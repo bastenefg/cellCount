@@ -1,0 +1,214 @@
+{
+  "status": "passed",
+  "audit_scope": "Bundle source/data identity, original source preservation, dependency exclusions and exact ZIP contents. Runtime checks appear only when supplied separately.",
+  "app_version": "1.2.0",
+  "audit_python": "3.12.14",
+  "app_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.2.0\\Live-Dead Cell Counter",
+  "app_files": 1505,
+  "app_bytes": 280263668,
+  "executable_sha256": "1dd8e17466aa3c4d77bf1e6e5e30db24ca15f1518e0b803b81fa80a06a2035df",
+  "original_package_files_checked": 81,
+  "original_package_mismatches": [],
+  "bundled_sources_checked": 167,
+  "bundled_source_mismatches": [],
+  "incompatible_icu_files": [],
+  "private_data_folders": [],
+  "missing_notices": [],
+  "zip": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.2.0\\Live-Dead-Cell-Counter-1.2.0-Windows-x64.zip",
+  "zip_bytes": 113868566,
+  "zip_sha256": "b9b921139bad82855214bf3da5b97e31dd5023831ddfd8ea3f114ec76aa93982",
+  "zip_crc_and_content_check": "passed",
+  "zip_mismatches": [],
+  "supplied_runtime_reports": [
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.2.0\\unit_tests_report.json",
+      "sha256": "e8455c16420587ed35f5791120cfa9ca8d55cfde4c1d003c2534246f09e053a0",
+      "report": {
+        "status": "passed",
+        "tests_passed": 82,
+        "elapsed_seconds": 83.445,
+        "command": ".venv/Scripts/python.exe -m unittest discover -s tests -v",
+        "log": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.2.0\\all_tests.log",
+        "log_sha256": "b7426bbcee69a48654cf38b81904adef183b31226b1fa982add278b169a6e33a"
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.2.0\\packaged_smoke\\smoke_test.json",
+      "sha256": "3f392bd685dadcfcf58f4b7b7e7c9b75925cd215deafcdce352af859d1085552",
+      "report": {
+        "status": "passed",
+        "gui_rendered": true,
+        "worker_verification_passed": true,
+        "segmentation_preview_passed": true,
+        "segmentation_updated_from_controls": true,
+        "display_did_not_change_labels": true,
+        "opening_preset_unchanged": true,
+        "preview_counts": {
+          "green_detections": 106,
+          "red_detections": 1402,
+          "live_only": 72,
+          "dead_only": 1368,
+          "double_positive": 34,
+          "total": 1474,
+          "viability_percent": 4.884667571234735
+        },
+        "quick_pair_analysis_passed": true,
+        "quick_counts_match_preview": true,
+        "persistent_preview_worker": true,
+        "initial_preview_seconds": 5.646558100008406,
+        "edit_timing_metric": "GUI control edit to current rendered preview, including debounce and display rendering",
+        "edit_timings": [
+          {
+            "red_high": 5,
+            "seconds": 1.724246600002516,
+            "counts": {
+              "green_detections": 106,
+              "red_detections": 726,
+              "live_only": 84,
+              "dead_only": 704,
+              "double_positive": 22,
+              "total": 810,
+              "viability_percent": 10.37037037037037
+            }
+          },
+          {
+            "red_high": 6,
+            "seconds": 1.9532835999852978,
+            "counts": {
+              "green_detections": 106,
+              "red_detections": 307,
+              "live_only": 89,
+              "dead_only": 290,
+              "double_positive": 17,
+              "total": 396,
+              "viability_percent": 22.474747474747474
+            }
+          }
+        ]
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.2.0\\native_launch_check.json",
+      "sha256": "c4337ed25cbe943967eb1b861f29aa9eeeffa7552889c82cbb4609d98f353806",
+      "report": {
+        "status": "passed",
+        "tracked_pid": 36480,
+        "platform": "windows",
+        "hidden_startup_requested": true,
+        "window_titles": [
+          "_q_titlebar",
+          "Live/Dead Cell Counter",
+          "Default IME"
+        ],
+        "exit_code": 0,
+        "other_app_processes_touched": false
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.2.0\\packaged_reference_preview_check.json",
+      "sha256": "f15282cab2f4717dc8c0081f3d8fbd0fbbea2a73e965c187b26bd0829a8f3ca5",
+      "report": {
+        "status": "passed",
+        "image": "S5",
+        "different_pixels": {
+          "labels_green": 0,
+          "labels_red": 0,
+          "labels_objects": 0
+        }
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.2.0\\packaged_reference_run\\reference_validation.json",
+      "sha256": "12a499c6c1a3bc2fedf0a1adba57268a191d6fef384719cd29ddca5f93f93904",
+      "report": {
+        "all_legacy_object_columns_match": true,
+        "ebfp_calls_checked": 486,
+        "float_tolerance": {
+          "atol": 1e-12,
+          "rtol": 1e-12
+        },
+        "objects_checked": 1297,
+        "reference_images": [
+          {
+            "exact_masks": [
+              "live",
+              "dead",
+              "objects"
+            ],
+            "image_id": "S5",
+            "summary_columns_checked": [
+              "total",
+              "live_only",
+              "dead_only",
+              "double_positive",
+              "viability_percent",
+              "ebfp_all_count",
+              "ebfp_all_percent",
+              "ebfp_live_count",
+              "ebfp_live_percent",
+              "double_positive_percent",
+              "ebfp_dead_count",
+              "ebfp_dead_percent",
+              "detected_objects_per_mm2",
+              "viability_excluding_double_percent",
+              "green_any_percent"
+            ]
+          },
+          {
+            "exact_masks": [
+              "live",
+              "dead",
+              "objects"
+            ],
+            "image_id": "S6",
+            "summary_columns_checked": [
+              "total",
+              "live_only",
+              "dead_only",
+              "double_positive",
+              "viability_percent",
+              "ebfp_all_count",
+              "ebfp_all_percent",
+              "ebfp_live_count",
+              "ebfp_live_percent",
+              "double_positive_percent",
+              "ebfp_dead_count",
+              "ebfp_dead_percent",
+              "detected_objects_per_mm2",
+              "viability_excluding_double_percent",
+              "green_any_percent"
+            ]
+          },
+          {
+            "exact_masks": [
+              "live",
+              "dead",
+              "objects"
+            ],
+            "image_id": "S7",
+            "summary_columns_checked": [
+              "total",
+              "live_only",
+              "dead_only",
+              "double_positive",
+              "viability_percent",
+              "ebfp_all_count",
+              "ebfp_all_percent",
+              "ebfp_live_count",
+              "ebfp_live_percent",
+              "double_positive_percent",
+              "ebfp_dead_count",
+              "ebfp_dead_percent",
+              "detected_objects_per_mm2",
+              "viability_excluding_double_percent",
+              "green_any_percent"
+            ]
+          }
+        ],
+        "rendered_image_bytes_are_not_part_of_numeric_reference_check": true,
+        "status": "passed"
+      }
+    }
+  ],
+  "issues": []
+}

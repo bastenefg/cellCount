@@ -1,0 +1,248 @@
+{
+  "input": {
+    "image_id": "alexandra_test1",
+    "replicate_id": "test1",
+    "green": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\images\\test1_live.tif",
+    "red": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\images\\test1_dead.tif",
+    "ebfp": ""
+  },
+  "shape": [
+    1024,
+    1024
+  ],
+  "red_edit": "high 4 to 5",
+  "matching_edit": "max_distance_px 6 to 5",
+  "excludes": "Worker startup, GUI rendering, and debounce are excluded from compute timings.",
+  "original": [
+    {
+      "read_seconds": 0.0388641000026837,
+      "segment_seconds": 1.6692631999612786,
+      "matching_seconds": 7.773147300002165,
+      "total_seconds": 9.481274599966127
+    },
+    {
+      "read_seconds": 0.011977699992712587,
+      "segment_seconds": 2.339725800033193,
+      "matching_seconds": 9.455217999988236,
+      "total_seconds": 11.806921500014141
+    },
+    {
+      "read_seconds": 0.018328100035432726,
+      "segment_seconds": 3.1298440999817103,
+      "matching_seconds": 9.816127199970651,
+      "total_seconds": 12.964299399987794
+    }
+  ],
+  "cached": [
+    {
+      "cold": {
+        "green_input_cached": false,
+        "read_green_seconds": 0.010170699970331043,
+        "green_segmentation_cached": false,
+        "segment_green_seconds": 1.3660207000211813,
+        "red_input_cached": false,
+        "read_red_seconds": 0.012031899997964501,
+        "red_segmentation_cached": false,
+        "segment_red_seconds": 1.6870685999747366,
+        "matching_cached": false,
+        "matching_seconds": 0.4818021999672055,
+        "total_seconds": 3.633781699987594
+      },
+      "unchanged": {
+        "green_input_cached": true,
+        "read_green_seconds": 0.0006876999977976084,
+        "green_segmentation_cached": true,
+        "segment_green_seconds": 4.999979864805937e-06,
+        "red_input_cached": true,
+        "read_red_seconds": 0.0004360000020824373,
+        "red_segmentation_cached": true,
+        "segment_red_seconds": 3.5999692045152187e-06,
+        "matching_cached": true,
+        "matching_seconds": 1.550000160932541e-05,
+        "total_seconds": 0.07634079997660592
+      },
+      "red_edit": {
+        "green_input_cached": true,
+        "read_green_seconds": 0.00071570003638044,
+        "green_segmentation_cached": true,
+        "segment_green_seconds": 5.600042641162872e-06,
+        "red_input_cached": true,
+        "read_red_seconds": 0.0005667999503202736,
+        "red_segmentation_cached": false,
+        "segment_red_seconds": 1.2241143000428565,
+        "matching_cached": false,
+        "matching_seconds": 0.233442600001581,
+        "total_seconds": 1.5144509000238031
+      },
+      "matching_edit": {
+        "green_input_cached": true,
+        "read_green_seconds": 0.0013158000074326992,
+        "green_segmentation_cached": true,
+        "segment_green_seconds": 1.0400020983070135e-05,
+        "red_input_cached": true,
+        "read_red_seconds": 0.0010986000415869057,
+        "red_segmentation_cached": true,
+        "segment_red_seconds": 1.1199968867003918e-05,
+        "matching_cached": false,
+        "matching_seconds": 0.4001132000121288,
+        "total_seconds": 0.4541377000277862
+      }
+    },
+    {
+      "cold": {
+        "green_input_cached": false,
+        "read_green_seconds": 0.010184900020249188,
+        "green_segmentation_cached": false,
+        "segment_green_seconds": 0.9487928000162356,
+        "red_input_cached": false,
+        "read_red_seconds": 0.01021699997363612,
+        "red_segmentation_cached": false,
+        "segment_red_seconds": 2.15885409998009,
+        "matching_cached": false,
+        "matching_seconds": 0.5076226000091992,
+        "total_seconds": 3.7371488999924622
+      },
+      "unchanged": {
+        "green_input_cached": true,
+        "read_green_seconds": 0.0014232000103220344,
+        "green_segmentation_cached": true,
+        "segment_green_seconds": 6.999995093792677e-06,
+        "red_input_cached": true,
+        "read_red_seconds": 0.001179100014269352,
+        "red_segmentation_cached": true,
+        "segment_red_seconds": 1.090002479031682e-05,
+        "matching_cached": true,
+        "matching_seconds": 5.509995389729738e-05,
+        "total_seconds": 0.11866430001100525
+      },
+      "red_edit": {
+        "green_input_cached": true,
+        "read_green_seconds": 0.0009277000208385289,
+        "green_segmentation_cached": true,
+        "segment_green_seconds": 5.999987479299307e-06,
+        "red_input_cached": true,
+        "read_red_seconds": 0.000934499956201762,
+        "red_segmentation_cached": false,
+        "segment_red_seconds": 1.7347368000191636,
+        "matching_cached": false,
+        "matching_seconds": 0.32268859999021515,
+        "total_seconds": 2.111193499993533
+      },
+      "matching_edit": {
+        "green_input_cached": true,
+        "read_green_seconds": 0.0008195999544113874,
+        "green_segmentation_cached": true,
+        "segment_green_seconds": 4.699977580457926e-06,
+        "red_input_cached": true,
+        "read_red_seconds": 0.0007078000344336033,
+        "red_segmentation_cached": true,
+        "segment_red_seconds": 5.600042641162872e-06,
+        "matching_cached": false,
+        "matching_seconds": 0.3596038999967277,
+        "total_seconds": 0.4109675000072457
+      }
+    },
+    {
+      "cold": {
+        "green_input_cached": false,
+        "read_green_seconds": 0.017535099992528558,
+        "green_segmentation_cached": false,
+        "segment_green_seconds": 1.284272700024303,
+        "red_input_cached": false,
+        "read_red_seconds": 0.012023599992971867,
+        "red_segmentation_cached": false,
+        "segment_red_seconds": 2.3231193000101484,
+        "matching_cached": false,
+        "matching_seconds": 0.5004360000020824,
+        "total_seconds": 4.217694199993275
+      },
+      "unchanged": {
+        "green_input_cached": true,
+        "read_green_seconds": 0.0006117000011727214,
+        "green_segmentation_cached": true,
+        "segment_green_seconds": 4.300032742321491e-06,
+        "red_input_cached": true,
+        "read_red_seconds": 0.00045870000030845404,
+        "red_segmentation_cached": true,
+        "segment_red_seconds": 3.8000289350748062e-06,
+        "matching_cached": true,
+        "matching_seconds": 1.3599987141788006e-05,
+        "total_seconds": 0.07804470002884045
+      },
+      "red_edit": {
+        "green_input_cached": true,
+        "read_green_seconds": 0.0008353000157512724,
+        "green_segmentation_cached": true,
+        "segment_green_seconds": 6.499991286545992e-06,
+        "red_input_cached": true,
+        "read_red_seconds": 0.0006526000215671957,
+        "red_segmentation_cached": false,
+        "segment_red_seconds": 1.074654099997133,
+        "matching_cached": false,
+        "matching_seconds": 0.2615341999917291,
+        "total_seconds": 1.3612859999993816
+      },
+      "matching_edit": {
+        "green_input_cached": true,
+        "read_green_seconds": 0.0005224999622441828,
+        "green_segmentation_cached": true,
+        "segment_green_seconds": 4.299974534660578e-06,
+        "red_input_cached": true,
+        "read_red_seconds": 0.00040120002813637257,
+        "red_segmentation_cached": true,
+        "segment_red_seconds": 4.399975296109915e-06,
+        "matching_cached": false,
+        "matching_seconds": 0.2676394999725744,
+        "total_seconds": 0.309748999949079
+      }
+    }
+  ],
+  "payload": [
+    {
+      "compressed": {
+        "write_seconds": 2.6095432000001892,
+        "read_seconds": 0.2743772999965586,
+        "bytes": 17357098
+      },
+      "uncompressed": {
+        "write_seconds": 0.14321050001308322,
+        "read_seconds": 0.13110180001240224,
+        "bytes": 46653022
+      }
+    },
+    {
+      "compressed": {
+        "write_seconds": 2.9208925999701023,
+        "read_seconds": 0.3841843000263907,
+        "bytes": 17357098
+      },
+      "uncompressed": {
+        "write_seconds": 0.1762948000105098,
+        "read_seconds": 0.13706069998443127,
+        "bytes": 46653022
+      }
+    },
+    {
+      "compressed": {
+        "write_seconds": 2.393248600012157,
+        "read_seconds": 0.30926469998667017,
+        "bytes": 17357098
+      },
+      "uncompressed": {
+        "write_seconds": 0.2009523999877274,
+        "read_seconds": 0.20222659996943548,
+        "bytes": 46653022
+      }
+    }
+  ],
+  "median_seconds": {
+    "original_compute": 11.806921500014141,
+    "cold": 3.7371488999924622,
+    "unchanged": 0.07804470002884045,
+    "red_edit": 1.5144509000238031,
+    "matching_edit": 0.4109675000072457,
+    "payload_compressed": 2.883920499996748,
+    "payload_uncompressed": 0.31335549999494106
+  },
+  "exact_parity": "All original/unchanged masks, contrasts and object records checked for all three repeats; red and matching edits checked once against the original pipeline."
+}

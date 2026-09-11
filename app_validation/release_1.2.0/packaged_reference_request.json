@@ -1,0 +1,98 @@
+{
+  "row": {
+    "image_id": "S5",
+    "replicate_id": "S5",
+    "green": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\reference\\raw\\CHO-S5-live.tif",
+    "red": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\reference\\raw\\CHO-S5-dead.tif"
+  },
+  "config": {
+    "schema_version": 1,
+    "pipeline_version": "1.1.0",
+    "input": {
+      "dtype": "uint8",
+      "expected_shape": [
+        1024,
+        1024
+      ],
+      "pixel_size_um": [
+        2.272724609375,
+        2.272724609375
+      ]
+    },
+    "segmentation": {
+      "background_sigma_px": 12,
+      "green": {
+        "sigma_px": 1.2,
+        "high": 10,
+        "low": 5,
+        "min_area_px": 20
+      },
+      "red": {
+        "sigma_px": 1,
+        "high": 4,
+        "low": 2,
+        "min_area_px": 12
+      },
+      "peak_window_px": 7,
+      "min_peak_distance_px": 6,
+      "exclude_border": true
+    },
+    "matching": {
+      "max_distance_px": 6,
+      "dilation_px": 1,
+      "overlap_window_radius_px": 24
+    },
+    "ebfp": {
+      "roi_dilation_px": 1,
+      "occupied_dilation_px": 2,
+      "null_inner_px": 18,
+      "null_outer_px": 65,
+      "q_threshold": 0.05,
+      "min_null_locations": 100,
+      "comparison_tolerance": 1e-05,
+      "q_scope": "all_objects_in_this_run"
+    },
+    "sensitivity": {
+      "segmentation_factors": [
+        0.75,
+        1,
+        1.25
+      ],
+      "ebfp_q_thresholds": [
+        0.01,
+        0.025,
+        0.05,
+        0.1
+      ],
+      "ebfp_dilation_px": [
+        0,
+        1,
+        2
+      ],
+      "spatial_null_shift_px": [
+        35,
+        35
+      ]
+    },
+    "display": {
+      "green": [
+        0,
+        120
+      ],
+      "red": [
+        0,
+        30
+      ],
+      "ebfp": [
+        0,
+        34
+      ],
+      "central_crop_fraction": 0.375,
+      "scale_bar_um": 100
+    },
+    "replicates": {
+      "status": "S5-S7 treated as independent provisionally; physical gel identity unconfirmed",
+      "aggregation": "pool_nonoverlapping_fields_within_replicate_then_unweighted_replicate_mean_and_sample_sd"
+    }
+  }
+}

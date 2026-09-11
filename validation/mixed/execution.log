@@ -1,0 +1,9 @@
+Analyzing S5
+Analyzing S6
+Analyzing S7
+Computing threshold sensitivity and extended EBFP diagnostics
+replicate_id  n_fields  n_fields_with_ebfp  total  live_only  dead_only  double_positive  viability_percent  ebfp_all_count  ebfp_all_scorable  ebfp_all_unscorable  ebfp_all_percent  ebfp_live_count  ebfp_live_scorable  ebfp_live_unscorable  ebfp_live_percent  double_positive_percent  viability_excluding_double_percent  green_any_percent  ebfp_dead_count  ebfp_dead_percent  ebfp_channel_not_provided  ebfp_live_channel_not_provided
+          S5         1                   1    438        190        155               93          43.378995             170                438                    0         38.812785              148                 190                     0          77.894737                21.232877                           55.072464          64.611872               22           8.870968                          0                               0
+          S6         1                   0    526        199        234               93          37.832700               0                  0                  526               NaN                0                   0                   199                NaN                17.680608                           45.958430          55.513308                0                NaN                        526                             199
+          S7         1                   1    333        120        137               76          36.036036             115                333                    0         34.534535               94                 120                     0          78.333333                22.822823                           46.692607          58.858859               21           9.859155                          0                               0
+Saved run: /workspace/scratch/4c7e5dd7a9b0/optional_ebfp_checks/mixed

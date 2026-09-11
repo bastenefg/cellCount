@@ -1,0 +1,88 @@
+{
+  "all_legacy_object_columns_match": true,
+  "ebfp_calls_checked": 486,
+  "float_tolerance": {
+    "atol": 1e-12,
+    "rtol": 1e-12
+  },
+  "objects_checked": 1297,
+  "reference_images": [
+    {
+      "exact_masks": [
+        "live",
+        "dead",
+        "objects"
+      ],
+      "image_id": "S5",
+      "summary_columns_checked": [
+        "total",
+        "live_only",
+        "dead_only",
+        "double_positive",
+        "viability_percent",
+        "ebfp_all_count",
+        "ebfp_all_percent",
+        "ebfp_live_count",
+        "ebfp_live_percent",
+        "double_positive_percent",
+        "ebfp_dead_count",
+        "ebfp_dead_percent",
+        "detected_objects_per_mm2",
+        "viability_excluding_double_percent",
+        "green_any_percent"
+      ]
+    },
+    {
+      "exact_masks": [
+        "live",
+        "dead",
+        "objects"
+      ],
+      "image_id": "S6",
+      "summary_columns_checked": [
+        "total",
+        "live_only",
+        "dead_only",
+        "double_positive",
+        "viability_percent",
+        "ebfp_all_count",
+        "ebfp_all_percent",
+        "ebfp_live_count",
+        "ebfp_live_percent",
+        "double_positive_percent",
+        "ebfp_dead_count",
+        "ebfp_dead_percent",
+        "detected_objects_per_mm2",
+        "viability_excluding_double_percent",
+        "green_any_percent"
+      ]
+    },
+    {
+      "exact_masks": [
+        "live",
+        "dead",
+        "objects"
+      ],
+      "image_id": "S7",
+      "summary_columns_checked": [
+        "total",
+        "live_only",
+        "dead_only",
+        "double_positive",
+        "viability_percent",
+        "ebfp_all_count",
+        "ebfp_all_percent",
+        "ebfp_live_count",
+        "ebfp_live_percent",
+        "double_positive_percent",
+        "ebfp_dead_count",
+        "ebfp_dead_percent",
+        "detected_objects_per_mm2",
+        "viability_excluding_double_percent",
+        "green_any_percent"
+      ]
+    }
+  ],
+  "rendered_image_bytes_are_not_part_of_numeric_reference_check": true,
+  "status": "passed"
+}

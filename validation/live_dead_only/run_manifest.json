@@ -1,0 +1,127 @@
+{
+  "code_sha256": {
+    "pipeline/__init__.py": "2c6550c83b1689f7400a8eeacedc1bf115961ddb3513bb90f99a83f12023cb0e",
+    "pipeline/cli.py": "0234c8f002d1660194f69ead4629b6d9b3aaaaa55c8171949daa8c9269e9f755",
+    "pipeline/core.py": "82d09a74225752d829912b9ce58ac1b7ab0536a395dbf575c61743e752ba99e6",
+    "pipeline/io.py": "ef96ec6d8fcea99cfb9c67dacd571a01dbb2e03da8f127f12a03cc8a39ee223b",
+    "pipeline/reporting.py": "473ae57233c689274f5d6b92ded4bf86d84231e118ce7014470acaab909dff98",
+    "run_pipeline.py": "91d1c8b2eb91339c90a5f6bbb4f1786031026a743eb0b3a34c603cf53d6b98fe"
+  },
+  "config_sha256": "1e5e9d6e3af9b16c3f91c83e2b53ebe10a57e0955b626091f351628618b10006",
+  "ebfp_images_not_provided": 3,
+  "ebfp_images_provided": 0,
+  "environment": {
+    "PIL": "12.3.0",
+    "matplotlib": "3.10.8",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.35-x86_64-with-glibc2.39",
+    "python": "3.12.13 (main, Aug  7 2026, 02:25:39) [Clang 22.1.3 ]",
+    "scipy": "1.17.0"
+  },
+  "extended_qc": true,
+  "finished_utc": "2026-09-09T19:09:13.045057+00:00",
+  "input_files": [
+    {
+      "bytes": 1503319,
+      "channel": "green",
+      "dtype": "uint8",
+      "filename": "CHO-S5-live.tif",
+      "image_id": "S5",
+      "path": "/workspace/scratch/4c7e5dd7a9b0/CHO_viability_pipeline/reference/raw/CHO-S5-live.tif",
+      "replicate_id": "S5",
+      "sha256": "d2c01fd50b2aac03314fb97e53233d1fc6002e2741f8a4d49dfe3dbc3c5141bf",
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "bytes": 1503319,
+      "channel": "red",
+      "dtype": "uint8",
+      "filename": "CHO-S5-dead.tif",
+      "image_id": "S5",
+      "path": "/workspace/scratch/4c7e5dd7a9b0/CHO_viability_pipeline/reference/raw/CHO-S5-dead.tif",
+      "replicate_id": "S5",
+      "sha256": "a74d4806cb81965469c75cc76d7750d9c0a9142a6fc32a97e5dfc5e526d74018",
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "bytes": 1503319,
+      "channel": "green",
+      "dtype": "uint8",
+      "filename": "CHO-S6-live.tif",
+      "image_id": "S6",
+      "path": "/workspace/scratch/4c7e5dd7a9b0/CHO_viability_pipeline/reference/raw/CHO-S6-live.tif",
+      "replicate_id": "S6",
+      "sha256": "233685f54f67ab5f9d7b548d75e8b38ea7703c97283e2e8049d433163d283509",
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "bytes": 1503319,
+      "channel": "red",
+      "dtype": "uint8",
+      "filename": "CHO-S6-dead.tif",
+      "image_id": "S6",
+      "path": "/workspace/scratch/4c7e5dd7a9b0/CHO_viability_pipeline/reference/raw/CHO-S6-dead.tif",
+      "replicate_id": "S6",
+      "sha256": "ddc6f7a060029e42777427a2824a0b9999514460e521698d91a78f741534fc18",
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "bytes": 1503319,
+      "channel": "green",
+      "dtype": "uint8",
+      "filename": "CHO-S7-live.tif",
+      "image_id": "S7",
+      "path": "/workspace/scratch/4c7e5dd7a9b0/CHO_viability_pipeline/reference/raw/CHO-S7-live.tif",
+      "replicate_id": "S7",
+      "sha256": "e913c88c4a8700cbe88cd0004c48cccffc7b6e9d1a2c12a14ed327ae1aa5f665",
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "bytes": 1503319,
+      "channel": "red",
+      "dtype": "uint8",
+      "filename": "CHO-S7-dead.tif",
+      "image_id": "S7",
+      "path": "/workspace/scratch/4c7e5dd7a9b0/CHO_viability_pipeline/reference/raw/CHO-S7-dead.tif",
+      "replicate_id": "S7",
+      "sha256": "351411df5dd48b4be4f786d47d2dd6e5c19ee0dfecd1e9d22f0c6caa95ef8221",
+      "shape": [
+        1024,
+        1024
+      ]
+    }
+  ],
+  "input_manifest_sha256": "21b3bbe87223f247a5c371f6b215c4a7c5ec808c46fa14062429e70306168021",
+  "pipeline_version": "1.1.0",
+  "q_family": "all scorable objects across the complete input manifest for this run",
+  "reference_run": false,
+  "replicate_interpretation": {
+    "aggregation": "pool_nonoverlapping_fields_within_replicate_then_unweighted_replicate_mean_and_sample_sd",
+    "status": "S5-S7 treated as independent provisionally; physical gel identity unconfirmed"
+  },
+  "source_checksums_unchanged": true,
+  "started_utc": "2026-09-09T19:08:46.976937+00:00",
+  "status": "completed",
+  "warnings": [
+    "24 object masks lose overlapping pixels under the original last-write rule. Inspect mask_pixels_final and mask_pixels_overwritten; legacy behavior retained for reproducibility.",
+    "EBFP was not provided for 3 field(s). Their EBFP measurements are missing, not negative; live/dead analysis includes these fields.",
+    "1297 objects have unavailable/unscorable EBFP measurements. They are excluded from EBFP percentage denominators only; counts and reasons are reported separately.",
+    "Extended EBFP diagnostics skipped because no EBFP images were provided."
+  ]
+}

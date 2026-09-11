@@ -1,0 +1,3 @@
+image_id,replicate_id,green,red
+gel1_field1,gel1,images/gel1_field1_live.tif,images/gel1_field1_dead.tif
+gel2_field1,gel2,images/gel2_field1_live.tif,images/gel2_field1_dead.tif

@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "platform": "windows",
+  "native_main_window_found": true,
+  "window_titles": [
+    "_q_titlebar",
+    "CHO Cell Counter",
+    "Default IME"
+  ],
+  "exit_code": 0
+}

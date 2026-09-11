@@ -1,0 +1,17 @@
+$ "C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\.venv\Scripts\python.exe" -m unittest discover -s tests -p test_optional_ebfp.py -v
+
+test_explicit_missing_ebfp_path_raises (test_optional_ebfp.OptionalEbfpManifestTests.test_explicit_missing_ebfp_path_raises) ... ok
+test_live_and_dead_columns_remain_required (test_optional_ebfp.OptionalEbfpManifestTests.test_live_and_dead_columns_remain_required) ... ok
+test_live_and_dead_files_remain_required (test_optional_ebfp.OptionalEbfpManifestTests.test_live_and_dead_files_remain_required) ... ok
+test_manifest_accepts_blank_ebfp_cell (test_optional_ebfp.OptionalEbfpManifestTests.test_manifest_accepts_blank_ebfp_cell) ... ok
+test_manifest_can_omit_entire_ebfp_column (test_optional_ebfp.OptionalEbfpManifestTests.test_manifest_can_omit_entire_ebfp_column) ... ok
+test_mixed_manifest_preserves_channel_availability (test_optional_ebfp.OptionalEbfpManifestTests.test_mixed_manifest_preserves_channel_availability) ... ok
+test_missing_channel_objects_do_not_change_measured_q_values (test_optional_ebfp.OptionalEbfpMeasurementTests.test_missing_channel_objects_do_not_change_measured_q_values) ... ok
+test_missing_channel_preserves_cells_but_has_no_ebfp_measurements (test_optional_ebfp.OptionalEbfpMeasurementTests.test_missing_channel_preserves_cells_but_has_no_ebfp_measurements) ... ok
+test_supplied_channel_matches_unchanged_core_algorithm (test_optional_ebfp.OptionalEbfpMeasurementTests.test_supplied_channel_matches_unchanged_core_algorithm) ... ok
+test_supplied_zero_blue_is_measured_negative_not_missing (test_optional_ebfp.OptionalEbfpMeasurementTests.test_supplied_zero_blue_is_measured_negative_not_missing) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.235s
+
+OK

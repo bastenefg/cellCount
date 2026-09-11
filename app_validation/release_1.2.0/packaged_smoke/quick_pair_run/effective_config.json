@@ -1,0 +1,90 @@
+{
+  "display": {
+    "central_crop_fraction": 0.375,
+    "ebfp": [
+      0,
+      34
+    ],
+    "green": [
+      0,
+      120
+    ],
+    "red": [
+      0,
+      30
+    ],
+    "scale_bar_um": 100
+  },
+  "ebfp": {
+    "comparison_tolerance": 1e-05,
+    "min_null_locations": 100,
+    "null_inner_px": 18,
+    "null_outer_px": 65,
+    "occupied_dilation_px": 2,
+    "q_scope": "all_objects_in_this_run",
+    "q_threshold": 0.05,
+    "roi_dilation_px": 1
+  },
+  "input": {
+    "dtype": "uint8",
+    "expected_shape": [
+      1024,
+      1024
+    ],
+    "pixel_size_um": [
+      2.272724609375,
+      2.272724609375
+    ]
+  },
+  "matching": {
+    "dilation_px": 1,
+    "max_distance_px": 6,
+    "overlap_window_radius_px": 24
+  },
+  "pipeline_version": "1.1.0",
+  "replicates": {
+    "aggregation": "pool_nonoverlapping_fields_within_replicate_then_unweighted_replicate_mean_and_sample_sd",
+    "status": "S5-S7 treated as independent provisionally; physical gel identity unconfirmed"
+  },
+  "schema_version": 1,
+  "segmentation": {
+    "background_sigma_px": 12,
+    "exclude_border": true,
+    "green": {
+      "high": 10,
+      "low": 5,
+      "min_area_px": 20,
+      "sigma_px": 1.2
+    },
+    "min_peak_distance_px": 6,
+    "peak_window_px": 7,
+    "red": {
+      "high": 4,
+      "low": 2,
+      "min_area_px": 12,
+      "sigma_px": 1
+    }
+  },
+  "sensitivity": {
+    "ebfp_dilation_px": [
+      0,
+      1,
+      2
+    ],
+    "ebfp_q_thresholds": [
+      0.01,
+      0.025,
+      0.05,
+      0.1
+    ],
+    "segmentation_factors": [
+      0.75,
+      1,
+      1.25
+    ],
+    "spatial_null_shift_px": [
+      35,
+      35
+    ]
+  }
+}

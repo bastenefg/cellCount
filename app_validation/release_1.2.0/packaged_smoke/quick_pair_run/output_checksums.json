@@ -1,0 +1,20 @@
+{
+  "aggregate_summary.json": "fb6545bc6b5faf45c77edf18c6d8646a8c5b9f7c80da20482f96cf3cf4d98384",
+  "channel_detections\\field_1_green.csv": "dc5b9e35aa616291911d982e2a393f81632de94bbef5232c4aeb2cb0ebc6cb7a",
+  "channel_detections\\field_1_red.csv": "2fc5399c6155425a8a7750d51e792c67b5c23877a53787b42f648c49b4387971",
+  "ebfp_q_sensitivity.csv": "ac780961cbe3ef8aa5a85e5b1962532f60b47579f5e738b692d9ca23153e6657",
+  "effective_config.json": "2fb990c56d1dd457ed13d1f760799b6161ade62c551a0e42d466d9537ae57a58",
+  "figure.png": "0c8e6b2eb176be0a90a4bba55d77e1b9ebfaa8d837b6bcc16550d8f81b345dd3",
+  "figure.svg": "6827d3d9651954caf8cb38973d0dc93a2a6ffb9d46bf59e63db5234192028422",
+  "figure_metadata.json": "99b0b92ae1212e5373f91a8eadd6054eb20bdcca41434c66890f3bc142c90165",
+  "image_summary.csv": "72eefebce8af9bae95688c46978982a02772e59f0a4ba638b0ceac499b3ef535",
+  "labels\\field_1.npz": "f3735e1968634f1dd701b6705b1d3e39916a168bfd34942960d1363581df549f",
+  "objects.csv": "afb7fc909efa8586dca5a99d4a3a8b07190393186d05b3d03eb74ec47d453f5a",
+  "qc\\field_1_detections.png": "37b30979339bded48839bb075eb728463a53096680c3e32f12a91ac487db9eb4",
+  "replicate_summary.csv": "3db35a1652b58f658bf9b2f225a0f97b7d5739999b2dfb85e36d55c3dbdc5b3a",
+  "resolved_samples.csv": "b44345b0b3d9cadf39c7fc361be9f9b1b023f7b10bb5d5409ffda08d5f6e5eb9",
+  "run_manifest.json": "1d38f762e7a0f0143eb34fc1d9ef649c1db50e6b7f2843e9d52c3363382ceebb",
+  "threshold_sensitivity.csv": "44cd3f7af46f953dca66d9d9239f296231ba44a6e9ffd5a98077e566e408ea4b",
+  "threshold_sensitivity_aggregate.csv": "245dcbaf67c1d9ed304b8c42c3025254992bcb9ae8425793887e6e42c24f1057",
+  "threshold_sensitivity_by_replicate.csv": "fec8c449add82c4ca5f8b084eff2014a53db4a0629ef3a843383c8c133b30d80"
+}

@@ -1,0 +1,155 @@
+[
+  {
+    "file": "CHO-S5-dead.tif",
+    "sha256": "a74d4806cb81965469c75cc76d7750d9c0a9142a6fc32a97e5dfc5e526d74018",
+    "shape": [
+      1024,
+      1024
+    ],
+    "dtype": "uint8",
+    "minimum": 0,
+    "maximum": 84,
+    "zero_fraction": 0.945307731628418,
+    "saturated_255_pixels": 0,
+    "pixel_pitch_um": 2.272724609375,
+    "frames": 1,
+    "imagej_description": "ImageJ=1.54f\nunit=micron\nmin=0.0\nmax=84.0\n",
+    "identity_channel_palette": true
+  },
+  {
+    "file": "CHO-S5-ebfp.tif",
+    "sha256": "cf278251754407fadb43ba7a0ef3d1ba406252fa1b92f13ddacc9b1b165116e5",
+    "shape": [
+      1024,
+      1024
+    ],
+    "dtype": "uint8",
+    "minimum": 0,
+    "maximum": 84,
+    "zero_fraction": 0.9830589294433594,
+    "saturated_255_pixels": 0,
+    "pixel_pitch_um": 2.272724609375,
+    "frames": 1,
+    "imagej_description": "ImageJ=1.54f\nunit=micron\nmin=0.0\nmax=84.0\n",
+    "identity_channel_palette": true
+  },
+  {
+    "file": "CHO-S5-live.tif",
+    "sha256": "d2c01fd50b2aac03314fb97e53233d1fc6002e2741f8a4d49dfe3dbc3c5141bf",
+    "shape": [
+      1024,
+      1024
+    ],
+    "dtype": "uint8",
+    "minimum": 0,
+    "maximum": 255,
+    "zero_fraction": 9.5367431640625e-07,
+    "saturated_255_pixels": 791,
+    "pixel_pitch_um": 2.272724609375,
+    "frames": 1,
+    "imagej_description": "ImageJ=1.54f\nunit=micron\nmin=0.0\nmax=84.0\n",
+    "identity_channel_palette": true
+  },
+  {
+    "file": "CHO-S6-dead.tif",
+    "sha256": "ddc6f7a060029e42777427a2824a0b9999514460e521698d91a78f741534fc18",
+    "shape": [
+      1024,
+      1024
+    ],
+    "dtype": "uint8",
+    "minimum": 0,
+    "maximum": 222,
+    "zero_fraction": 0.9233999252319336,
+    "saturated_255_pixels": 0,
+    "pixel_pitch_um": 2.272724609375,
+    "frames": 1,
+    "imagej_description": "ImageJ=1.54f\nunit=micron\nmin=0.0\nmax=83.0\n",
+    "identity_channel_palette": true
+  },
+  {
+    "file": "CHO-S6-ebfp.tif",
+    "sha256": "cef34b0b44d6cc3d666ac62c27a25f30bef49568012f765a6245efaaea825e01",
+    "shape": [
+      1024,
+      1024
+    ],
+    "dtype": "uint8",
+    "minimum": 0,
+    "maximum": 83,
+    "zero_fraction": 0.9788789749145508,
+    "saturated_255_pixels": 0,
+    "pixel_pitch_um": 2.272724609375,
+    "frames": 1,
+    "imagej_description": "ImageJ=1.54f\nunit=micron\nmin=0.0\nmax=83.0\n",
+    "identity_channel_palette": true
+  },
+  {
+    "file": "CHO-S6-live.tif",
+    "sha256": "233685f54f67ab5f9d7b548d75e8b38ea7703c97283e2e8049d433163d283509",
+    "shape": [
+      1024,
+      1024
+    ],
+    "dtype": "uint8",
+    "minimum": 1,
+    "maximum": 255,
+    "zero_fraction": 0.0,
+    "saturated_255_pixels": 796,
+    "pixel_pitch_um": 2.272724609375,
+    "frames": 1,
+    "imagej_description": "ImageJ=1.54f\nunit=micron\nmin=0.0\nmax=83.0\n",
+    "identity_channel_palette": true
+  },
+  {
+    "file": "CHO-S7-dead.tif",
+    "sha256": "351411df5dd48b4be4f786d47d2dd6e5c19ee0dfecd1e9d22f0c6caa95ef8221",
+    "shape": [
+      1024,
+      1024
+    ],
+    "dtype": "uint8",
+    "minimum": 0,
+    "maximum": 206,
+    "zero_fraction": 0.9341850280761719,
+    "saturated_255_pixels": 0,
+    "pixel_pitch_um": 2.272724609375,
+    "frames": 1,
+    "imagej_description": "ImageJ=1.54f\nunit=micron\nmin=0.0\nmax=83.0\n",
+    "identity_channel_palette": true
+  },
+  {
+    "file": "CHO-S7-ebfp.tif",
+    "sha256": "a17ad6d08070afede195ab9a11b7a241eb98436eb8e2d9b03be7e0e6e8f604a6",
+    "shape": [
+      1024,
+      1024
+    ],
+    "dtype": "uint8",
+    "minimum": 0,
+    "maximum": 83,
+    "zero_fraction": 0.9825458526611328,
+    "saturated_255_pixels": 0,
+    "pixel_pitch_um": 2.272724609375,
+    "frames": 1,
+    "imagej_description": "ImageJ=1.54f\nunit=micron\nmin=0.0\nmax=83.0\n",
+    "identity_channel_palette": true
+  },
+  {
+    "file": "CHO-S7-live.tif",
+    "sha256": "e913c88c4a8700cbe88cd0004c48cccffc7b6e9d1a2c12a14ed327ae1aa5f665",
+    "shape": [
+      1024,
+      1024
+    ],
+    "dtype": "uint8",
+    "minimum": 1,
+    "maximum": 255,
+    "zero_fraction": 0.0,
+    "saturated_255_pixels": 329,
+    "pixel_pitch_um": 2.272724609375,
+    "frames": 1,
+    "imagej_description": "ImageJ=1.54f\nunit=micron\nmin=0.0\nmax=83.0\n",
+    "identity_channel_palette": true
+  }
+]

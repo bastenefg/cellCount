@@ -1,0 +1,11 @@
+{
+  "roi": "Live/dead union-object mask, dilated by one pixel, excluding pixels assigned to another object.",
+  "statistic": "Sum of unchanged original EBFP pixel values within ROI.",
+  "local_null": "Same mask translated by all valid integer offsets with 18 <= displacement <= 65 pixels, excluding placements overlapping any object mask dilated by two pixels.",
+  "empirical_p": "(1 + number of null sums >= observed sum)/(1 + number of null placements). Conservative ties included.",
+  "classification": "Benjamini-Hochberg adjustment across all 1297 objects in S5/S6/S7; q <= 0.05.",
+  "interpretation": "Detectable EBFP-channel enrichment relative to local cell-free background. Exploratory empirical criterion; no biological specificity or sensitivity established without controls; does not measure ongoing protein synthesis.",
+  "unshifted_p_cutoff": 0.0183614584244119,
+  "validation": "Mask dilation 0/1/2 pixels, q thresholds 0.01/0.025/0.05/0.10, and a computational 35-pixel horizontal shift of blue-channel coordinates scored at the fixed unshifted p cutoff; source images remain unmodified. The shift is a spatial-association null, not a biological negative control.",
+  "randomness": "None. All valid local shifts evaluated exhaustively."
+}

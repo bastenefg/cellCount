@@ -1,0 +1,15 @@
+{
+  "release": "1.1.0",
+  "reference_check": "passed",
+  "exact_label_arrays": 9,
+  "matched_objects": 1297,
+  "matched_ebfp_detections": 486,
+  "unit_tests_passed": 22,
+  "live_dead_only_end_to_end": "passed",
+  "mixed_ebfp_end_to_end": "passed; extended QC included",
+  "no_signal_blue": "synthetic correctness test passed; supplied zero blue scored negative, not missing",
+  "source_file_checksums_unchanged": true,
+  "recorded_environment_tested": true,
+  "fresh_dependency_install_on_other_platforms_tested": false,
+  "blank_end_to_end": "passed in prior release 1.0.0; empty-data correctness tests also pass in 1.1.0"
+}

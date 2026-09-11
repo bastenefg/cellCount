@@ -1,0 +1,21 @@
+# Local environments and generated application bundles
+/.venv/
+/build/
+/dist/
+/runs/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local assistant state and credentials
+/.codex/
+/.agents/
+.env
+.env.*
+!.env.example
+
+# Keep validation reports, figures and scripts; omit temporary array payloads
+# and the incompatible DLLs isolated during packaging diagnostics.
+/app_validation/**/*.npz
+/app_validation/quarantined_dlls/
+/app_validation/github_publish/

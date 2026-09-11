@@ -1,0 +1,128 @@
+{
+  "status": "passed",
+  "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+  "app_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\CHO Cell Counter",
+  "app_files": 1494,
+  "app_bytes": 280061238,
+  "executable_sha256": "097cb761b01cd31584c15c77111f3b4b94d5a0289088f36389dcea12cec09335",
+  "zip": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\CHO-Cell-Counter-Windows-x64.zip",
+  "zip_bytes": 111204143,
+  "zip_sha256": "b59daa62ba26aab715bc0711ed728a9d6c32a06b80dcfe49cae066df04780091",
+  "zip_crc_check": "passed",
+  "source_check": {
+    "status": "passed",
+    "files_compared": 156,
+    "mismatches": [],
+    "user_images_bundled": false,
+    "user_runs_bundled": false
+  },
+  "reference_validation": {
+    "all_legacy_object_columns_match": true,
+    "ebfp_calls_checked": 486,
+    "float_tolerance": {
+      "atol": 1e-12,
+      "rtol": 1e-12
+    },
+    "objects_checked": 1297,
+    "reference_images": [
+      {
+        "exact_masks": [
+          "live",
+          "dead",
+          "objects"
+        ],
+        "image_id": "S5",
+        "summary_columns_checked": [
+          "total",
+          "live_only",
+          "dead_only",
+          "double_positive",
+          "viability_percent",
+          "ebfp_all_count",
+          "ebfp_all_percent",
+          "ebfp_live_count",
+          "ebfp_live_percent",
+          "double_positive_percent",
+          "ebfp_dead_count",
+          "ebfp_dead_percent",
+          "detected_objects_per_mm2",
+          "viability_excluding_double_percent",
+          "green_any_percent"
+        ]
+      },
+      {
+        "exact_masks": [
+          "live",
+          "dead",
+          "objects"
+        ],
+        "image_id": "S6",
+        "summary_columns_checked": [
+          "total",
+          "live_only",
+          "dead_only",
+          "double_positive",
+          "viability_percent",
+          "ebfp_all_count",
+          "ebfp_all_percent",
+          "ebfp_live_count",
+          "ebfp_live_percent",
+          "double_positive_percent",
+          "ebfp_dead_count",
+          "ebfp_dead_percent",
+          "detected_objects_per_mm2",
+          "viability_excluding_double_percent",
+          "green_any_percent"
+        ]
+      },
+      {
+        "exact_masks": [
+          "live",
+          "dead",
+          "objects"
+        ],
+        "image_id": "S7",
+        "summary_columns_checked": [
+          "total",
+          "live_only",
+          "dead_only",
+          "double_positive",
+          "viability_percent",
+          "ebfp_all_count",
+          "ebfp_all_percent",
+          "ebfp_live_count",
+          "ebfp_live_percent",
+          "double_positive_percent",
+          "ebfp_dead_count",
+          "ebfp_dead_percent",
+          "detected_objects_per_mm2",
+          "viability_excluding_double_percent",
+          "green_any_percent"
+        ]
+      }
+    ],
+    "rendered_image_bytes_are_not_part_of_numeric_reference_check": true,
+    "status": "passed"
+  },
+  "packaged_verify": "passed",
+  "gui_smoke": {
+    "status": "passed",
+    "gui_rendered": true,
+    "worker_verification_passed": true
+  },
+  "native_launch": {
+    "status": "passed",
+    "platform": "windows",
+    "native_main_window_found": true,
+    "window_titles": [
+      "_q_titlebar",
+      "CHO Cell Counter",
+      "Default IME"
+    ],
+    "exit_code": 0
+  },
+  "excluded_incompatible_build_host_dlls": [
+    "icuuc.dll",
+    "icudt78.dll"
+  ]
+}

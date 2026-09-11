@@ -1,0 +1,6 @@
+image,dtype,n_unique_raw_levels,detections,segmented_pixels,area_median_px,area_le_20_px_count,area_lt_25_px_count,peak_contrast_median,peak_contrast_lt_6_count,raw_max_le_15_count,single_seed_parent_count
+test1 LIVE,uint8,256,106,31357,261.0,0,0,129.37025353706736,0,0,20
+test1 DEAD,uint8,37,1402,33133,16.5,973,1121,5.029480244448141,1096,1199,1225
+S5 DEAD,uint8,55,248,6508,25.0,69,116,10.467981419701317,51,59,248
+S6 DEAD,uint8,100,327,9706,30.0,64,102,12.26254140606246,62,70,317
+S7 DEAD,uint8,92,213,6281,30.0,37,72,11.09028056406224,44,47,211

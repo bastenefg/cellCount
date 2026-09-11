@@ -1,0 +1,71 @@
+{
+  "code_sha256": {
+    "pipeline\\__init__.py": "2c6550c83b1689f7400a8eeacedc1bf115961ddb3513bb90f99a83f12023cb0e",
+    "pipeline\\cli.py": "0234c8f002d1660194f69ead4629b6d9b3aaaaa55c8171949daa8c9269e9f755",
+    "pipeline\\core.py": "82d09a74225752d829912b9ce58ac1b7ab0536a395dbf575c61743e752ba99e6",
+    "pipeline\\io.py": "ef96ec6d8fcea99cfb9c67dacd571a01dbb2e03da8f127f12a03cc8a39ee223b",
+    "pipeline\\reporting.py": "473ae57233c689274f5d6b92ded4bf86d84231e118ce7014470acaab909dff98",
+    "run_pipeline.py": "91d1c8b2eb91339c90a5f6bbb4f1786031026a743eb0b3a34c603cf53d6b98fe"
+  },
+  "config_sha256": "ce4e5b0c7976547ad2e9e04dc44ff2b9d011fbe3d57f815328c289d8ef57d544",
+  "ebfp_images_not_provided": 1,
+  "ebfp_images_provided": 0,
+  "environment": {
+    "PIL": "12.3.0",
+    "matplotlib": "3.10.8",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "platform": "Windows-10-10.0.19045-SP0",
+    "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+    "scipy": "1.17.0"
+  },
+  "extended_qc": false,
+  "finished_utc": "2026-09-09T22:39:23.145841+00:00",
+  "input_files": [
+    {
+      "bytes": 1050348,
+      "channel": "green",
+      "dtype": "uint8",
+      "filename": "test1_live.tif",
+      "image_id": "field_1",
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\images\\test1_live.tif",
+      "replicate_id": "sample_1",
+      "sha256": "35fac6320b0378b78e5f21e03bc73aaa242758831899d308354fbea8654d5be9",
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "bytes": 1050348,
+      "channel": "red",
+      "dtype": "uint8",
+      "filename": "test1_dead.tif",
+      "image_id": "field_1",
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\images\\test1_dead.tif",
+      "replicate_id": "sample_1",
+      "sha256": "619be3331b431d68419abf5f8541ce2c2b9215e5a702a2d1a77146ac4fdf3210",
+      "shape": [
+        1024,
+        1024
+      ]
+    }
+  ],
+  "input_manifest_sha256": "b44345b0b3d9cadf39c7fc361be9f9b1b023f7b10bb5d5409ffda08d5f6e5eb9",
+  "pipeline_version": "1.1.0",
+  "q_family": "all scorable objects across the complete input manifest for this run",
+  "reference_run": false,
+  "replicate_interpretation": {
+    "aggregation": "pool_nonoverlapping_fields_within_replicate_then_unweighted_replicate_mean_and_sample_sd",
+    "status": "S5-S7 treated as independent provisionally; physical gel identity unconfirmed"
+  },
+  "source_checksums_unchanged": true,
+  "started_utc": "2026-09-09T22:37:10.372924+00:00",
+  "status": "completed",
+  "warnings": [
+    "66 object masks lose overlapping pixels under the original last-write rule. Inspect mask_pixels_final and mask_pixels_overwritten; legacy behavior retained for reproducibility.",
+    "EBFP was not provided for 1 field(s). Their EBFP measurements are missing, not negative; live/dead analysis includes these fields.",
+    "1474 objects have unavailable/unscorable EBFP measurements. They are excluded from EBFP percentage denominators only; counts and reasons are reported separately.",
+    "Fewer than two replicate groups: between-replicate sample SD is undefined."
+  ]
+}

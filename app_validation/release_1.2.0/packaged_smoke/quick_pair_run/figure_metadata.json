@@ -1,0 +1,31 @@
+{
+  "crop_yx": [
+    320,
+    704,
+    320,
+    704
+  ],
+  "display": {
+    "central_crop_fraction": 0.375,
+    "ebfp": [
+      0,
+      34
+    ],
+    "green": [
+      0,
+      120
+    ],
+    "red": [
+      0,
+      30
+    ],
+    "scale_bar_um": 100
+  },
+  "n_fields_with_ebfp": 0,
+  "representative_ebfp_channel_provided": false,
+  "representative_image_id": "field_1",
+  "representative_source_channel_paths": {
+    "green": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\images\\test1_live.tif",
+    "red": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\images\\test1_dead.tif"
+  }
+}

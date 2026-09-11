@@ -1,0 +1,22 @@
+{
+  "double_positive_percent": {
+    "mean": 20.578769300056866,
+    "n_replicates_with_defined_metric": 3,
+    "sample_sd": 2.6327713084511184
+  },
+  "ebfp_all_percent": {
+    "mean": 37.18674922643879,
+    "n_replicates_with_defined_metric": 3,
+    "sample_sd": 2.316384979547648
+  },
+  "ebfp_live_percent": {
+    "mean": 80.55173528461017,
+    "n_replicates_with_defined_metric": 3,
+    "sample_sd": 4.2279118333161865
+  },
+  "viability_percent": {
+    "mean": 39.08257702986595,
+    "n_replicates_with_defined_metric": 3,
+    "sample_sd": 3.827715811611837
+  }
+}

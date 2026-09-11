@@ -1,0 +1,5 @@
+Analyzing alexandra_test1
+Computing threshold sensitivity
+replicate_id  n_fields  n_fields_with_ebfp  total  live_only  dead_only  double_positive  viability_percent  ebfp_all_count  ebfp_all_scorable  ebfp_all_unscorable  ebfp_all_percent  ebfp_live_count  ebfp_live_scorable  ebfp_live_unscorable  ebfp_live_percent  double_positive_percent  viability_excluding_double_percent  green_any_percent  ebfp_dead_count  ebfp_dead_percent  ebfp_channel_not_provided  ebfp_live_channel_not_provided
+       test1         1                   0   1474         72       1368               34           4.884668               0                  0                 1474               NaN                0                   0                    72                NaN                 2.306649                                 5.0           7.191316                0                NaN                       1474                              72
+Saved run: C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\runs\gui_existing_sample_validation

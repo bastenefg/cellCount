@@ -1,0 +1,32 @@
+{
+  "crop_yx": [
+    320,
+    704,
+    320,
+    704
+  ],
+  "display": {
+    "central_crop_fraction": 0.375,
+    "ebfp": [
+      0,
+      34
+    ],
+    "green": [
+      0,
+      120
+    ],
+    "red": [
+      0,
+      30
+    ],
+    "scale_bar_um": 100
+  },
+  "n_fields_with_ebfp": 3,
+  "representative_ebfp_channel_provided": true,
+  "representative_image_id": "S6",
+  "representative_source_channel_paths": {
+    "ebfp": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.2.0\\Live-Dead Cell Counter\\_internal\\reference\\raw\\CHO-S6-ebfp.tif",
+    "green": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.2.0\\Live-Dead Cell Counter\\_internal\\reference\\raw\\CHO-S6-live.tif",
+    "red": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.2.0\\Live-Dead Cell Counter\\_internal\\reference\\raw\\CHO-S6-dead.tif"
+  }
+}

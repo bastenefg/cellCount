@@ -1,0 +1,3 @@
+$ "C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\.venv\Scripts\python.exe" run_pipeline.py verify --run "C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\runs\gui_reference_validation"
+
+Verified unchanged source files, pipeline code, and saved outputs. This check does not re-run the analysis.

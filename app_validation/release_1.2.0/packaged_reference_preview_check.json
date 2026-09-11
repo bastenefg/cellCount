@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "image": "S5",
+  "different_pixels": {
+    "labels_green": 0,
+    "labels_red": 0,
+    "labels_objects": 0
+  }
+}

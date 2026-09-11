@@ -1,0 +1,3 @@
+# Preserve original bytes: PACKAGE_SHA256.json and run provenance hash files.
+# Text diffing still works; only automatic line-ending conversion is disabled.
+* -text

@@ -1,0 +1,505 @@
+{
+  "purpose": "Inspect raw input and unchanged segmentation, without choosing a target viability or biological ground truth.",
+  "baseline_red_labels_exactly_reproduced": true,
+  "baseline_segmentation": {
+    "background_sigma_px": 12,
+    "exclude_border": true,
+    "green": {
+      "high": 10,
+      "low": 5,
+      "min_area_px": 20,
+      "sigma_px": 1.2
+    },
+    "min_peak_distance_px": 6,
+    "peak_window_px": 7,
+    "red": {
+      "high": 4,
+      "low": 2,
+      "min_area_px": 12,
+      "sigma_px": 1
+    }
+  },
+  "sample_summary": {
+    "image_id": "alexandra_test1",
+    "replicate_id": "test1",
+    "ebfp_channel_provided": false,
+    "total": 1474,
+    "live_only": 72,
+    "dead_only": 1368,
+    "double_positive": 34,
+    "viability_percent": 4.884667571234735,
+    "ebfp_all_count": 0,
+    "ebfp_all_scorable": 0,
+    "ebfp_all_unscorable": 1474,
+    "ebfp_all_percent": "",
+    "ebfp_live_count": 0,
+    "ebfp_live_scorable": 0,
+    "ebfp_live_unscorable": 72,
+    "ebfp_live_percent": "",
+    "double_positive_percent": 2.306648575305292,
+    "viability_excluding_double_percent": 5.0,
+    "green_any_percent": 7.191316146540027,
+    "ebfp_dead_count": 0,
+    "ebfp_dead_percent": "",
+    "ebfp_channel_not_provided": 1474,
+    "ebfp_live_channel_not_provided": 72,
+    "detected_objects_per_mm2": 272.1472442900426
+  },
+  "images": [
+    {
+      "image": "test1 LIVE",
+      "shape": [
+        1024,
+        1024
+      ],
+      "dtype": "uint8",
+      "n_unique_raw_levels": 256,
+      "raw_percentiles": {
+        "0": 0.0,
+        "25": 1.0,
+        "50": 1.0,
+        "75": 2.0,
+        "90": 5.0,
+        "95": 19.0,
+        "99": 167.0,
+        "99.9": 255.0,
+        "100": 255.0
+      },
+      "most_common_raw_levels": [
+        {
+          "value": 1,
+          "pixels": 655869,
+          "percent": 62.54854202270508
+        },
+        {
+          "value": 2,
+          "pixels": 194597,
+          "percent": 18.558216094970703
+        },
+        {
+          "value": 4,
+          "pixels": 40567,
+          "percent": 3.8687705993652344
+        },
+        {
+          "value": 0,
+          "pixels": 37750,
+          "percent": 3.6001205444335938
+        },
+        {
+          "value": 5,
+          "pixels": 17121,
+          "percent": 1.6327857971191406
+        },
+        {
+          "value": 7,
+          "pixels": 11796,
+          "percent": 1.1249542236328125
+        },
+        {
+          "value": 8,
+          "pixels": 7005,
+          "percent": 0.6680488586425781
+        },
+        {
+          "value": 10,
+          "pixels": 6229,
+          "percent": 0.5940437316894531
+        },
+        {
+          "value": 255,
+          "pixels": 5625,
+          "percent": 0.5364418029785156
+        },
+        {
+          "value": 13,
+          "pixels": 4103,
+          "percent": 0.3912925720214844
+        },
+        {
+          "value": 11,
+          "pixels": 3648,
+          "percent": 0.347900390625
+        },
+        {
+          "value": 16,
+          "pixels": 2795,
+          "percent": 0.2665519714355469
+        }
+      ],
+      "detections": 106,
+      "segmented_pixels": 31357,
+      "area_median_px": 261.0,
+      "area_le_20_px_count": 0,
+      "area_lt_25_px_count": 0,
+      "peak_contrast_median": 129.37025353706736,
+      "peak_contrast_lt_6_count": 0,
+      "raw_max_le_15_count": 0,
+      "single_seed_parent_count": 20
+    },
+    {
+      "image": "test1 DEAD",
+      "shape": [
+        1024,
+        1024
+      ],
+      "dtype": "uint8",
+      "n_unique_raw_levels": 37,
+      "raw_percentiles": {
+        "0": 0.0,
+        "25": 0.0,
+        "50": 0.0,
+        "75": 0.0,
+        "90": 15.0,
+        "95": 15.0,
+        "99": 15.0,
+        "99.9": 31.0,
+        "100": 255.0
+      },
+      "most_common_raw_levels": [
+        {
+          "value": 0,
+          "pixels": 919638,
+          "percent": 87.7035140991211
+        },
+        {
+          "value": 15,
+          "pixels": 126322,
+          "percent": 12.047004699707031
+        },
+        {
+          "value": 31,
+          "pixels": 1789,
+          "percent": 0.17061233520507812
+        },
+        {
+          "value": 47,
+          "pixels": 438,
+          "percent": 0.04177093505859375
+        },
+        {
+          "value": 63,
+          "pixels": 139,
+          "percent": 0.013256072998046875
+        },
+        {
+          "value": 79,
+          "pixels": 70,
+          "percent": 0.00667572021484375
+        },
+        {
+          "value": 95,
+          "pixels": 39,
+          "percent": 0.003719329833984375
+        },
+        {
+          "value": 127,
+          "pixels": 18,
+          "percent": 0.00171661376953125
+        },
+        {
+          "value": 49,
+          "pixels": 17,
+          "percent": 0.001621246337890625
+        },
+        {
+          "value": 33,
+          "pixels": 16,
+          "percent": 0.00152587890625
+        },
+        {
+          "value": 111,
+          "pixels": 14,
+          "percent": 0.00133514404296875
+        },
+        {
+          "value": 65,
+          "pixels": 11,
+          "percent": 0.001049041748046875
+        }
+      ],
+      "detections": 1402,
+      "segmented_pixels": 33133,
+      "area_median_px": 16.5,
+      "area_le_20_px_count": 973,
+      "area_lt_25_px_count": 1121,
+      "peak_contrast_median": 5.029480244448141,
+      "peak_contrast_lt_6_count": 1096,
+      "raw_max_le_15_count": 1199,
+      "single_seed_parent_count": 1225
+    },
+    {
+      "image": "S5 DEAD",
+      "shape": [
+        1024,
+        1024
+      ],
+      "dtype": "uint8",
+      "n_unique_raw_levels": 55,
+      "raw_percentiles": {
+        "0": 0.0,
+        "25": 0.0,
+        "50": 0.0,
+        "75": 0.0,
+        "90": 0.0,
+        "95": 3.0,
+        "99": 4.0,
+        "99.9": 14.0,
+        "100": 84.0
+      },
+      "most_common_raw_levels": [
+        {
+          "value": 0,
+          "pixels": 991227,
+          "percent": 94.5307731628418
+        },
+        {
+          "value": 3,
+          "pixels": 26097,
+          "percent": 2.4888038635253906
+        },
+        {
+          "value": 4,
+          "pixels": 25726,
+          "percent": 2.4534225463867188
+        },
+        {
+          "value": 7,
+          "pixels": 2782,
+          "percent": 0.26531219482421875
+        },
+        {
+          "value": 10,
+          "pixels": 862,
+          "percent": 0.08220672607421875
+        },
+        {
+          "value": 6,
+          "pixels": 444,
+          "percent": 0.0423431396484375
+        },
+        {
+          "value": 13,
+          "pixels": 328,
+          "percent": 0.031280517578125
+        },
+        {
+          "value": 20,
+          "pixels": 155,
+          "percent": 0.014781951904296875
+        },
+        {
+          "value": 17,
+          "pixels": 151,
+          "percent": 0.014400482177734375
+        },
+        {
+          "value": 14,
+          "pixels": 117,
+          "percent": 0.011157989501953125
+        },
+        {
+          "value": 16,
+          "pixels": 102,
+          "percent": 0.00972747802734375
+        },
+        {
+          "value": 23,
+          "pixels": 90,
+          "percent": 0.00858306884765625
+        }
+      ],
+      "detections": 248,
+      "segmented_pixels": 6508,
+      "area_median_px": 25.0,
+      "area_le_20_px_count": 69,
+      "area_lt_25_px_count": 116,
+      "peak_contrast_median": 10.467981419701317,
+      "peak_contrast_lt_6_count": 51,
+      "raw_max_le_15_count": 59,
+      "single_seed_parent_count": 248
+    },
+    {
+      "image": "S6 DEAD",
+      "shape": [
+        1024,
+        1024
+      ],
+      "dtype": "uint8",
+      "n_unique_raw_levels": 100,
+      "raw_percentiles": {
+        "0": 0.0,
+        "25": 0.0,
+        "50": 0.0,
+        "75": 0.0,
+        "90": 0.0,
+        "95": 3.0,
+        "99": 4.0,
+        "99.9": 23.0,
+        "100": 222.0
+      },
+      "most_common_raw_levels": [
+        {
+          "value": 0,
+          "pixels": 968255,
+          "percent": 92.33999252319336
+        },
+        {
+          "value": 3,
+          "pixels": 36020,
+          "percent": 3.4351348876953125
+        },
+        {
+          "value": 4,
+          "pixels": 35902,
+          "percent": 3.4238815307617188
+        },
+        {
+          "value": 7,
+          "pixels": 4323,
+          "percent": 0.4122734069824219
+        },
+        {
+          "value": 10,
+          "pixels": 1141,
+          "percent": 0.10881423950195312
+        },
+        {
+          "value": 6,
+          "pixels": 593,
+          "percent": 0.056552886962890625
+        },
+        {
+          "value": 13,
+          "pixels": 416,
+          "percent": 0.0396728515625
+        },
+        {
+          "value": 17,
+          "pixels": 219,
+          "percent": 0.020885467529296875
+        },
+        {
+          "value": 20,
+          "pixels": 217,
+          "percent": 0.020694732666015625
+        },
+        {
+          "value": 14,
+          "pixels": 149,
+          "percent": 0.014209747314453125
+        },
+        {
+          "value": 16,
+          "pixels": 137,
+          "percent": 0.013065338134765625
+        },
+        {
+          "value": 23,
+          "pixels": 129,
+          "percent": 0.012302398681640625
+        }
+      ],
+      "detections": 327,
+      "segmented_pixels": 9706,
+      "area_median_px": 30.0,
+      "area_le_20_px_count": 64,
+      "area_lt_25_px_count": 102,
+      "peak_contrast_median": 12.26254140606246,
+      "peak_contrast_lt_6_count": 62,
+      "raw_max_le_15_count": 70,
+      "single_seed_parent_count": 317
+    },
+    {
+      "image": "S7 DEAD",
+      "shape": [
+        1024,
+        1024
+      ],
+      "dtype": "uint8",
+      "n_unique_raw_levels": 92,
+      "raw_percentiles": {
+        "0": 0.0,
+        "25": 0.0,
+        "50": 0.0,
+        "75": 0.0,
+        "90": 0.0,
+        "95": 3.0,
+        "99": 4.0,
+        "99.9": 16.0,
+        "100": 206.0
+      },
+      "most_common_raw_levels": [
+        {
+          "value": 0,
+          "pixels": 979564,
+          "percent": 93.41850280761719
+        },
+        {
+          "value": 3,
+          "pixels": 31623,
+          "percent": 3.0158042907714844
+        },
+        {
+          "value": 4,
+          "pixels": 31341,
+          "percent": 2.988910675048828
+        },
+        {
+          "value": 7,
+          "pixels": 3308,
+          "percent": 0.3154754638671875
+        },
+        {
+          "value": 10,
+          "pixels": 733,
+          "percent": 0.06990432739257812
+        },
+        {
+          "value": 6,
+          "pixels": 487,
+          "percent": 0.046443939208984375
+        },
+        {
+          "value": 13,
+          "pixels": 284,
+          "percent": 0.0270843505859375
+        },
+        {
+          "value": 17,
+          "pixels": 168,
+          "percent": 0.016021728515625
+        },
+        {
+          "value": 20,
+          "pixels": 125,
+          "percent": 0.011920928955078125
+        },
+        {
+          "value": 14,
+          "pixels": 99,
+          "percent": 0.009441375732421875
+        },
+        {
+          "value": 16,
+          "pixels": 82,
+          "percent": 0.00782012939453125
+        },
+        {
+          "value": 23,
+          "pixels": 68,
+          "percent": 0.0064849853515625
+        }
+      ],
+      "detections": 213,
+      "segmented_pixels": 6281,
+      "area_median_px": 30.0,
+      "area_le_20_px_count": 37,
+      "area_lt_25_px_count": 72,
+      "peak_contrast_median": 11.09028056406224,
+      "peak_contrast_lt_6_count": 44,
+      "raw_max_le_15_count": 47,
+      "single_seed_parent_count": 211
+    }
+  ]
+}

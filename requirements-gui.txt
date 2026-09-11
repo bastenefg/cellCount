@@ -1,0 +1,4 @@
+# Adds only the desktop interface; the scientific lock remains authoritative.
+-r requirements-lock.txt
+PySide6-Essentials==6.11.2
+shiboken6==6.11.2

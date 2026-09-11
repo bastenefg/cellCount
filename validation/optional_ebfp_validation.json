@@ -1,0 +1,22 @@
+{
+  "live_dead_only": {
+    "status": "passed",
+    "viability_counts_and_fractions_match_full_ebfp_reference": true,
+    "exact_label_arrays": 9,
+    "missing_ebfp_object_rows": 1297,
+    "missing_ebfp_is_NA_not_negative": true,
+    "extended_qc": "skipped with no EBFP",
+    "figure_visually_reviewed": true,
+    "source_code_output_checksum_verification": "passed"
+  },
+  "mixed": {
+    "status": "passed",
+    "viability_counts_and_fractions_match_full_ebfp_reference": true,
+    "exact_label_arrays": 9,
+    "missing_ebfp_object_rows": 526,
+    "missing_ebfp_is_NA_not_negative": true,
+    "extended_qc": "completed on available EBFP",
+    "figure_visually_reviewed": true,
+    "source_code_output_checksum_verification": "passed"
+  }
+}

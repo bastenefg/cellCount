@@ -1,0 +1,22 @@
+{
+  "double_positive_percent": {
+    "mean": 2.306648575305292,
+    "n_replicates_with_defined_metric": 1,
+    "sample_sd": null
+  },
+  "ebfp_all_percent": {
+    "mean": null,
+    "n_replicates_with_defined_metric": 0,
+    "sample_sd": null
+  },
+  "ebfp_live_percent": {
+    "mean": null,
+    "n_replicates_with_defined_metric": 0,
+    "sample_sd": null
+  },
+  "viability_percent": {
+    "mean": 4.884667571234735,
+    "n_replicates_with_defined_metric": 1,
+    "sample_sd": null
+  }
+}

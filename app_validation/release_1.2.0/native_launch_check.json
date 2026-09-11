@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "tracked_pid": 36480,
+  "platform": "windows",
+  "hidden_startup_requested": true,
+  "window_titles": [
+    "_q_titlebar",
+    "Live/Dead Cell Counter",
+    "Default IME"
+  ],
+  "exit_code": 0,
+  "other_app_processes_touched": false
+}

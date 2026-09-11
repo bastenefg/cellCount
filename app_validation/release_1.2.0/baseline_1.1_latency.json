@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "version": "1.1.0",
+  "metric": "Full-image one-shot frozen preview worker launch to exit, excluding GUI debounce and drawing",
+  "image": "test1",
+  "timings": [
+    {
+      "red_high": 4,
+      "seconds": 13.855240500008222,
+      "counts": {
+        "green_detections": 106,
+        "red_detections": 1402,
+        "live_only": 72,
+        "dead_only": 1368,
+        "double_positive": 34,
+        "total": 1474,
+        "viability_percent": 4.884667571234735
+      }
+    },
+    {
+      "red_high": 5,
+      "seconds": 9.759808800008614,
+      "counts": {
+        "green_detections": 106,
+        "red_detections": 726,
+        "live_only": 84,
+        "dead_only": 704,
+        "double_positive": 22,
+        "total": 810,
+        "viability_percent": 10.37037037037037
+      }
+    },
+    {
+      "red_high": 6,
+      "seconds": 8.018035100016277,
+      "counts": {
+        "green_detections": 106,
+        "red_detections": 307,
+        "live_only": 89,
+        "dead_only": 290,
+        "double_positive": 17,
+        "total": 396,
+        "viability_percent": 22.474747474747474
+      }
+    }
+  ]
+}

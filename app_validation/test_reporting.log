@@ -1,0 +1,9 @@
+$ "C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\.venv\Scripts\python.exe" -m unittest discover -s tests -p test_reporting.py -v
+
+test_pool_fields_before_computing_between_gel_statistics (test_reporting.ReportingCorrectnessTests.test_pool_fields_before_computing_between_gel_statistics) ... ok
+test_unscorable_ebfp_is_reported_without_calling_it_negative (test_reporting.ReportingCorrectnessTests.test_unscorable_ebfp_is_reported_without_calling_it_negative) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.127s
+
+OK

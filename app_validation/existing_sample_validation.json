@@ -1,0 +1,445 @@
+{
+  "status": "passed",
+  "purpose": "GUI adapter fidelity for existing, explicitly assigned test1 dataset; not biological validation of acquisition settings",
+  "environment": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.19045-SP0",
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "pandas": "2.2.3",
+    "PIL": "12.3.0",
+    "matplotlib": "3.10.8"
+  },
+  "run_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\runs\\gui_existing_sample_validation",
+  "source_manifest": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\samples.csv",
+  "assigned_rows": [
+    {
+      "image_id": "alexandra_test1",
+      "replicate_id": "test1",
+      "green": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\images\\test1_live.tif",
+      "red": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\images\\test1_dead.tif",
+      "ebfp": ""
+    }
+  ],
+  "worker_command": [
+    "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\run_app.py",
+    "--pipeline",
+    "analyze",
+    "--manifest",
+    "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\runs\\.cho_inputs\\gui_existing_sample_validation_0d9fa686\\samples.csv",
+    "--config",
+    "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\runs\\.cho_inputs\\gui_existing_sample_validation_0d9fa686\\config.json",
+    "--output",
+    "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\runs\\gui_existing_sample_validation",
+    "--log",
+    "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\runs\\gui_existing_sample_validation.log"
+  ],
+  "worker_log": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\runs\\gui_existing_sample_validation.log",
+  "elapsed_seconds": 103.64,
+  "worker_exit_code": 0,
+  "verify_exit_code": 0,
+  "compared_run": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\runs\\new_experiment",
+  "mask_comparisons": [
+    {
+      "image_id": "alexandra_test1",
+      "labels": "live",
+      "shape": [
+        1024,
+        1024
+      ],
+      "different_pixels": 0
+    },
+    {
+      "image_id": "alexandra_test1",
+      "labels": "dead",
+      "shape": [
+        1024,
+        1024
+      ],
+      "different_pixels": 0
+    },
+    {
+      "image_id": "alexandra_test1",
+      "labels": "objects",
+      "shape": [
+        1024,
+        1024
+      ],
+      "different_pixels": 0
+    }
+  ],
+  "tables_match_previous_run": true,
+  "numeric_table_tolerance": {
+    "atol": 1e-12,
+    "rtol": 1e-12
+  },
+  "object_records_checked": 1474,
+  "missing_ebfp_remains_undefined": true,
+  "desktop_result_reader_passed": true,
+  "displayed_viability": [
+    "4.9%",
+    "1 replicate group \u00b7 SD undefined"
+  ],
+  "displayed_ebfp": [
+    "Not measured",
+    "No defined measurements"
+  ],
+  "image_summary": [
+    {
+      "image_id": "alexandra_test1",
+      "replicate_id": "test1",
+      "ebfp_channel_provided": "False",
+      "total": "1474",
+      "live_only": "72",
+      "dead_only": "1368",
+      "double_positive": "34",
+      "viability_percent": "4.884667571234735",
+      "ebfp_all_count": "0",
+      "ebfp_all_scorable": "0",
+      "ebfp_all_unscorable": "1474",
+      "ebfp_all_percent": "",
+      "ebfp_live_count": "0",
+      "ebfp_live_scorable": "0",
+      "ebfp_live_unscorable": "72",
+      "ebfp_live_percent": "",
+      "double_positive_percent": "2.306648575305292",
+      "viability_excluding_double_percent": "5.0",
+      "green_any_percent": "7.191316146540027",
+      "ebfp_dead_count": "0",
+      "ebfp_dead_percent": "",
+      "ebfp_channel_not_provided": "1474",
+      "ebfp_live_channel_not_provided": "72",
+      "detected_objects_per_mm2": "272.1472442900426"
+    }
+  ],
+  "original_config_unchanged": true,
+  "release_hashes": {
+    ".python-version": {
+      "sha256": "aa0d6581054e6e4ff3f91839deca7a854ad37221b8784d060b42d0f847ff1a3b",
+      "matches_release": true
+    },
+    "CHANGELOG.md": {
+      "sha256": "ea531eb389b9328e4dd2d8a6612ddee70972454bf2e6816ee5898df0548a91a1",
+      "matches_release": true
+    },
+    "CODEX_PROMPT.md": {
+      "sha256": "22306457b8d0b319f25a55e175ae5e77eadff14adbe66ebe453e518de917db50",
+      "matches_release": true
+    },
+    "README.md": {
+      "sha256": "cada73438b8b5df5d1c2619a056876ca8a9b3c14c5c62a791a7b0d4501ee9dfe",
+      "matches_release": true
+    },
+    "configs/reference_48h.json": {
+      "sha256": "1e5e9d6e3af9b16c3f91c83e2b53ebe10a57e0955b626091f351628618b10006",
+      "matches_release": true
+    },
+    "pipeline/__init__.py": {
+      "sha256": "2c6550c83b1689f7400a8eeacedc1bf115961ddb3513bb90f99a83f12023cb0e",
+      "matches_release": true
+    },
+    "pipeline/cli.py": {
+      "sha256": "0234c8f002d1660194f69ead4629b6d9b3aaaaa55c8171949daa8c9269e9f755",
+      "matches_release": true
+    },
+    "pipeline/core.py": {
+      "sha256": "82d09a74225752d829912b9ce58ac1b7ab0536a395dbf575c61743e752ba99e6",
+      "matches_release": true
+    },
+    "pipeline/io.py": {
+      "sha256": "ef96ec6d8fcea99cfb9c67dacd571a01dbb2e03da8f127f12a03cc8a39ee223b",
+      "matches_release": true
+    },
+    "pipeline/reporting.py": {
+      "sha256": "473ae57233c689274f5d6b92ded4bf86d84231e118ce7014470acaab909dff98",
+      "matches_release": true
+    },
+    "reference/ORIGINAL_ANALYSIS_REPORT.md": {
+      "sha256": "a5be63f789bd57839b905ee20046be02ad302fa9f96b4b30b16e5980726e58f6",
+      "matches_release": true
+    },
+    "reference/expected/S5_green.csv": {
+      "sha256": "6ea659d8d8513a808c62257532aeee76be8f408f2878f904c99e1e94d0896a89",
+      "matches_release": true
+    },
+    "reference/expected/S5_masks.npz": {
+      "sha256": "0fc2b7978535c5cd1a35bd45876f58e13e36f9b00d47bc38cf08bbf48377a5f6",
+      "matches_release": true
+    },
+    "reference/expected/S5_objects.csv": {
+      "sha256": "8aa355e336cfd133032fc80dcc415918e9cd777b77e60426b58c758caccff124",
+      "matches_release": true
+    },
+    "reference/expected/S5_red.csv": {
+      "sha256": "49463a55c3ab10662741903433b6b71844d54c81fe165548a00c58560b2b28cd",
+      "matches_release": true
+    },
+    "reference/expected/S6_green.csv": {
+      "sha256": "9b532d84d52adb9c1e616cca5f38bcd46e9055d389269c7c8ba4f40e37945454",
+      "matches_release": true
+    },
+    "reference/expected/S6_masks.npz": {
+      "sha256": "8d4736a074848af2e98b173fec510f53adb0d3e09b635324ca0947732dc41d4b",
+      "matches_release": true
+    },
+    "reference/expected/S6_objects.csv": {
+      "sha256": "7ad92320216801964b9fa52800c142d5e80e82b399f8fda933819c01f4ffc308",
+      "matches_release": true
+    },
+    "reference/expected/S6_red.csv": {
+      "sha256": "a180fe2ffec9ad636f355d67ff341af6bb92067cfa181f0682bcccc93fa62ba3",
+      "matches_release": true
+    },
+    "reference/expected/S7_green.csv": {
+      "sha256": "0d6835cff8c60edd8b510b456aae95ae9b09122803f68d786f02616953cc39ac",
+      "matches_release": true
+    },
+    "reference/expected/S7_masks.npz": {
+      "sha256": "2f71bb3490ffa5c2b2340f11234b9b2ea2db4e90518c9f97c726538a62a85c0a",
+      "matches_release": true
+    },
+    "reference/expected/S7_objects.csv": {
+      "sha256": "03e9e515b2b3ade2600664b3428524e9fad2e4daf347d9d0bea2bc9739cb2578",
+      "matches_release": true
+    },
+    "reference/expected/S7_red.csv": {
+      "sha256": "a6da0c6fcfed7fc183e571f5c7699498e96112bb7e4b00ad2cff8e428afb2724",
+      "matches_release": true
+    },
+    "reference/expected/aggregate_summary.json": {
+      "sha256": "ef7a3646aa16c08d3a346abf7cdb30c60f077066084183fb2ea8eb9e2460e779",
+      "matches_release": true
+    },
+    "reference/expected/ebfp_methods.json": {
+      "sha256": "7842157f11d4303aa2d5979a9232a42076fcef12be7181ceb21b87870d7a83eb",
+      "matches_release": true
+    },
+    "reference/expected/ebfp_objects.csv": {
+      "sha256": "ed2082e818c60c82d557f3ecd84d22ba8955ab6a9b93a5987e598132ae7b4777",
+      "matches_release": true
+    },
+    "reference/expected/ebfp_summary.json": {
+      "sha256": "8efc08fe5683f7779155658782b67191d27898aaa2a97a0bc5aadde089e235fa",
+      "matches_release": true
+    },
+    "reference/expected/ebfp_validation.csv": {
+      "sha256": "ecced9140f226ab343de9a25f23aac65cac1613f86a9aaa88b103437ccbdea46",
+      "matches_release": true
+    },
+    "reference/expected/independent_component_sensitivity.csv": {
+      "sha256": "69003b1e920735f9b4a1435c91a5e1e5891d5fd5a8d2fc52c90b57b01ee69da6",
+      "matches_release": true
+    },
+    "reference/expected/source_manifest.json": {
+      "sha256": "30309c04add5f3f83fe698fa4b977cc648f01741eb96b996e0bc657a55000cae",
+      "matches_release": true
+    },
+    "reference/expected/summary.csv": {
+      "sha256": "61f68291bd2e41971d45f765c565b7f5ae2e19671c87db5207859ecd98a7e61a",
+      "matches_release": true
+    },
+    "reference/expected/threshold_sensitivity.csv": {
+      "sha256": "51552ee163c5c6b9acae09ea360ad5a9faa926713df2e7236fe08f27b0ad6dcf",
+      "matches_release": true
+    },
+    "reference/original_code/ebfp_qc.py": {
+      "sha256": "cbb950422b03351e3d5f15e13dd3ccec04a2526bea814e5d84cd16b463d96ac7",
+      "matches_release": true
+    },
+    "reference/original_code/environment.json": {
+      "sha256": "d112a44299b69a95965518baad14f19cdff960908d604ce26edbfcbcbd0d2989",
+      "matches_release": true
+    },
+    "reference/original_code/make_figure.py": {
+      "sha256": "e35326882fe5be2f6e11e998825cea65001d8ca35bab470e6e2688e5fd76017f",
+      "matches_release": true
+    },
+    "reference/original_code/make_qc.py": {
+      "sha256": "3b23284fc3480345406f1c8cbb2526b54755537d95aae6786118bc3923d02952",
+      "matches_release": true
+    },
+    "reference/original_code/run_all.py": {
+      "sha256": "4565668ad5ac555918092f87d840349de16df18a2cc96e1b2cdb659c78016a4f",
+      "matches_release": true
+    },
+    "reference/original_code/segment.py": {
+      "sha256": "28b449133f2d4980a2fc1c2685ad0503640f6a22ce27e64db2204dbba23af6d6",
+      "matches_release": true
+    },
+    "reference/original_code/sensitivity.py": {
+      "sha256": "04660b9541fb67ae31ed396b77186645f99fa06bc66c68020cb0efc9e9eebde7",
+      "matches_release": true
+    },
+    "reference/original_code/summarize.py": {
+      "sha256": "bce7888e3c73df6ab66bab7ad750233a318ab93bfbe65e5546a9403304ff78d4",
+      "matches_release": true
+    },
+    "reference/raw/CHO-S5-dead.tif": {
+      "sha256": "a74d4806cb81965469c75cc76d7750d9c0a9142a6fc32a97e5dfc5e526d74018",
+      "matches_release": true
+    },
+    "reference/raw/CHO-S5-ebfp.tif": {
+      "sha256": "cf278251754407fadb43ba7a0ef3d1ba406252fa1b92f13ddacc9b1b165116e5",
+      "matches_release": true
+    },
+    "reference/raw/CHO-S5-live.tif": {
+      "sha256": "d2c01fd50b2aac03314fb97e53233d1fc6002e2741f8a4d49dfe3dbc3c5141bf",
+      "matches_release": true
+    },
+    "reference/raw/CHO-S6-dead.tif": {
+      "sha256": "ddc6f7a060029e42777427a2824a0b9999514460e521698d91a78f741534fc18",
+      "matches_release": true
+    },
+    "reference/raw/CHO-S6-ebfp.tif": {
+      "sha256": "cef34b0b44d6cc3d666ac62c27a25f30bef49568012f765a6245efaaea825e01",
+      "matches_release": true
+    },
+    "reference/raw/CHO-S6-live.tif": {
+      "sha256": "233685f54f67ab5f9d7b548d75e8b38ea7703c97283e2e8049d433163d283509",
+      "matches_release": true
+    },
+    "reference/raw/CHO-S7-dead.tif": {
+      "sha256": "351411df5dd48b4be4f786d47d2dd6e5c19ee0dfecd1e9d22f0c6caa95ef8221",
+      "matches_release": true
+    },
+    "reference/raw/CHO-S7-ebfp.tif": {
+      "sha256": "a17ad6d08070afede195ab9a11b7a241eb98436eb8e2d9b03be7e0e6e8f604a6",
+      "matches_release": true
+    },
+    "reference/raw/CHO-S7-live.tif": {
+      "sha256": "e913c88c4a8700cbe88cd0004c48cccffc7b6e9d1a2c12a14ed327ae1aa5f665",
+      "matches_release": true
+    },
+    "reference/samples.csv": {
+      "sha256": "ac37cbc8281cd26ad11b16077a8ac17e338b24cccf1dfc3c2d4f7fe2c5467733",
+      "matches_release": true
+    },
+    "requirements-lock.txt": {
+      "sha256": "5cc8e727d70809e1f7dfacad8750f1ffc11ba63644eb37e06e60b323aaacda98",
+      "matches_release": true
+    },
+    "requirements.txt": {
+      "sha256": "859a90b1c8c307570c207cf46839dff02c0342467bd2cffdc460d7bee782efc0",
+      "matches_release": true
+    },
+    "run_pipeline.py": {
+      "sha256": "91d1c8b2eb91339c90a5f6bbb4f1786031026a743eb0b3a34c603cf53d6b98fe",
+      "matches_release": true
+    },
+    "samples_live_dead_template.csv": {
+      "sha256": "90dbbca3fe7d2191ba2702ac56912baf74345e87fea9ffd7d4fcc97e62f6124e",
+      "matches_release": true
+    },
+    "samples_template.csv": {
+      "sha256": "c11ace17126fd8022915e07b57d28571c9de10e5ca7ee0fe681c3da523cf7a5b",
+      "matches_release": true
+    },
+    "tests/test_core.py": {
+      "sha256": "d41a5fa5335cd5e6fff152d9bfb32a657ecda82b83279667dd92db2d921f5d79",
+      "matches_release": true
+    },
+    "tests/test_optional_ebfp.py": {
+      "sha256": "b595f33359fb4ff69608bef3af1923bce0b5719f1642f617d61c0c3dcbaea9b7",
+      "matches_release": true
+    },
+    "tests/test_reporting.py": {
+      "sha256": "0cd76db922b45a3d4cfae31cd339858ff9e77b15f1a67a6ae0f64f64c9bde92c",
+      "matches_release": true
+    },
+    "validation/aggregate_summary.json": {
+      "sha256": "a1e332dbdf1239706d3c159058b07199a8bf79cc974eb7dd737d432c8292ec0a",
+      "matches_release": true
+    },
+    "validation/figure.png": {
+      "sha256": "cad4a270332f045fda413a38f73c167f4cf51cc85ae83d9154c88e2b425b99e5",
+      "matches_release": true
+    },
+    "validation/figure.svg": {
+      "sha256": "bd417a80cc4abaf701c1042f64326575e4b332ac7ccd2fb43d917b891cbfb042",
+      "matches_release": true
+    },
+    "validation/image_summary.csv": {
+      "sha256": "b5dbcdff50b0efa5f1e0253598a9fb25d7dccfaaa767521358e054ae1397461b",
+      "matches_release": true
+    },
+    "validation/live_dead_only/aggregate_summary.json": {
+      "sha256": "91279d2ea5d4d11e2a51b37f28d0e53e0d5ec47d4a809d5bd3eb79732cbc06ee",
+      "matches_release": true
+    },
+    "validation/live_dead_only/execution.log": {
+      "sha256": "132a8cf3e7c47b26f89051b995c1b8782941a3ae1b2da5cfed49977fac1c55cf",
+      "matches_release": true
+    },
+    "validation/live_dead_only/figure.png": {
+      "sha256": "5b2151c7bb694d79955dbaec3e05e4cce269601b0701e3bee0662abd0255009d",
+      "matches_release": true
+    },
+    "validation/live_dead_only/image_summary.csv": {
+      "sha256": "494e2318e595751c4d58f58810ae0ac4da7f7ef9e2175d6f15e70aa923eddcca",
+      "matches_release": true
+    },
+    "validation/live_dead_only/replicate_summary.csv": {
+      "sha256": "86073bc6a240f26df841c6530272f3aeedb8de6fd37bedfe352393e31c264fb5",
+      "matches_release": true
+    },
+    "validation/live_dead_only/run_manifest.json": {
+      "sha256": "8cb26e7fc7b3ab230c841ce7ce1d6ff94c5bb52669aa6f5c67ddda73cdffb3e9",
+      "matches_release": true
+    },
+    "validation/mixed/aggregate_summary.json": {
+      "sha256": "32b58af9a0bc7f5a384f52057e63dcb9c3ad525dc7923e7b498c2f741121fdf6",
+      "matches_release": true
+    },
+    "validation/mixed/execution.log": {
+      "sha256": "08517222dcd8199139de1766ca43c56344859fa8149b6d7fdd1420896790a292",
+      "matches_release": true
+    },
+    "validation/mixed/figure.png": {
+      "sha256": "7818113b025d1db4027482ff35430c48c18ba53941cec58d4fea2b0d9ccaebbd",
+      "matches_release": true
+    },
+    "validation/mixed/image_summary.csv": {
+      "sha256": "0e42041964b2b7ea02525162854eeaa1f02cd6477876818bb521fac3a952219b",
+      "matches_release": true
+    },
+    "validation/mixed/replicate_summary.csv": {
+      "sha256": "c01b342234fb88499f79e45e8294c7ef9ff8d2a96c01036f4ff4bcdd4df97b4d",
+      "matches_release": true
+    },
+    "validation/mixed/run_manifest.json": {
+      "sha256": "c18999e26a0249a4ba42f93105b141960be7f0b78bae1b4a993ecd8469ba34ff",
+      "matches_release": true
+    },
+    "validation/optional_ebfp_validation.json": {
+      "sha256": "2ccc111f4f38ed46d6c0b91339ec2ed9143fbe9760a7ecd91c309c2ec7c4edfd",
+      "matches_release": true
+    },
+    "validation/reference_execution.log": {
+      "sha256": "93787023ee00e50e2a27dfc8d7966b203bb49eabb4152547c63157fada5bdfbe",
+      "matches_release": true
+    },
+    "validation/reference_validation.json": {
+      "sha256": "ecd5cfd7691c61e4be8dc583f71ee4992a4fb7c7d91836876a9715c02a594b16",
+      "matches_release": true
+    },
+    "validation/replicate_summary.csv": {
+      "sha256": "5c22bf22b4b0c8ce184256d523691b3c9a9c965dbc57471f186342681a31c2b5",
+      "matches_release": true
+    },
+    "validation/run_manifest.json": {
+      "sha256": "59a433358abb7a7b359be401bb16a61db62f752012e5b9f3249b89b484c46491",
+      "matches_release": true
+    },
+    "validation/unit_tests.log": {
+      "sha256": "54950e42e526bdcefab1b65c13ed642597d3616da81a277223828b9a286dd247",
+      "matches_release": true
+    },
+    "validation/verification_summary.json": {
+      "sha256": "947e2fb1fbdf79f0a37b175cc497c721e15a4818c1982b41a66d3e047324d9e4",
+      "matches_release": true
+    }
+  },
+  "original_release_files_checked": 81,
+  "original_release_files_unchanged": true
+}

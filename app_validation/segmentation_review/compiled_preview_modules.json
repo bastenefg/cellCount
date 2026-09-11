@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "modules": [
+    "desktop.segmentation",
+    "desktop.segmentation_dialog",
+    "desktop.segmentation_view",
+    "desktop.smoke"
+  ]
+}

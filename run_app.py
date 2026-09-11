@@ -1,0 +1,58 @@
+"""Desktop entry point. The scientific command-line implementation is unchanged."""
+from pathlib import Path
+import os
+import sys
+
+
+def main():
+    if "--preview-server" in sys.argv:
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--preview-server", type=Path, required=True)
+        parser.add_argument("--parent-pid", type=int)
+        args = parser.parse_args()
+        from desktop.preview_server import serve
+        return serve(args.preview_server, args.parent_pid)
+    if "--segmentation-preview" in sys.argv:
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--segmentation-preview", type=Path, required=True)
+        parser.add_argument("--preview-output", type=Path, required=True)
+        args = parser.parse_args()
+        from desktop.segmentation import write_preview
+        return write_preview(args.segmentation_preview, args.preview_output)
+    if "--smoke-test" in sys.argv:
+        from desktop.smoke import main as smoke_main
+        return smoke_main(sys.argv[1:])
+    if "--pipeline" in sys.argv:
+        args = sys.argv[sys.argv.index("--pipeline") + 1:]
+        stream = None
+        if "--log" in args:
+            index = args.index("--log")
+            log_path = Path(args[index + 1])
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            stream = log_path.open("w", encoding="utf-8", buffering=1)
+            del args[index:index + 2]
+            sys.stdout = sys.stderr = stream
+        elif sys.stdout is None:
+            sys.stdout = sys.stderr = open(os.devnull, "w")
+        os.environ["MPLBACKEND"] = "Agg"
+        sys.argv = ["run_pipeline.py", *args]
+        try:
+            from pipeline.cli import main as pipeline_main
+            return pipeline_main()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            return 1
+        finally:
+            if stream:
+                stream.flush()
+    from desktop.app import main as desktop_main
+    return desktop_main()
+
+
+if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
+    raise SystemExit(main())

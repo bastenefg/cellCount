@@ -1,0 +1,4 @@
+image_id,replicate_id,green,red,ebfp
+gel1_field1,gel1,images/gel1_field1_live.tif,images/gel1_field1_dead.tif,images/gel1_field1_ebfp.tif
+gel1_field2,gel1,images/gel1_field2_live.tif,images/gel1_field2_dead.tif,images/gel1_field2_ebfp.tif
+gel2_field1,gel2,images/gel2_field1_live.tif,images/gel2_field1_dead.tif,images/gel2_field1_ebfp.tif

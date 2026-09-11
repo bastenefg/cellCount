@@ -1,0 +1,17 @@
+$ "C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\.venv\Scripts\python.exe" -m unittest discover -s tests -p test_core.py -v
+
+test_bh_known_values_and_input_order (test_core.CoreCorrectnessTests.test_bh_known_values_and_input_order) ... ok
+test_blue_detection_is_invariant_to_uniform_intensity_offset (test_core.CoreCorrectnessTests.test_blue_detection_is_invariant_to_uniform_intensity_offset) ... ok
+test_border_exclusion_uses_actual_non_square_image_dimensions (test_core.CoreCorrectnessTests.test_border_exclusion_uses_actual_non_square_image_dimensions) ... ok
+test_close_centroids_alone_do_not_merge_separate_cells (test_core.CoreCorrectnessTests.test_close_centroids_alone_do_not_merge_separate_cells) ... ok
+test_constant_images_have_no_cells_and_empty_union_is_valid (test_core.CoreCorrectnessTests.test_constant_images_have_no_cells_and_empty_union_is_valid) ... ok
+test_dead_only_field_does_not_require_any_green_objects (test_core.CoreCorrectnessTests.test_dead_only_field_does_not_require_any_green_objects) ... ok
+test_flat_blue_signal_is_not_significant_cell_enrichment (test_core.CoreCorrectnessTests.test_flat_blue_signal_is_not_significant_cell_enrichment) ... ok
+test_no_cell_free_background_is_unscorable_not_ebfp_negative (test_core.CoreCorrectnessTests.test_no_cell_free_background_is_unscorable_not_ebfp_negative) ... ok
+test_one_red_object_cannot_be_matched_to_two_green_objects (test_core.CoreCorrectnessTests.test_one_red_object_cannot_be_matched_to_two_green_objects) ... ok
+test_one_unscorable_object_does_not_invalidate_all_bh_results (test_core.CoreCorrectnessTests.test_one_unscorable_object_does_not_invalidate_all_bh_results) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.041s
+
+OK

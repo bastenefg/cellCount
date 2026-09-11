@@ -1,0 +1,4 @@
+image_id,replicate_id,green,red,ebfp
+S5,S5,raw/CHO-S5-live.tif,raw/CHO-S5-dead.tif,raw/CHO-S5-ebfp.tif
+S6,S6,raw/CHO-S6-live.tif,raw/CHO-S6-dead.tif,raw/CHO-S6-ebfp.tif
+S7,S7,raw/CHO-S7-live.tif,raw/CHO-S7-dead.tif,raw/CHO-S7-ebfp.tif

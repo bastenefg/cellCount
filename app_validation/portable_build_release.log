@@ -1,0 +1,130 @@
+No broken requirements found.
+217 INFO: PyInstaller: 6.22.2, contrib hooks: 2026.7
+217 INFO: Python: 3.12.14
+267 INFO: Platform: Windows-10-10.0.19045-SP0
+267 INFO: Python environment: C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\.venv
+273 INFO: Removing temporary files and cleaning cache in C:\Users\basti\AppData\Local\pyinstaller
+2662 INFO: Module search paths (PYTHONPATH):
+['C:\\Users\\basti\\Desktop\\zhao '
+ 'papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline',
+ 'C:\\Users\\basti\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python312.zip',
+ 'C:\\Users\\basti\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\DLLs',
+ 'C:\\Users\\basti\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\Lib',
+ 'C:\\Users\\basti\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python',
+ 'C:\\Users\\basti\\Desktop\\zhao '
+ 'papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv',
+ 'C:\\Users\\basti\\Desktop\\zhao '
+ 'papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages',
+ 'C:\\Users\\basti\\Desktop\\zhao '
+ 'papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline']
+3292 INFO: Appending 'datas' from .spec
+3311 INFO: checking Analysis
+3311 INFO: Building Analysis because Analysis-00.toc is non existent
+3311 INFO: Looking for Python shared library...
+3311 INFO: Using Python shared library: C:\Users\basti\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python312.dll
+3311 INFO: Running Analysis Analysis-00.toc
+3311 INFO: Target bytecode optimization level: 0
+3311 INFO: Initializing module dependency graph...
+3317 INFO: Initializing module graph hook caches...
+3338 INFO: Analyzing modules for base_library.zip ...
+4614 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+4958 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+6506 INFO: Processing standard module hook 'hook-math.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+6743 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+8391 INFO: Caching module dependency graph...
+8439 INFO: Analyzing C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\run_app.py
+8482 INFO: Processing standard module hook 'hook-PySide6.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+8874 INFO: Processing standard module hook 'hook-shiboken6.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+9065 INFO: Processing standard module hook 'hook-PySide6.QtNetwork.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+11944 INFO: Processing standard module hook 'hook-PySide6.QtCore.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+16283 INFO: Processing standard module hook 'hook-PySide6.QtGui.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+41261 INFO: Processing standard module hook 'hook-PySide6.QtWidgets.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+45017 INFO: Processing standard module hook 'hook-platform.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+45043 INFO: Processing standard module hook 'hook-numpy.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+45627 INFO: Processing standard module hook 'hook-difflib.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+45840 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+46031 INFO: Processing standard module hook 'hook-xml.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+46307 INFO: Processing standard module hook 'hook-_ctypes.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+47165 INFO: Processing standard module hook 'hook-sysconfig.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+47781 INFO: Processing standard module hook 'hook-webbrowser.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+48480 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+48483 INFO: SetuptoolsInfo: initializing cached setuptools info...
+50277 INFO: Processing standard module hook 'hook-PIL.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+50407 INFO: Processing standard module hook 'hook-PIL.Image.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+50901 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+51110 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+51407 INFO: Processing standard module hook 'hook-pandas.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+53400 INFO: Processing standard module hook 'hook-pytz.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+53887 INFO: Processing standard module hook 'hook-scipy.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+55442 INFO: Processing standard module hook 'hook-scipy.linalg.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+55687 INFO: Processing standard module hook 'hook-scipy.special._ufuncs.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+57237 INFO: Processing standard module hook 'hook-scipy.spatial._ckdtree.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+57311 INFO: Processing standard module hook 'hook-matplotlib.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+57822 INFO: Processing pre-safe-import-module hook 'hook-packaging.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+57932 INFO: Processing pre-safe-import-module hook 'hook-gi.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+58365 INFO: Processing standard module hook 'hook-matplotlib.backend_bases.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+59222 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+59322 INFO: Processing standard module hook 'hook-matplotlib.pyplot.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+59937 INFO: Processing standard module hook 'hook-matplotlib.figure.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+60621 INFO: Processing standard module hook 'hook-dateutil.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+60720 INFO: Processing pre-safe-import-module hook 'hook-six.moves.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+62997 INFO: Processing standard module hook 'hook-scipy.spatial.transform.rotation.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+64127 INFO: Processing standard module hook 'hook-scipy.stats._stats.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+64711 INFO: Processing standard module hook 'hook-scipy.sparse.csgraph.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+65857 INFO: Processing standard module hook 'hook-scipy.special._ellip_harm_2.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+68657 INFO: Processing standard module hook 'hook-pandas.io.formats.style.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+70893 INFO: Processing standard module hook 'hook-pandas.plotting.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+71996 INFO: Processing standard module hook 'hook-sqlite3.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+72407 INFO: Processing standard module hook 'hook-pandas.io.clipboard.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+72772 INFO: Processing standard module hook 'hook-xml.dom.domreg.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+73947 INFO: Analyzing hidden import 'matplotlib.backends.backend_svg'
+74002 INFO: Processing module hooks (post-graph stage)...
+74013 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+74013 INFO: Matplotlib backend selection method: user-provided name(s)
+74508 INFO: Selected matplotlib backends: ['Agg', 'svg']
+74508 INFO: Extra dists for selected matplotlib backends: []
+75031 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+75100 WARNING: Hidden import "scipy.special._cdflib" not found!
+75141 INFO: Performing binary vs. data reclassification (1232 entries)
+77933 INFO: Looking for ctypes DLLs
+78087 INFO: Analyzing run-time hooks ...
+78096 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+78097 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+78097 INFO: Including run-time hook 'pyi_rth_mplconfig.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+78097 INFO: Processing pre-find-module-path hook 'hook-_pyi_rth_utils.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\pre_find_module_path'
+78097 INFO: Processing standard module hook 'hook-_pyi_rth_utils.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+78107 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+78118 INFO: Including run-time hook 'pyi_rth_pyside6.py' from 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+78182 INFO: Creating base_library.zip...
+78234 INFO: Looking for dynamic libraries
+82152 INFO: Extra DLL search directories (AddDllDirectory): ['C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\shiboken6', 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\numpy.libs', 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\scipy.libs', 'C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\pandas.libs']
+82152 INFO: Extra DLL search directories (PATH): ['C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\.venv\\Lib\\site-packages\\PySide6']
+86457 INFO: Warnings written to C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\build\CHO_Cell_Counter\warn-CHO_Cell_Counter.txt
+86630 INFO: Graph cross-reference written to C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\build\CHO_Cell_Counter\xref-CHO_Cell_Counter.html
+86740 INFO: checking PYZ
+86740 INFO: Building PYZ because PYZ-00.toc is non existent
+86740 INFO: Building PYZ (ZlibArchive) C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\build\CHO_Cell_Counter\PYZ-00.pyz
+88380 INFO: Building PYZ (ZlibArchive) C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\build\CHO_Cell_Counter\PYZ-00.pyz completed successfully.
+88420 INFO: checking PKG
+88420 INFO: Building PKG because PKG-00.toc is non existent
+88420 INFO: Building PKG (CArchive) CHO Cell Counter.pkg
+88457 INFO: Building PKG (CArchive) CHO Cell Counter.pkg completed successfully.
+88457 INFO: Bootloader C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\.venv\Lib\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+88457 INFO: checking EXE
+88457 INFO: Building EXE because EXE-00.toc is non existent
+88457 INFO: Building EXE from EXE-00.toc
+88457 INFO: Copying bootloader EXE to C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\build\CHO_Cell_Counter\CHO Cell Counter.exe
+88517 INFO: Copying icon to EXE
+88557 INFO: Copying 0 resources to EXE
+88557 INFO: Embedding manifest in EXE
+88587 INFO: Appending PKG archive to EXE
+88667 INFO: Fixing EXE headers
+88947 INFO: Building EXE from EXE-00.toc completed successfully.
+88957 INFO: checking COLLECT
+88957 INFO: Building COLLECT because COLLECT-00.toc is non existent
+88957 INFO: Removing dir C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\dist\CHO Cell Counter
+89322 INFO: Building COLLECT COLLECT-00.toc
+92252 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+92296 INFO: Build complete! The results are available in: C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\dist
+Collected notices for 24 installed distributions in C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\build\third_party_notices
+Portable app: C:\Users\basti\Desktop\zhao papers\CHO_viability_pipeline_v1.1.0\CHO_viability_pipeline\dist\CHO Cell Counter\CHO Cell Counter.exe

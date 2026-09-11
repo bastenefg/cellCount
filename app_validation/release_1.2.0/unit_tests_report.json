@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "tests_passed": 82,
+  "elapsed_seconds": 83.445,
+  "command": ".venv/Scripts/python.exe -m unittest discover -s tests -v",
+  "log": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.2.0\\all_tests.log",
+  "log_sha256": "b7426bbcee69a48654cf38b81904adef183b31226b1fa982add278b169a6e33a"
+}

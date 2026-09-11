@@ -1,0 +1,4 @@
+replicate_id,n_fields,n_fields_with_ebfp,total,live_only,dead_only,double_positive,viability_percent,ebfp_all_count,ebfp_all_scorable,ebfp_all_unscorable,ebfp_all_percent,ebfp_live_count,ebfp_live_scorable,ebfp_live_unscorable,ebfp_live_percent,double_positive_percent,viability_excluding_double_percent,green_any_percent,ebfp_dead_count,ebfp_dead_percent,ebfp_channel_not_provided,ebfp_live_channel_not_provided
+S5,1,0,438,190,155,93,43.37899543378995,0,0,438,,0,0,190,,21.232876712328768,55.072463768115945,64.61187214611873,0,,438,190
+S6,1,0,526,199,234,93,37.832699619771866,0,0,526,,0,0,199,,17.680608365019012,45.95842956120092,55.51330798479088,0,,526,199
+S7,1,0,333,120,137,76,36.03603603603604,0,0,333,,0,0,120,,22.822822822822822,46.69260700389105,58.85885885885886,0,,333,120

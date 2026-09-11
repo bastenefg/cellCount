@@ -1,0 +1,79 @@
+{
+  "counts": {
+    "green_detections": 106,
+    "red_detections": 1402,
+    "live_only": 72,
+    "dead_only": 1368,
+    "double_positive": 34,
+    "total": 1474,
+    "viability_percent": 4.884667571234735
+  },
+  "size_default": [
+    1460,
+    900
+  ],
+  "current": true,
+  "selected_object": {
+    "x": 521,
+    "y": 502,
+    "id": 626,
+    "text": "CURRENT \u00b7 pixel (521, 502) \u00b7 TIFF intensity 0 \u00b7 working contrast 3.28\nObject 626: area 15 px\u00b2 \u00b7 peak contrast 8.12 \u00b7 mean intensity 10.00 \u00b7 parent peaks 1"
+  },
+  "visible_ids": 1402,
+  "views_zoom": [
+    {
+      "scale": 2.5,
+      "cx": 518.4,
+      "cy": 502.40000000000003,
+      "fit": false
+    },
+    {
+      "scale": 2.5,
+      "cx": 518.8000000000001,
+      "cy": 502.40000000000003,
+      "fit": false
+    }
+  ],
+  "display_controls_preserve_segmentation": true,
+  "size_minimum": [
+    1020,
+    660
+  ],
+  "views_minimum": [
+    {
+      "scale": 0.171875,
+      "cx": 512.0,
+      "cy": 506.1818181818182,
+      "fit": true
+    },
+    {
+      "scale": 0.171875,
+      "cx": 506.1818181818182,
+      "cy": 506.1818181818182,
+      "fit": true
+    }
+  ],
+  "settings_scroll_max": 435,
+  "apply_enabled": true,
+  "status": "Preview current \u00b7 full image \u00b7 display and zoom do not affect segmentation",
+  "font_registration": "Segoe UI regular, bold and semibold loaded; Fusion style",
+  "size_minimum_with_fonts": [
+    1020,
+    660
+  ],
+  "views_minimum_with_fonts": [
+    {
+      "scale": 0.171875,
+      "cx": 512.0,
+      "cy": 506.1818181818182,
+      "fit": true
+    },
+    {
+      "scale": 0.171875,
+      "cx": 512.0,
+      "cy": 506.1818181818182,
+      "fit": true
+    }
+  ],
+  "settings_scroll_max_with_fonts": 289
+}

@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "worker_run": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\runs\\gui_synthetic_smoke_20260909_163429_996b",
+  "qt_event_loop_iterations_during_analysis": 366,
+  "reference_results_and_overlay_rendered": true,
+  "blank_images_zero_objects": true,
+  "missing_ebfp_displayed_as_not_measured": true,
+  "worker_verification_passed": true
+}

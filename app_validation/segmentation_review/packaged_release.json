@@ -1,0 +1,101 @@
+{
+  "status": "passed",
+  "audit_scope": "Bundle source/data identity, original source preservation, dependency exclusions and exact ZIP contents. Runtime checks appear only when supplied separately.",
+  "app_version": "1.1.0",
+  "audit_python": "3.12.14",
+  "app_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.1.0\\CHO Cell Counter",
+  "app_files": 1501,
+  "app_bytes": 280196455,
+  "executable_sha256": "4bfc600be8abd19ab4f99e8380843fba59a1e8d7ae090914709fe9166ac98358",
+  "original_package_files_checked": 81,
+  "original_package_mismatches": [],
+  "bundled_sources_checked": 163,
+  "bundled_source_mismatches": [],
+  "incompatible_icu_files": [],
+  "private_data_folders": [],
+  "missing_notices": [],
+  "zip": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.1.0\\CHO-Cell-Counter-1.1.0-Windows-x64.zip",
+  "zip_bytes": 113817377,
+  "zip_sha256": "94b46406879af4966fb9a40dbf3437719984654167da4dd5e0d4d8fc7cab21b6",
+  "zip_crc_and_content_check": "passed",
+  "zip_mismatches": [],
+  "supplied_runtime_reports": [
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\segmentation_review\\packaged_smoke\\smoke_test.json",
+      "sha256": "40112a050aa08afa5aca09a026c581c6acbe60e7cc6be79c2d486f2070b64440",
+      "report": {
+        "status": "passed",
+        "gui_rendered": true,
+        "worker_verification_passed": true,
+        "segmentation_preview_passed": true,
+        "segmentation_updated_from_controls": true,
+        "display_did_not_change_labels": true,
+        "opening_preset_unchanged": true,
+        "preview_counts": {
+          "green_detections": 106,
+          "red_detections": 1402,
+          "live_only": 72,
+          "dead_only": 1368,
+          "double_positive": 34,
+          "total": 1474,
+          "viability_percent": 4.884667571234735
+        }
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\segmentation_review\\packaged_reference_preview_check.json",
+      "sha256": "f15282cab2f4717dc8c0081f3d8fbd0fbbea2a73e965c187b26bd0829a8f3ca5",
+      "report": {
+        "status": "passed",
+        "image": "S5",
+        "different_pixels": {
+          "labels_green": 0,
+          "labels_red": 0,
+          "labels_objects": 0
+        }
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\segmentation_review\\native_launch_check.json",
+      "sha256": "033f0be1575f85785de750de99378f3951cb8a263159535d010724071755890d",
+      "report": {
+        "status": "passed",
+        "tracked_pid": 10048,
+        "platform": "windows",
+        "hidden_startup_requested": true,
+        "window_titles": [
+          "_q_titlebar",
+          "CHO Cell Counter",
+          "Default IME"
+        ],
+        "exit_code": 0,
+        "other_app_processes_touched": false
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\segmentation_review\\compiled_preview_modules.json",
+      "sha256": "655e04a2e0ac2b3087215fb4b3786757a02b461da662614b164250591509ac2c",
+      "report": {
+        "status": "passed",
+        "modules": [
+          "desktop.segmentation",
+          "desktop.segmentation_dialog",
+          "desktop.segmentation_view",
+          "desktop.smoke"
+        ]
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\segmentation_review\\source_tests.json",
+      "sha256": "cd8fc0724536adda32b79e95f247a8af0ea36bef44884d276afefe5cd0685110",
+      "report": {
+        "status": "passed",
+        "tests": 64,
+        "seconds": 51.717,
+        "source_log": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\segmentation_review\\all_tests.log",
+        "source_log_sha256": "5ab05bd28b25c5a5044b0e4e98fbf049dc52af49d0c5cc4c32172b41742066ab"
+      }
+    }
+  ],
+  "issues": []
+}
