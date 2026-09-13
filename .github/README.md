@@ -18,6 +18,8 @@ is included; keep the executable and its `_internal` folder together.
   seconds on the development machine, using full-resolution images.
 - **Batch analysis:** process multiple fields and biological replicate groups
   with saved settings, counts, figures and provenance records.
+- **Figure export:** save the current run's summary directly as a PNG or SVG
+  from the Results page.
 
 The repository includes source, tests, reference fixtures, the supplied sample
 pair, and validation evidence. All 82 tests passed for version 1.2.0; the

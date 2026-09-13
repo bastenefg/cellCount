@@ -111,6 +111,76 @@ class WindowReviewTests(unittest.TestCase):
         return [[table.item(row, column).text() for column in range(table.columnCount())]
                 for row in range(table.rowCount())]
 
+    def test_summary_preview_switches_between_completed_runs(self):
+        first = self._result_fixture("first_run")
+        second = self._result_fixture("second_run")
+        Image.new("RGB", (24, 24), "red").save(first / "figure.png")
+        Image.new("RGB", (24, 24), "blue").save(second / "figure.png")
+        for run, color in ((first, "#ff0000"), (second, "#0000ff"), (first, "#ff0000")):
+            with self.subTest(run=run.name):
+                self.window.load_result(run)
+                self.window.preview_choice.setCurrentIndex(0)
+                items = self.window.viewer.scene().items()
+                self.assertEqual(len(items), 1)
+                self.assertEqual(items[0].pixmap().toImage().pixelColor(0, 0).name(), color)
+                self.assertEqual(Path(self.window.preview_choice.currentData()), run / "figure.png")
+
+    def test_missing_or_corrupt_summary_clears_previous_detection_preview(self):
+        run = self._result_fixture("preview_failure")
+        (run / "qc").mkdir()
+        Image.new("RGB", (24, 24), "red").save(run / "qc" / "synthetic_field_detections.png")
+        self.window.load_result(run)
+        for invalid in ("missing", "corrupt"):
+            with self.subTest(invalid=invalid):
+                self.window.preview_choice.setCurrentIndex(1)
+                self.assertEqual(len(self.window.viewer.scene().items()), 1)
+                if invalid == "missing":
+                    (run / "figure.png").unlink()
+                else:
+                    (run / "figure.png").write_bytes(b"This is not a PNG.")
+                self.window.preview_choice.setCurrentIndex(0)
+                self.assertEqual(self.window.viewer.scene().items(), [])
+                self.assertIn("Preview unavailable", self.window.preview_caption.text())
+
+    def test_summary_export_uses_current_run_while_detection_is_selected(self):
+        old = self._result_fixture("previous_run")
+        current = self._result_fixture("current_run")
+        Image.new("RGB", (24, 24), "blue").save(current / "figure.png")
+        (current / "figure.svg").write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg"><text>Current run</text></svg>', encoding="utf-8")
+        (current / "qc").mkdir()
+        Image.new("RGB", (24, 24), "red").save(current / "qc" / "synthetic_field_detections.png")
+        self.window.load_result(old)
+        self.window.load_result(current)
+        self.assertEqual(self.window.preview_choice.currentIndex(), 1)
+        before = {path: path.read_bytes() for path in current.rglob("*") if path.is_file()}
+        for suffix, selected_filter in ((".png", "PNG image (*.png)"), (".svg", "SVG vector figure (*.svg)")):
+            with self.subTest(format=suffix):
+                destination = self.root / ("exported_summary" + suffix)
+                # The SVG case exercises a filename typed without its extension.
+                chosen = destination.with_suffix("") if suffix == ".svg" else destination
+                with patch("desktop.app.QFileDialog.getSaveFileName", return_value=(str(chosen), selected_filter)), \
+                        patch.object(self.window, "error") as error:
+                    self.window.save_summary_figure()
+                error.assert_not_called()
+                self.assertEqual(destination.read_bytes(), (current / ("figure" + suffix)).read_bytes())
+        self.assertEqual({path: path.read_bytes() for path in before}, before)
+
+    def test_summary_export_cannot_overwrite_completed_run_artifacts(self):
+        previous = self._result_fixture("preserved_previous")
+        current = self._result_fixture("preserved_current")
+        Image.new("RGB", (24, 24), "blue").save(current / "figure.png")
+        self.window.load_result(current)
+        for destination in (current / "figure.png", previous / "figure.png", current / "export.png"):
+            with self.subTest(destination=destination):
+                before = destination.read_bytes() if destination.exists() else None
+                with patch("desktop.app.QFileDialog.getSaveFileName", return_value=(str(destination), "PNG image (*.png)")), \
+                        patch.object(self.window, "error") as error:
+                    self.window.save_summary_figure()
+                error.assert_called_once()
+                self.assertIn("outside analysis run folders", str(error.call_args.args[0]))
+                self.assertEqual(destination.read_bytes() if destination.exists() else None, before)
+
     def test_malformed_run_keeps_previous_results_and_visible_measurements(self):
         valid = self._result_fixture("valid")
         self.window.load_result(valid)

@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "gui_rendered": true,
+  "worker_verification_passed": true,
+  "summary_export_byte_identical": [
+    ".png",
+    ".svg"
+  ],
+  "export_while_detection_selected": true
+}

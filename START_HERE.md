@@ -5,7 +5,7 @@ fluorescence TIFF images, with optional EBFP measurements.
 
 ## Use the app
 
-Download the version 1.2.0 Windows ZIP from this repository's Releases page,
+Download the version 1.2.1 Windows ZIP from this repository's Releases page,
 extract the entire archive, and open **Live-Dead Cell Counter.exe**. Python is
 included. Keep the executable and its `_internal` folder together.
 
@@ -13,6 +13,11 @@ included. Keep the executable and its `_internal` folder together.
 sample IDs. Select **Preview segmentation** to compare the input and detected
 outlines, zoom, inspect individual objects, and adjust detection settings.
 **Batch / CSV** supports multiple fields and replicate groups.
+
+On **Results → Figure & detections**, use **Save summary figure…** to export
+the loaded run's summary as a PNG or SVG. The summary's microscopy panels show
+the original image crop, so changing segmentation settings changes the counts
+and detection overlays while those raw image panels stay the same.
 
 Read [APP_GUIDE.md](APP_GUIDE.md) for the workflow, settings, and source/build
 instructions. [README.md](README.md) is the preserved original scientific
@@ -33,6 +38,14 @@ Generated environments, old application bundles, temporary preview arrays and
 ordinary run output folders are excluded from Git. Validation records describe
 the original local runs and may contain machine-specific paths. The portable
 Windows application is distributed as a release asset.
+
+## Version 1.2.1 update
+
+Adds direct PNG/SVG summary export and a preview caption identifying the loaded
+run and central crop. Missing or unreadable previews now clear the old image.
+All 10 GUI review tests passed, including run switching, failed preview loads,
+exact summary exports and preservation of completed run files. The counting
+pipeline is unchanged.
 
 ## Version 1.2.0 validation
 

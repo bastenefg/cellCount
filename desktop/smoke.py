@@ -12,13 +12,14 @@ def main(arguments):
     parser.add_argument("--smoke-test", type=Path, required=True)
     parser.add_argument("--run", type=Path, required=True)
     parser.add_argument("--preview-manifest", type=Path)
+    parser.add_argument("--results-only", action="store_true", help="Check saved-result display, export and verification without rerunning analysis.")
     args = parser.parse_args(arguments)
     output = args.smoke_test.resolve()
     output.mkdir(parents=True, exist_ok=True)
     os.environ["QT_QPA_PLATFORM"] = "offscreen"
     try:
         from PySide6.QtGui import QFont, QFontDatabase
-        from PySide6.QtWidgets import QApplication
+        from PySide6.QtWidgets import QApplication, QFileDialog
         from .app import MainWindow, STYLE
         from .services import ROOT, read_manifest
         from copy import deepcopy
@@ -52,6 +53,7 @@ def main(arguments):
         app.processEvents()
         window.grab().save(str(output / "results.png"))
         window.result_tabs.setCurrentIndex(1)
+        window.preview_choice.setCurrentIndex(0)
         app.processEvents()
         window.viewer.fit()
         window.grab().save(str(output / "figure.png"))
@@ -59,6 +61,27 @@ def main(arguments):
         app.processEvents()
         window.viewer.fit()
         window.grab().save(str(output / "detections.png"))
+        # Export the summary while a detection overlay is selected. Both formats
+        # must be exact copies of this run's saved figure, independent of zoom.
+        saved_exports = []
+        original_save_dialog = QFileDialog.getSaveFileName
+        try:
+            for extension in (".png", ".svg"):
+                source = args.run / ("figure" + extension)
+                if not source.is_file():
+                    continue
+                destination = output / ("exported_summary" + extension)
+                QFileDialog.getSaveFileName = lambda *a, p=destination: (str(p), "")
+                window.figure_button.click()
+                assert destination.read_bytes() == source.read_bytes(), "Export differs from the loaded run's summary"
+                saved_exports.append(extension)
+        finally:
+            QFileDialog.getSaveFileName = original_save_dialog
+        assert saved_exports, "No summary figure exported"
+        window.resize(1000, 650)
+        app.processEvents()
+        window.grab().save(str(output / "results_compact.png"))
+        window.resize(1280, 910)
         window.output_base.setText(str(output))
         window.verify_results()
         deadline = time.monotonic() + 120
@@ -71,6 +94,15 @@ def main(arguments):
             raise RuntimeError("Verification worker timed out.")
         if errors or "verification passed" not in window.status_text.text().lower():
             raise RuntimeError(str(errors) or window.status_text.text())
+        if args.results_only:
+            window.close()
+            (output / "smoke_test.json").write_text(json.dumps({
+                "status": "passed", "gui_rendered": True,
+                "worker_verification_passed": True,
+                "summary_export_byte_identical": saved_exports,
+                "export_while_detection_selected": True,
+            }, indent=2) + "\n", encoding="utf-8")
+            return 0
         import numpy as np
         from .segmentation_dialog import SegmentationDialog
         from .services import default_config

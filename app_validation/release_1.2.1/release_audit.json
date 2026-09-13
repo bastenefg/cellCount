@@ -1,0 +1,53 @@
+{
+  "status": "passed",
+  "audit_scope": "Bundle source/data identity, original source preservation, dependency exclusions and exact ZIP contents. Runtime checks appear only when supplied separately.",
+  "app_version": "1.2.1",
+  "audit_python": "3.12.14",
+  "app_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.2.1\\Live-Dead Cell Counter",
+  "app_files": 1505,
+  "app_bytes": 280276141,
+  "executable_sha256": "f957c353cce33055aa0c3351ea26ffaa93c7f8042bd8b4bffab56a0ee33befcc",
+  "original_package_files_checked": 81,
+  "original_package_mismatches": [],
+  "bundled_sources_checked": 167,
+  "bundled_source_mismatches": [],
+  "incompatible_icu_files": [],
+  "private_data_folders": [],
+  "missing_notices": [],
+  "zip": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.2.1\\Live-Dead-Cell-Counter-1.2.1-Windows-x64.zip",
+  "zip_bytes": 113874451,
+  "zip_sha256": "d25de06ae9342e600a7d968fd506bcd0b8759f058f1fe4f738fc8f01260f8f7a",
+  "zip_crc_and_content_check": "passed",
+  "zip_mismatches": [],
+  "supplied_runtime_reports": [
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.2.1\\source_smoke\\smoke_test.json",
+      "sha256": "da6143dd4a48c6a0e029c7beacd934b1ad95a0caf6dab4108596ccb216ab74ad",
+      "report": {
+        "status": "passed",
+        "gui_rendered": true,
+        "worker_verification_passed": true,
+        "summary_export_byte_identical": [
+          ".png",
+          ".svg"
+        ],
+        "export_while_detection_selected": true
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.2.1\\packaged_smoke\\smoke_test.json",
+      "sha256": "da6143dd4a48c6a0e029c7beacd934b1ad95a0caf6dab4108596ccb216ab74ad",
+      "report": {
+        "status": "passed",
+        "gui_rendered": true,
+        "worker_verification_passed": true,
+        "summary_export_byte_identical": [
+          ".png",
+          ".svg"
+        ],
+        "export_while_detection_selected": true
+      }
+    }
+  ],
+  "issues": []
+}

@@ -8,7 +8,7 @@ preserved.
 
 ## Open the portable app
 
-1. Extract **Live-Dead-Cell-Counter-1.2.0-Windows-x64.zip** completely into a new folder.
+1. Extract **Live-Dead-Cell-Counter-1.2.1-Windows-x64.zip** completely into a new folder.
 2. Open the extracted **Live-Dead Cell Counter** folder.
 3. Double-click **Live-Dead Cell Counter.exe**. Python is included; no installation or
    command line is needed.
@@ -172,6 +172,12 @@ Use **Results** to inspect a completed run: **Counts** shows the tables and
 segmentation** opens the interactive review with the saved run's inputs and
 effective settings. Use **Open run…**
 to load an earlier run or **Save summary CSV** to export the displayed summary.
+Use **Save summary figure...** in **Figure & detections** to save the loaded
+run's summary as a full-resolution PNG or editable SVG. This always exports the
+summary, even while a detection overlay is selected. Choose a destination outside
+the run folder to keep its verification records intact. The summary contains a
+representative field's central crop; detections show each full field. The preview
+caption identifies the loaded run, and hovering over it shows the image path.
 Use **Open run folder**
 for per-image and per-replicate CSV tables, individual
 objects, figures, masks, effective settings, and provenance records. Keep the
@@ -205,11 +211,11 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1 -Zip
 ```
 
 This installs the build requirements into `.venv`, builds the executable, and
-creates `dist/1.2.0/Live-Dead-Cell-Counter-1.2.0-Windows-x64.zip`. The executable is in
-`dist/1.2.0/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
+creates `dist/1.2.1/Live-Dead-Cell-Counter-1.2.1-Windows-x64.zip`. The executable is in
+`dist/1.2.1/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
 replace an existing app directory, so an older open app remains intact. To
 rebuild the same version, choose another folder, for example
-`-ReleaseFolder 1.2.0-rebuild1`. Use `-SkipInstall` to use an
+`-ReleaseFolder 1.2.1-rebuild1`. Use `-SkipInstall` to use an
 already prepared environment. All scientific dependency versions remain pinned
 in the unchanged `requirements-lock.txt`. Qt and dependency notices are included
 in `_internal/third_party_notices`.
@@ -224,7 +230,7 @@ copies. The included source has no newly assigned license.
 After building, audit the release contents and ZIP with:
 
 ```powershell
-.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.2.0\Live-Dead Cell Counter" --zip ".\dist\1.2.0\Live-Dead-Cell-Counter-1.2.0-Windows-x64.zip" --output ".\app_validation\release_1.2.0_audit.json"
+.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.2.1\Live-Dead Cell Counter" --zip ".\dist\1.2.1\Live-Dead-Cell-Counter-1.2.1-Windows-x64.zip" --output ".\app_validation\release_1.2.1_audit.json"
 ```
 
 This audit checks bundled sources, preserved original package files, excluded

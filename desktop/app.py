@@ -129,10 +129,12 @@ class ImageViewer(QGraphicsView):
         self.fit_mode = True
 
     def load(self, path):
-        pixmap = QPixmap(str(path))
+        self.scene().clear()
+        self.scene().setSceneRect(0, 0, 0, 0)
+        pixmap = QPixmap()
+        pixmap.loadFromData(Path(path).read_bytes())
         if pixmap.isNull():
             raise ValueError(f"Could not load preview: {path}")
-        self.scene().clear()
         self.scene().addPixmap(pixmap)
         self.scene().setSceneRect(pixmap.rect())
         self.fit()
@@ -331,6 +333,11 @@ class MainWindow(QMainWindow):
         self.inspect_button.setEnabled(False)
         contents.addLayout(row_layout(self.preview_choice, self.inspect_button, None,
             button("−", lambda: self.viewer.zoom(1 / 1.25)), button("+", lambda: self.viewer.zoom(1.25)), button("Fit", lambda: self.viewer.fit())))
+        self.preview_caption = label("", "muted", True)
+        self.figure_button = button("Save summary figure…", self.save_summary_figure)
+        self.figure_button.setToolTip("Save this run's summary as a full-resolution PNG or editable SVG.")
+        self.figure_button.setEnabled(False)
+        contents.addLayout(row_layout(self.preview_caption, None, self.figure_button))
         self.viewer = ImageViewer()
         contents.addWidget(self.viewer, 1)
         self.result_tabs.addTab(visual, "Figure && detections")
@@ -719,6 +726,7 @@ class MainWindow(QMainWindow):
         self.select_preview()
         self.folder_button.setEnabled(True)
         self.csv_button.setEnabled(True)
+        self.figure_button.setEnabled(any((result["path"] / ("figure" + ext)).is_file() for ext in (".png", ".svg")))
         self.verify_button.setEnabled(self.process is None)
         self.inspect_button.setEnabled(True)
         self.result_tabs.setCurrentIndex(1)
@@ -740,12 +748,48 @@ class MainWindow(QMainWindow):
                 self.result_table.setItem(i, j, item)
 
     def select_preview(self, *_):
+        self.viewer.scene().clear()
+        self.preview_caption.clear()
         path = self.preview_choice.currentData()
-        if path and Path(path).is_file():
+        if path:
+            description = "Summary figure (central crop)" if self.preview_choice.currentIndex() == 0 else self.preview_choice.currentText()
+            self.preview_caption.setText(f"{description} · {self.result['path'].name}")
+            self.preview_caption.setToolTip(path)
             try:
                 self.viewer.load(path)
             except Exception as exc:
+                self.preview_caption.setText("Preview unavailable for this run. See run notes below.")
                 self.result_notes.appendPlainText(str(exc))
+
+    def save_summary_figure(self):
+        if not self.result:
+            return
+        run = self.result["path"]
+        formats = {".png": "PNG image (*.png)", ".svg": "SVG vector figure (*.svg)"}
+        available = {ext: title for ext, title in formats.items() if (run / ("figure" + ext)).is_file()}
+        if not available:
+            return self.error("This run has no saved summary figure. Check its run folder.")
+        default_ext = next(iter(available))
+        path, selected_filter = QFileDialog.getSaveFileName(
+            self, "Save summary figure", run.name + "_summary" + default_ext,
+            ";;".join(available.values()))
+        if not path:
+            return
+        try:
+            destination = Path(path)
+            if not destination.suffix:
+                extension = next((ext for ext, title in available.items() if title == selected_filter), default_ext)
+                destination = destination.with_suffix(extension)
+            extension = destination.suffix.lower()
+            if extension not in available:
+                raise ValueError("Choose an available summary figure format: " + ", ".join(available) + ".")
+            self.check_export_path(destination, extension)
+            if destination.resolve().is_relative_to(run):
+                raise ValueError("Save exported copies outside the completed run to preserve its verification records.")
+            destination.write_bytes((run / ("figure" + extension)).read_bytes())
+            self.status_text.setText(f"Summary figure saved to {destination.resolve()}")
+        except Exception as exc:
+            self.error(exc)
 
     def save_summary(self):
         if not self.result:
