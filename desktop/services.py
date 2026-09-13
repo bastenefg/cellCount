@@ -1,7 +1,9 @@
 """File and process adapters; no image processing or scientific calculations."""
 from datetime import datetime
+from copy import deepcopy
 from pathlib import Path
 import csv
+import hashlib
 import json
 import math
 import re
@@ -94,9 +96,108 @@ def output_path(base, name):
     return path
 
 
+def input_compatible(first, second):
+    """A batch has one spatial calibration and one scalar TIFF format."""
+    return (list(first["expected_shape"]) == list(second["expected_shape"])
+            and first["dtype"] == second["dtype"]
+            and len(first["pixel_size_um"]) == len(second["pixel_size_um"]) == 2
+            and all(math.isclose(float(a), float(b), rel_tol=1e-8, abs_tol=1e-12)
+                    for a, b in zip(first["pixel_size_um"], second["pixel_size_um"])))
+
+
+def discover_leica_imports(rows):
+    """Recover import provenance from exported TIFFs, including after CSV reload.
+
+    The stored Leica source identity is retained as described by the importer;
+    only the exported TIFF bytes are checked against SHA256 here.
+    """
+    sidecars, verified, records = {}, {}, []
+    for row in rows:
+        row_records = {}
+        for channel in ("green", "red", "ebfp"):
+            if not row.get(channel):
+                continue
+            path = Path(row[channel]).resolve()
+            sidecar = path.parent / "import_provenance.json"
+            if not sidecar.is_file():
+                continue
+            if sidecar not in sidecars:
+                data = json.loads(sidecar.read_text(encoding="utf-8"))
+                if not isinstance(data, dict) or data.get("schema_version") != 1:
+                    raise ValueError(f"Unsupported Leica import record: {sidecar}")
+                if not isinstance(data.get("exports"), dict) or not isinstance(data.get("result"), dict):
+                    raise ValueError(f"Invalid Leica import record: {sidecar}")
+                sidecars[sidecar] = data
+            data = sidecars[sidecar]
+            matched = None
+            for original_role, exported in data["exports"].items():
+                if original_role not in ("green", "red", "ebfp") or not isinstance(exported, dict):
+                    raise ValueError(f"Invalid Leica export record: {sidecar}")
+                if exported.get("filename") != original_role + ".tif":
+                    raise ValueError(f"Invalid Leica export filename: {sidecar}")
+                if path == (sidecar.parent / exported["filename"]).resolve():
+                    matched = exported
+                    break
+            if matched is None:
+                raise ValueError(f"This TIFF is not recorded in its Leica import: {path}")
+            if path not in verified:
+                if path.stat().st_size != matched.get("bytes"):
+                    raise ValueError(f"Imported TIFF changed; import the Leica image again: {path}")
+                with path.open("rb") as stream:
+                    digest = hashlib.file_digest(stream, "sha256").hexdigest()
+                if digest != matched.get("sha256"):
+                    raise ValueError(f"Imported TIFF changed; import the Leica image again: {path}")
+                verified[path] = digest
+            if sidecar not in row_records:
+                record = deepcopy(data)
+                record["provenance_path"] = str(sidecar)
+                record["analysis_field_id"] = row["image_id"]
+                record["analysis_replicate_id"] = row["replicate_id"]
+                record["analysis_channel_paths"] = {}
+                row_records[sidecar] = record
+            row_records[sidecar]["analysis_channel_paths"][channel] = str(path)
+        records.extend(row_records.values())
+    return records
+
+
+def config_with_imports(rows, config):
+    """Restore Leica calibration and keep a verified provenance snapshot."""
+    settings = deepcopy(config)
+    settings.pop("leica_imports", None)
+    imports = discover_leica_imports(rows)
+    selected_paths = {str(Path(row[channel]).resolve()) for row in rows
+                      for channel in ("green", "red", "ebfp") if row.get(channel)}
+    recovered_paths = {path for item in imports for path in item["analysis_channel_paths"].values()}
+    for previous in config.get("leica_imports", []):
+        expected_paths = set(previous.get("analysis_channel_paths", {}).values()) & selected_paths
+        if expected_paths - recovered_paths:
+            raise ValueError("The Leica import record is missing for these TIFFs. Restore import_provenance.json beside the images, or import the Leica acquisition again.")
+    if not imports:
+        return settings
+    imported_input = imports[0]["result"]["input"]
+    if any(not input_compatible(imported_input, item["result"]["input"]) for item in imports[1:]):
+        raise ValueError("These Leica fields have different image sizes, bit depths or pixel calibrations. Analyze them in separate batches.")
+    imported_fields = {item["analysis_field_id"] for item in imports}
+    all_imported = len(imported_fields) == len(rows)
+    if not all_imported and not input_compatible(settings["input"], imported_input):
+        raise ValueError("The Leica calibration or image format differs from the other TIFF fields. Analyze them in a separate batch.")
+    if all_imported:
+        settings["input"].update(deepcopy(imported_input))
+        for item in imports:
+            display = item["result"].get("display", {})
+            folder = Path(item["provenance_path"]).parent
+            for channel, filename in item["analysis_channel_paths"].items():
+                for original_role, exported in item["exports"].items():
+                    if Path(filename) == (folder / exported["filename"]).resolve() and original_role in display:
+                        settings["display"][channel] = deepcopy(display[original_role])
+    settings["leica_imports"] = imports
+    return settings
+
+
 def prepare_analysis(base, name, rows, config, extended=False):
     validate_rows(rows)
     from pipeline.io import validate_config
+    config = config_with_imports(rows, config)
     validate_config(config)
     out = output_path(base, name)
     # Stable input snapshots live outside the run, so the pipeline can create its
@@ -158,7 +259,14 @@ def read_results(path):
     warnings = meta.get("warnings", [])
     if not isinstance(warnings, list) or any(not isinstance(item, str) for item in warnings):
         raise ValueError("Invalid run notes.")
-    return {"path": path, "meta": meta, "stats": stats, "reference": reference, **tables}
+    imports = []
+    settings_path = path / "effective_config.json"
+    if settings_path.is_file():
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        imports = settings.get("leica_imports", [])
+        if not isinstance(imports, list) or any(not isinstance(item, dict) for item in imports):
+            raise ValueError("Invalid saved Leica import records.")
+    return {"path": path, "meta": meta, "stats": stats, "reference": reference, "leica_imports": imports, **tables}
 
 
 def number(value, places=1):

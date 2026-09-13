@@ -5,7 +5,7 @@ fluorescence TIFF images, with optional EBFP measurements.
 
 ## Use the app
 
-Download the version 1.2.1 Windows ZIP from this repository's Releases page,
+Download the version 1.3.0 Windows ZIP from this repository's Releases page,
 extract the entire archive, and open **Live-Dead Cell Counter.exe**. Python is
 included. Keep the executable and its `_internal` folder together.
 
@@ -13,6 +13,11 @@ included. Keep the executable and its `_internal` folder together.
 sample IDs. Select **Preview segmentation** to compare the input and detected
 outlines, zoom, inspect individual objects, and adjust detection settings.
 **Batch / CSV** supports multiple fields and replicate groups.
+
+**Import Leica .lif / .lof…** reads Leica SP8 acquisitions directly. Choose a
+series, LIVE/DEAD channels and either one Z slice or an explicit maximum-intensity
+projection. Pixel calibration is read from metadata and can be reviewed. Peak
+and region threshold sliders make segmentation adjustments easier.
 
 On **Results → Figure & detections**, use **Save summary figure…** to export
 the loaded run's summary as a PNG or SVG. The summary's microscopy panels show
@@ -38,6 +43,14 @@ Generated environments, old application bundles, temporary preview arrays and
 ordinary run output folders are excluded from Git. Validation records describe
 the original local runs and may contain machine-specific paths. The portable
 Windows application is distributed as a release asset.
+
+## Version 1.3.0 update
+
+Adds native LIF/LOF import, channel previews, Z-plane and projection choices,
+selected time points, acquisition calibration and cached TIFF extraction.
+Threshold sliders retain exact numeric controls and update previews after
+release. The counting pipeline remains unchanged; projections are explicitly
+reported as 2D projected counts. See APP_GUIDE.md for the workflow and limits.
 
 ## Version 1.2.1 update
 

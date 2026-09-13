@@ -1,5 +1,6 @@
 """Local desktop interface. All measurements are delegated to pipeline.cli."""
 from pathlib import Path
+from copy import deepcopy
 import csv
 import json
 import sys
@@ -19,7 +20,7 @@ from . import __version__
 from .forms import ConfigDialog, FieldDialog
 from .quick_start import QuickStartWidget
 from .services import (
-    ROOT, default_config, metric, new_run_name, number, output_path,
+    ROOT, config_with_imports, default_config, input_compatible, metric, new_run_name, number, output_path,
     prepare_analysis, process_command, read_manifest, read_results, validate_rows, write_manifest,
 )
 
@@ -252,12 +253,15 @@ class MainWindow(QMainWindow):
         self.quick_start.setObjectName("card")
         self.quick_start.previewRequested.connect(self.preview_segmentation)
         self.quick_start.runRequested.connect(self.run_analysis)
+        self.quick_start.leicaRequested.connect(self.import_leica)
         self.input_modes.addTab(self.quick_start, "Quick analysis")
         fields, contents = card()
         self.field_count = label("Fields · 0", "section")
         contents.addLayout(row_layout(self.field_count, None,
             button("Import CSV", self.import_csv), button("Export CSV", self.export_csv),
             button("+ Add field", self.add_field, True)))
+        self.batch_leica_button = button("Import Leica .lif / .lof…", self.import_leica)
+        contents.addLayout(row_layout(self.batch_leica_button, None))
         contents.addWidget(label("One row per field. Nonoverlapping fields from the same biological sample share a replicate ID.", "muted", True))
         self.field_table = table(["Field ID", "Replicate ID", "Live · green", "Dead · red", "EBFP · optional"])
         self.field_table.setMinimumHeight(140)
@@ -290,6 +294,7 @@ class MainWindow(QMainWindow):
         content.addWidget(label("Each run creates a new folder with counts, overlays, figures, settings and verification records.", "muted", True))
         layout.addWidget(output)
         self.input_modes.currentChanged.connect(lambda _: self.update_config_summary())
+        self.quick_start.changed.connect(self.update_config_summary)
         return page
 
     def _results_page(self):
@@ -396,8 +401,10 @@ class MainWindow(QMainWindow):
                 if quick:
                     # TIFF dimensions are per-input convenience, not a change to
                     # the batch preset when a quick preview is accepted.
-                    for key in ("expected_shape", "dtype"):
+                    for key in ("expected_shape", "dtype", "pixel_size_um"):
                         reviewed["input"][key] = self.config["input"][key]
+                    reviewed["display"] = deepcopy(self.config["display"])
+                    reviewed.pop("leica_imports", None)
                 self.config = reviewed
                 self.config_name = "Visually reviewed settings"
                 self.update_config_summary()
@@ -485,12 +492,57 @@ class MainWindow(QMainWindow):
             return
         try:
             rows = read_manifest(path)
+            config = config_with_imports(rows, self.config)
             if self.rows and QMessageBox.question(self, "Replace field list?", "Importing this CSV will replace the current field list.") != QMessageBox.StandardButton.Yes:
                 return
             self.rows = rows
+            self.config = config
             self.refresh_fields()
+            self.update_config_summary()
         except Exception as exc:
             self.error(exc)
+
+    def import_leica(self):
+        try:
+            from .leica_dialog import LeicaImportDialog
+            output = Path(self.output_base.text()).expanduser().resolve().parent / "imports"
+            dialog = LeicaImportDialog(self.config, output, self)
+            screen = self.screen().availableGeometry()
+            dialog.resize(min(1040, screen.width() - 40), min(820, screen.height() - 50))
+            if not dialog.exec():
+                return
+            bundle = dialog.result_bundle
+            if self.input_modes.currentIndex() == 0:
+                self.quick_start.set_imported(bundle)
+            else:
+                self.append_leica_import(bundle)
+            self.status_text.setText(bundle["description"] + " Review segmentation before running the analysis.")
+            self.update_config_summary()
+        except Exception as exc:
+            self.error(exc)
+
+    def append_leica_import(self, bundle):
+        if self.rows and not input_compatible(self.config["input"], bundle["input"]):
+            raise ValueError("This Leica image has a different size, bit depth or pixel calibration from the current batch. Use Quick analysis or start a separate batch.")
+        row = deepcopy(bundle["row"])
+        for key in ("image_id", "replicate_id"):
+            taken = {existing[key].casefold() for existing in self.rows}
+            stem = row[key]
+            suffix = 2
+            while row[key].casefold() in taken:
+                row[key] = f"{stem}_{suffix}"
+                suffix += 1
+        rows = [*self.rows, row]
+        validate_rows(rows)
+        config = deepcopy(self.config)
+        if not self.rows:
+            config["input"].update(deepcopy(bundle["input"]))
+            config["display"].update(deepcopy(bundle.get("display", {})))
+        config = config_with_imports(rows, config)
+        self.rows, self.config = rows, config
+        self.config_name = "Leica acquisition settings"
+        self.refresh_fields()
+        self.update_config_summary()
 
     def export_csv(self):
         if not self.rows:
@@ -505,10 +557,12 @@ class MainWindow(QMainWindow):
 
     def update_config_summary(self):
         c = self.config
-        height, width = c["input"]["expected_shape"]
-        py, px = c["input"]["pixel_size_um"]
+        imported = self.quick_start.imported if self.input_modes.currentIndex() == 0 else None
+        input_settings = imported["input"] if imported else c["input"]
+        height, width = input_settings["expected_shape"]
+        py, px = input_settings["pixel_size_um"]
         self.preset_title.setText("Analysis settings · " + self.config_name)
-        image_format = "Size and bit depth read from TIFFs" if self.input_modes.currentIndex() == 0 else f"{width} × {height} pixels · {c['input']['dtype']}"
+        image_format = "Size and bit depth read from TIFFs" if self.input_modes.currentIndex() == 0 and not imported else f"{width} × {height} pixels · {input_settings['dtype']}"
         self.config_summary.setText(f"{image_format} · {px:g} × {py:g} µm/pixel\nLIVE low / high: {c['segmentation']['green']['low']:g} / {c['segmentation']['green']['high']:g}    ·    DEAD low / high: {c['segmentation']['red']['low']:g} / {c['segmentation']['red']['high']:g}    ·    EBFP q ≤ {c['ebfp']['q_threshold']:g}")
 
     def load_config(self):
@@ -561,7 +615,7 @@ class MainWindow(QMainWindow):
         if self.input_modes.currentIndex() == 0:
             return self.quick_start.prepare(self.config)
         validate_rows(self.rows)
-        return self.rows, self.config
+        return self.rows, config_with_imports(self.rows, self.config)
 
     def run_reference(self):
         if self.process:
@@ -599,6 +653,8 @@ class MainWindow(QMainWindow):
     def set_busy(self, busy):
         self.run_button.setEnabled(not busy)
         self.quick_start.run_button.setEnabled(not busy)
+        self.quick_start.leica_button.setEnabled(not busy)
+        self.batch_leica_button.setEnabled(not busy)
         self.reference_button.setEnabled(not busy)
         self.verify_button.setEnabled(not busy and self.result is not None)
         self.cancel_button.setVisible(busy)
@@ -712,6 +768,13 @@ class MainWindow(QMainWindow):
             check = result["reference"]
             notes.append(f"Recorded reference comparison: {check.get('status', 'unknown')}; {check.get('objects_checked', '?')} objects checked.")
         notes.extend(result["meta"].get("warnings", []))
+        for imported in result.get("leica_imports", []):
+            field = imported.get("analysis_field_id", "field")
+            selection = imported.get("selection", {})
+            if selection.get("mode") == "max":
+                notes.append(f"Leica field {field}: counts are from a 2D maximum-intensity projection, not a 3D cell count; objects overlapping in Z can merge.")
+            else:
+                notes.append(f"Leica field {field}: counts are from the selected 2D optical slice.")
         self.result_notes.setPlainText("\n".join(notes))
         self.populate_result_table()
         self.preview_choice.blockSignals(True)

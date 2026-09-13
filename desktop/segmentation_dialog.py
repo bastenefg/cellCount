@@ -14,7 +14,7 @@ from PySide6.QtCore import QProcess, QProcessEnvironment, QTimer, Qt
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout,
     QFrame, QGroupBox, QHBoxLayout, QLabel, QMessageBox, QPushButton,
-    QScrollArea, QSpinBox, QSplitter, QVBoxLayout, QWidget,
+    QScrollArea, QSlider, QSpinBox, QSplitter, QVBoxLayout, QWidget,
 )
 from pipeline.io import validate_config
 from .services import ROOT
@@ -67,6 +67,8 @@ class SegmentationDialog(QDialog):
         self._worker_generation = None
         self._last_channel = "red"
         self._loading = False
+        self._threshold_dragging = False
+        self._threshold_ranges = {}
         self._closing = False
         self._retry = False
         self._temporary = TemporaryDirectory(prefix="cell_segmentation_")
@@ -128,6 +130,7 @@ class SegmentationDialog(QDialog):
         form = QFormLayout(group)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         self.inputs = {}
+        self.threshold_sliders = {}
         definitions = [
             ("high", "Peak threshold", .5, .000001, 1e6, "Minimum peak contrast above the estimated background. Raising this rejects weaker detections."),
             ("low", "Region threshold", .5, .000001, 1e6, "Contrast required to grow the mask around a peak. Must be at most the peak threshold."),
@@ -141,7 +144,25 @@ class SegmentationDialog(QDialog):
             widget.valueChanged.connect(self._settings_changed)
             self.inputs[key] = widget
             form.addRow(title, widget)
+            if key in ("high", "low"):
+                slider = QSlider(Qt.Orientation.Horizontal)
+                slider.setAccessibleName(title + " slider")
+                slider.setToolTip(help_text + " Release to update the preview. Use the number above for an exact value.")
+                slider.setSingleStep(10)
+                slider.sliderPressed.connect(self._threshold_drag_started)
+                slider.valueChanged.connect(lambda value, name=key: self._threshold_slid(name, value))
+                slider.sliderReleased.connect(self._threshold_drag_finished)
+                self.threshold_sliders[key] = slider
+                form.addRow(slider)
+        self.threshold_range = QComboBox()
+        self.threshold_range.setAccessibleName("Threshold slider range")
+        self.threshold_range.setToolTip("Use a smaller range for finer mouse adjustments. This changes the sliders only, not the thresholds.")
+        for maximum in (25, 100, 255, 1024, 4095, 16384, 65535):
+            self.threshold_range.addItem(f"0–{maximum:,}", maximum)
+        self.threshold_range.currentIndexChanged.connect(self._threshold_range_changed)
+        form.addRow("Slider range", self.threshold_range)
         form.addRow(note("Thresholds act on the smoothed, background-subtracted signal, not on raw brightness.", "muted"))
+        form.addRow(note("Drag a slider, then release to update. Region cannot exceed peak; exact values can also be typed above.", "muted"))
         controls.addWidget(group)
         shared = QGroupBox("Background, splitting & matching")
         form = QFormLayout(shared)
@@ -270,7 +291,59 @@ class SegmentationDialog(QDialog):
             widget.setValue(value)
             self._control_originals[key] = (widget.value(), value)
         self.exclude_border.setChecked(self.config["segmentation"]["exclude_border"])
+        self._sync_threshold_sliders(preferred=self._threshold_ranges.get(channel, max(25, params["high"] * 2)))
         self._loading = False
+
+    def _sync_threshold_sliders(self, preferred=None):
+        """Move slider thumbs without rounding the exact numeric settings."""
+        largest = max(self.inputs[key].value() for key in self.threshold_sliders)
+        target = max(largest, preferred or self.threshold_range.currentData())
+        choices = [self.threshold_range.itemData(i) for i in range(self.threshold_range.count())]
+        if largest > choices[-1]:
+            # Preserve unusual imported presets and the existing numeric range.
+            maximum = min(1000000, 10 ** int(np.ceil(np.log10(largest))))
+            self.threshold_range.addItem(f"0–{maximum:,}", maximum)
+            choices.append(maximum)
+        maximum = next((value for value in choices if value >= target), choices[-1])
+        self.threshold_range.blockSignals(True)
+        self.threshold_range.setCurrentIndex(choices.index(maximum))
+        for index, value in enumerate(choices):
+            self.threshold_range.model().item(index).setEnabled(value >= largest)
+        self.threshold_range.blockSignals(False)
+        self._threshold_ranges[self.channel_choice.currentData()] = maximum
+        for key, slider in self.threshold_sliders.items():
+            slider.blockSignals(True)
+            # Hundredths allow keyboard refinement even on a broad 16-bit range.
+            slider.setRange(0, int(maximum * 100))
+            slider.setPageStep(max(100, int(maximum * 10)))
+            slider.setValue(round(self.inputs[key].value() * 100))
+            slider.blockSignals(False)
+
+    def _threshold_range_changed(self, *_):
+        if not self._loading:
+            self._sync_threshold_sliders()
+
+    def _threshold_drag_started(self):
+        self._threshold_dragging = True
+        self.debounce.stop()
+
+    def _threshold_slid(self, key, position):
+        if self._loading:
+            return
+        value = max(self.inputs[key].minimum(), position / 100)
+        # Moving a slider never creates a high/low combination the pipeline
+        # rejects. Exact typed values retain the existing validation behavior.
+        other = self.inputs["low" if key == "high" else "high"].value()
+        value = max(value, other) if key == "high" else min(value, other)
+        if value == self.inputs[key].value():
+            self._sync_threshold_sliders()
+            return
+        self.inputs[key].setValue(value)
+
+    def _threshold_drag_finished(self):
+        self._threshold_dragging = False
+        if self.auto.isChecked() and not self._is_current():
+            self.debounce.start()
 
     def _collect_controls(self):
         for key, widget in self.inputs.items():
@@ -286,6 +359,7 @@ class SegmentationDialog(QDialog):
     def _settings_changed(self, *_):
         if self._loading:
             return
+        self._sync_threshold_sliders()
         self._collect_controls()
         self._invalidate()
 
@@ -309,7 +383,7 @@ class SegmentationDialog(QDialog):
         self.render()
 
     def _auto_changed(self, enabled):
-        if enabled and not self._is_current():
+        if enabled and not self._is_current() and not self._threshold_dragging:
             self.debounce.start()
         elif not enabled:
             self.debounce.stop()
@@ -336,13 +410,18 @@ class SegmentationDialog(QDialog):
         if self.preview:
             self.counts.setText("Previous preview — update required for current settings")
             self.pixel_info.setText("Settings changed. The images show the previous preview until the update finishes.")
-        if self.auto.isChecked():
+        if self._threshold_dragging:
+            self.status.setText("Release the threshold slider to update the preview." if self.auto.isChecked()
+                                else "Settings changed — click Update preview.")
+        elif self.auto.isChecked():
             self.debounce.start()
 
     def refresh_preview(self):
         if self._closing:
             return
         self.debounce.stop()
+        if self._threshold_dragging:
+            return
         try:
             self._collect_controls()
             validate_config(self.config)
@@ -573,6 +652,7 @@ class SegmentationDialog(QDialog):
 
     def reset_settings(self):
         self.config = deepcopy(self.original_config)
+        self._threshold_ranges.clear()
         self._load_controls()
         self._invalidate()
 

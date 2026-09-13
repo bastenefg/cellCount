@@ -21,6 +21,9 @@ def main():
         args = parser.parse_args()
         from desktop.segmentation import write_preview
         return write_preview(args.segmentation_preview, args.preview_output)
+    if "--leica-smoke-test" in sys.argv:
+        from desktop.leica_smoke import main as leica_smoke_main
+        return leica_smoke_main(sys.argv[1:])
     if "--smoke-test" in sys.argv:
         from desktop.smoke import main as smoke_main
         return smoke_main(sys.argv[1:])

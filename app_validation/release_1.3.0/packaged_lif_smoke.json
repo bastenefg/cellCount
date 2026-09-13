@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "timings_seconds": {
+    "catalog_and_selection_previews": 0.31199999999989814,
+    "import": 0.125,
+    "initial_segmentation_preview": 3.2039999999997235,
+    "slider_release_to_preview": 0.75
+  },
+  "reader_import_passed": true,
+  "source_format": ".lif",
+  "channel_previews_rendered": true,
+  "pixel_values_preserved": true,
+  "quick_analysis_provenance_preserved": true,
+  "threshold_drag_deferred": true,
+  "persistent_preview_worker": true,
+  "analysis_requested": false,
+  "source_identity_unchanged": true,
+  "elapsed_seconds": 7.42200000000048
+}

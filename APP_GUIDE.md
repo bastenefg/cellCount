@@ -1,4 +1,4 @@
-# Live/Dead Cell Counter 1.2
+# Live/Dead Cell Counter 1.3
 
 A 64-bit Windows desktop interface for paired LIVE/DEAD fluorescence images and
 optional EBFP analysis. The app can review other cell types; its bundled CHO
@@ -8,7 +8,7 @@ preserved.
 
 ## Open the portable app
 
-1. Extract **Live-Dead-Cell-Counter-1.2.1-Windows-x64.zip** completely into a new folder.
+1. Extract **Live-Dead-Cell-Counter-1.3.0-Windows-x64.zip** completely into a new folder.
 2. Open the extracted **Live-Dead Cell Counter** folder.
 3. Double-click **Live-Dead Cell Counter.exe**. Python is included; no installation or
    command line is needed.
@@ -65,10 +65,11 @@ Use **Load settings** to select a configuration or **Review / edit** to inspect
 and adapt a copy. Click **Preview segmentation** to review the object boundaries
 and adjust detection settings before running the full analysis (see below).
 Select a new output folder and click **Run analysis**. The
-app checks inputs before starting. All modes require registered, scalar,
-single-plane TIFFs. The bundled reference and default batch configuration expect
+app checks inputs before starting. The counting engine uses registered, scalar,
+single-plane TIFFs. Leica imports prepare those inputs automatically. The bundled reference and default batch configuration expect
 1024 × 1024 uint8 images with the reference acquisition and calibration. RGB
-composites and image stacks are unsupported. Use a separately named configuration
+composites and direct multi-page TIFF input are unsupported. Use the Leica
+importer below for .lif/.lof Z stacks. Use a separately named configuration
 when acquisition or calibration differs; review thresholds against controls before
 analyzing a complete comparison. The GUI does not change the numerical method.
 
@@ -77,7 +78,64 @@ acquired: missing means **not measured**, not a negative result. An acquired
 channel with no detectable signal remains a measurement. Extended QC adds EBFP
 mask-dilation and spatial-shift diagnostics; primary counts remain the same.
 
+## Import Leica SP8 files (.lif / .lof)
+
+Click **Import Leica .lif / .lof…** in Quick analysis, or **Import Leica…** in
+Batch / CSV. Open a Leica file (or drop it into the import window), then:
+
+1. Select the image series. A LIF can contain several independent acquisitions;
+   choose the one to analyze. The image list loads without reading all pixels.
+2. Assign the acquired channels to LIVE, DEAD and optional EBFP. The initial
+   LIVE/DEAD choices are the first two channels; **check these assignments** using
+   your staining and acquisition settings. Names such as Ch0/Ch1 do not identify
+   a dye. Confirm the assignments after reviewing the previews.
+3. For a Z stack, choose **Single Z plane** and use the Z slider, or explicitly
+   choose **Maximum intensity projection** and its first/last Z planes. Select a
+   time point if the acquisition contains more than one.
+4. Check **Pixel size (µm)**. Values come from Leica metadata when available and
+   can be edited here. If metadata is absent, confirm the displayed preset value.
+5. Click **Use these images**, then preview segmentation and run analysis as usual.
+
+A single-plane acquisition is imported directly. A projection takes the maximum
+stored value at each XY pixel independently in each selected channel. These are
+**2D projected object counts, not 3D cell counts**: cells above one another can
+merge. Z slices are not automatically pooled as independent cells or replicates.
+The run records the selected series, channel mapping, Z range, time and calibration.
+
+Only selected channels/planes are read. Maximum projections stream one plane at
+a time; the importer never needs the whole stack in memory. Repeated imports of
+an unchanged selection reuse verified TIFF exports. Cancel remains available
+while reading or exporting. Thumbnails use display scaling only; extracted
+uint8/uint16 pixel values and bit depth are preserved without normalization.
+
+Prepared TIFFs and `import_provenance.json` are kept in an **imports** folder
+beside the selected runs folder. Keep the entire import folder with your results,
+including when exporting/reopening a CSV. Run settings contain a verified copy
+of the import record; normal run verification covers the actual analyzed TIFFs.
+The Leica source is recorded by path, byte size and modification time rather
+than hashing a potentially multi-gigabyte container on each import.
+
+To add more series to a batch, use Import Leica again. New fields get separate
+replicate IDs; edit those deliberately if nonoverlapping fields belong to the
+same biological replicate. One batch must share XY dimensions, dtype and pixel
+calibration. Analyze acquisitions with different formats in separate batches.
+
+Supported: scalar XY fluorescence images in LIF/LOF, uint8/uint16 (including
+lower-bit acquisitions stored in those types), Z stacks and selected time points.
+RGB composites, varying tile/mosaic dimensions, spectral dimensions, floating
+point/FLIM data and bit-packed layouts are rejected with a message. The original
+Leica files are opened read-only. The reader is the pinned BSD-licensed
+[liffile 2026.7.14](https://github.com/cgohlke/liffile/tree/v2026.7.14).
+
 ## See and adjust cell segmentation
+
+**Peak threshold** and **Region threshold** now have sliders beside the exact
+numeric inputs. Drag for a quick adjustment or type a precise value. A drag
+updates the segmentation after release, so intermediate slider positions do not
+queue slow computations. The region slider cannot exceed the peak threshold.
+Use **Slider range** for fine adjustments near your thresholds or a wider range
+for 16-bit images. Sliders change the same existing threshold settings; they do
+not change brightness or the counting algorithm.
 
 After choosing a TIFF pair, adding fields or importing `samples.csv`, click **Preview segmentation**
 on **New analysis**. For a saved run, open **Results** and click **Inspect
@@ -211,11 +269,11 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1 -Zip
 ```
 
 This installs the build requirements into `.venv`, builds the executable, and
-creates `dist/1.2.1/Live-Dead-Cell-Counter-1.2.1-Windows-x64.zip`. The executable is in
-`dist/1.2.1/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
+creates `dist/1.3.0/Live-Dead-Cell-Counter-1.3.0-Windows-x64.zip`. The executable is in
+`dist/1.3.0/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
 replace an existing app directory, so an older open app remains intact. To
 rebuild the same version, choose another folder, for example
-`-ReleaseFolder 1.2.1-rebuild1`. Use `-SkipInstall` to use an
+`-ReleaseFolder 1.3.0-rebuild1`. Use `-SkipInstall` to use an
 already prepared environment. All scientific dependency versions remain pinned
 in the unchanged `requirements-lock.txt`. Qt and dependency notices are included
 in `_internal/third_party_notices`.
@@ -230,7 +288,7 @@ copies. The included source has no newly assigned license.
 After building, audit the release contents and ZIP with:
 
 ```powershell
-.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.2.1\Live-Dead Cell Counter" --zip ".\dist\1.2.1\Live-Dead-Cell-Counter-1.2.1-Windows-x64.zip" --output ".\app_validation\release_1.2.1_audit.json"
+.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.3.0\Live-Dead Cell Counter" --zip ".\dist\1.3.0\Live-Dead-Cell-Counter-1.3.0-Windows-x64.zip" --output ".\app_validation\release_1.3.0_audit.json"
 ```
 
 This audit checks bundled sources, preserved original package files, excluded

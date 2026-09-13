@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "timings_seconds": {
+    "catalog_and_selection_previews": 0.75,
+    "import": 0.10900000000037835,
+    "initial_segmentation_preview": 2.8590000000003783,
+    "slider_release_to_preview": 0.6560000000008586,
+    "analysis": 6.313000000000102
+  },
+  "reader_import_passed": true,
+  "source_format": ".lof",
+  "channel_previews_rendered": true,
+  "pixel_values_preserved": true,
+  "quick_analysis_provenance_preserved": true,
+  "threshold_drag_deferred": true,
+  "persistent_preview_worker": true,
+  "analysis_requested": true,
+  "analysis_passed": true,
+  "saved_provenance_passed": true,
+  "analysis_counts_match_preview": true,
+  "source_identity_unchanged": true,
+  "elapsed_seconds": 13.75
+}

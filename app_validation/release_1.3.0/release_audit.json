@@ -1,0 +1,75 @@
+{
+  "status": "passed",
+  "audit_scope": "Bundle source/data identity, original source preservation, dependency exclusions and exact ZIP contents. Runtime checks appear only when supplied separately.",
+  "app_version": "1.3.0",
+  "audit_python": "3.12.14",
+  "app_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.3.0\\Live-Dead Cell Counter",
+  "app_files": 1514,
+  "app_bytes": 280514437,
+  "executable_sha256": "f3353eccca1f8b66556b060c28163248355b575562ba6605e65d2fe364d25ae5",
+  "original_package_files_checked": 81,
+  "original_package_mismatches": [],
+  "bundled_sources_checked": 174,
+  "bundled_source_mismatches": [],
+  "incompatible_icu_files": [],
+  "private_data_folders": [],
+  "missing_notices": [],
+  "zip": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.3.0\\Live-Dead-Cell-Counter-1.3.0-Windows-x64.zip",
+  "zip_bytes": 114029622,
+  "zip_sha256": "149ca9c1978776c9559eb69bedb20e6d1faa6c7bafc536eb1dbcbebf269db66e",
+  "zip_crc_and_content_check": "passed",
+  "zip_mismatches": [],
+  "supplied_runtime_reports": [
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.3.0\\packaged_lif_smoke.json",
+      "sha256": "fee21b031c0750cad308c751a9a78cf02aa1d561bf6caebbb3755a9896261234",
+      "report": {
+        "status": "passed",
+        "timings_seconds": {
+          "catalog_and_selection_previews": 0.31199999999989814,
+          "import": 0.125,
+          "initial_segmentation_preview": 3.2039999999997235,
+          "slider_release_to_preview": 0.75
+        },
+        "reader_import_passed": true,
+        "source_format": ".lif",
+        "channel_previews_rendered": true,
+        "pixel_values_preserved": true,
+        "quick_analysis_provenance_preserved": true,
+        "threshold_drag_deferred": true,
+        "persistent_preview_worker": true,
+        "analysis_requested": false,
+        "source_identity_unchanged": true,
+        "elapsed_seconds": 7.42200000000048
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.3.0\\packaged_lof_smoke.json",
+      "sha256": "62a8719d750f7785e3a579dd33d65f375c84a3956fb92114156803b7680f8bf2",
+      "report": {
+        "status": "passed",
+        "timings_seconds": {
+          "catalog_and_selection_previews": 0.75,
+          "import": 0.10900000000037835,
+          "initial_segmentation_preview": 2.8590000000003783,
+          "slider_release_to_preview": 0.6560000000008586,
+          "analysis": 6.313000000000102
+        },
+        "reader_import_passed": true,
+        "source_format": ".lof",
+        "channel_previews_rendered": true,
+        "pixel_values_preserved": true,
+        "quick_analysis_provenance_preserved": true,
+        "threshold_drag_deferred": true,
+        "persistent_preview_worker": true,
+        "analysis_requested": true,
+        "analysis_passed": true,
+        "saved_provenance_passed": true,
+        "analysis_counts_match_preview": true,
+        "source_identity_unchanged": true,
+        "elapsed_seconds": 13.75
+      }
+    }
+  ],
+  "issues": []
+}

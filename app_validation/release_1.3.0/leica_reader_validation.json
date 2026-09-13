@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "formats": [
+    ".lif",
+    ".lof"
+  ],
+  "real_file_cases_checked": 5,
+  "single_plane_and_z_selection": "passed",
+  "maximum_projection_pixel_equality": "passed",
+  "largest_stack_depth": 115,
+  "source_sha256_unchanged": true,
+  "catalog_seconds_range": [
+    0.00266,
+    0.0452
+  ],
+  "import_seconds_range": [
+    0.05053,
+    0.2469
+  ],
+  "cached_import_seconds_range": [
+    0.02475,
+    0.06235
+  ],
+  "timing_note": "Observed on this development machine. Filesystem cache was not controlled; these are not cold-storage guarantees.",
+  "uint16_check": "Synthetic 12-bit values in uint16 preserved exactly; no real uint16 fixture available.",
+  "private_fixture_pixels_published": false
+}
