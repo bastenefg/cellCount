@@ -1,0 +1,61 @@
+{
+  "status": "passed",
+  "audit_scope": "Bundle source/data identity, original source preservation, dependency exclusions and exact ZIP contents. Runtime checks appear only when supplied separately.",
+  "app_version": "1.3.1",
+  "audit_python": "3.12.14",
+  "app_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.3.1\\Live-Dead Cell Counter",
+  "app_files": 1516,
+  "app_bytes": 280585732,
+  "executable_sha256": "026c8d1e10b55874234dc49365db20eb6fe7b40c2256cec7d4f355b5d779014b",
+  "original_package_files_checked": 81,
+  "original_package_mismatches": [],
+  "bundled_sources_checked": 176,
+  "bundled_source_mismatches": [],
+  "incompatible_icu_files": [],
+  "private_data_folders": [],
+  "missing_notices": [],
+  "zip": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.3.1\\Live-Dead-Cell-Counter-1.3.1-Windows-x64.zip",
+  "zip_bytes": 114064329,
+  "zip_sha256": "5a0c4c90b9610b16cfac52ce420afb02271ca07886a1aebbd517a321beab438b",
+  "zip_crc_and_content_check": "passed",
+  "zip_mismatches": [],
+  "supplied_runtime_reports": [
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.3.1\\source_smoke.json",
+      "sha256": "06a2e691b28a1e191002be0403a85f6011f7669ad428e9442795eea945b132e8",
+      "report": {
+        "status": "passed",
+        "gui_rendered": true,
+        "worker_verification_passed": true,
+        "summary_export_byte_identical": [
+          ".png",
+          ".svg"
+        ],
+        "export_while_detection_selected": true,
+        "full_field_summary_passed": true,
+        "legacy_run_figures_unchanged": true,
+        "saved_segmentation_parameters_used": true,
+        "stored_detection_masks_used": true
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.3.1\\packaged_smoke.json",
+      "sha256": "06a2e691b28a1e191002be0403a85f6011f7669ad428e9442795eea945b132e8",
+      "report": {
+        "status": "passed",
+        "gui_rendered": true,
+        "worker_verification_passed": true,
+        "summary_export_byte_identical": [
+          ".png",
+          ".svg"
+        ],
+        "export_while_detection_selected": true,
+        "full_field_summary_passed": true,
+        "legacy_run_figures_unchanged": true,
+        "saved_segmentation_parameters_used": true,
+        "stored_detection_masks_used": true
+      }
+    }
+  ],
+  "issues": []
+}

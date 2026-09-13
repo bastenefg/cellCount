@@ -1,5 +1,6 @@
 """Opt-in packaging check: render real widgets and verify through the real worker."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -32,8 +33,49 @@ def main(arguments):
             QFontDatabase.addApplicationFont(str(font))
         app.setFont(QFont("Segoe UI", 10))
         window = MainWindow()
+        window.summary_cache = output / "summary_cache"
         errors = []
         window.error = lambda error: errors.append(str(error))
+
+        def run_figures(run):
+            return {extension: (run / ("figure" + extension)).read_bytes()
+                    if (run / ("figure" + extension)).is_file() else None
+                    for extension in (".png", ".svg")}
+
+        def await_full_field_summary():
+            deadline = time.monotonic() + 90
+            while True:
+                app.processEvents()
+                if errors:
+                    raise RuntimeError(str(errors))
+                if window.summary_process is None:
+                    if not window.summary_paths:
+                        raise RuntimeError("Full-field summary did not load: " + window.result_notes.toPlainText())
+                    break
+                if time.monotonic() >= deadline:
+                    window.summary_process.kill()
+                    window.summary_process.waitForFinished(10000)
+                    raise RuntimeError("Full-field summary worker timed out.")
+                time.sleep(.025)
+            for key in ("png", "svg", "metadata"):
+                assert Path(window.summary_paths[key]).is_file(), f"Missing full-field summary {key}"
+                assert not Path(window.summary_paths[key]).resolve().is_relative_to(window.result["path"]), "Summary cache was written inside the completed run"
+            metadata = json.loads(Path(window.summary_paths["metadata"]).read_text(encoding="utf-8"))
+            saved_config = json.loads((window.result["path"] / "effective_config.json").read_text(encoding="utf-8"))
+            assert metadata["segmentation"] == saved_config["segmentation"], "Summary thresholds/settings differ from those used for the saved detections"
+            stored_masks = metadata["stored_detection_masks"]
+            mask_path = window.result["path"] / "labels" / (metadata["representative_image_id"] + ".npz")
+            assert Path(stored_masks["path"]).resolve() == mask_path, "Summary uses masks from a different field"
+            with mask_path.open("rb") as stream:
+                assert stored_masks["sha256"] == hashlib.file_digest(stream, "sha256").hexdigest(), "Summary masks differ from the saved detection masks"
+            assert metadata["view"] == "full_field"
+            assert Path(metadata["run"]).resolve() == window.result["path"], "Summary belongs to a different run"
+            height, width = metadata["shape_yx"]
+            assert height > 0 and width > 0
+            assert metadata["crop_yx"] == [0, height, 0, width], "Summary still uses a central crop"
+            assert Path(window.preview_choice.itemData(0)).resolve() == Path(window.summary_paths["png"]).resolve(), "Summary dropdown still points at the legacy cropped figure"
+            assert window.figure_button.isEnabled(), "Full-field export is unavailable after rendering"
+
         window.show()
         assert window.windowTitle() == "Live/Dead Cell Counter"
         assert window.input_modes.currentIndex() == 0, "Quick analysis is not the default"
@@ -48,7 +90,9 @@ def main(arguments):
         assert window.input_modes.currentIndex() == 1
         app.processEvents()
         window.grab().save(str(output / "setup.png"))
+        original_figures = run_figures(args.run)
         window.load_result(args.run)
+        await_full_field_summary()
         window.result_tabs.setCurrentIndex(0)
         app.processEvents()
         window.grab().save(str(output / "results.png"))
@@ -62,22 +106,21 @@ def main(arguments):
         window.viewer.fit()
         window.grab().save(str(output / "detections.png"))
         # Export the summary while a detection overlay is selected. Both formats
-        # must be exact copies of this run's saved figure, independent of zoom.
+        # must be exact copies of this run's full-field cache, independent of zoom.
         saved_exports = []
         original_save_dialog = QFileDialog.getSaveFileName
         try:
             for extension in (".png", ".svg"):
-                source = args.run / ("figure" + extension)
-                if not source.is_file():
-                    continue
+                source = Path(window.summary_paths[extension.removeprefix(".")])
                 destination = output / ("exported_summary" + extension)
                 QFileDialog.getSaveFileName = lambda *a, p=destination: (str(p), "")
                 window.figure_button.click()
-                assert destination.read_bytes() == source.read_bytes(), "Export differs from the loaded run's summary"
+                assert destination.read_bytes() == source.read_bytes(), "Export differs from the loaded run's full-field summary"
                 saved_exports.append(extension)
         finally:
             QFileDialog.getSaveFileName = original_save_dialog
         assert saved_exports, "No summary figure exported"
+        assert run_figures(args.run) == original_figures, "Displaying/exporting the full field modified a legacy run figure"
         window.resize(1000, 650)
         app.processEvents()
         window.grab().save(str(output / "results_compact.png"))
@@ -101,6 +144,10 @@ def main(arguments):
                 "worker_verification_passed": True,
                 "summary_export_byte_identical": saved_exports,
                 "export_while_detection_selected": True,
+                "full_field_summary_passed": True,
+                "legacy_run_figures_unchanged": True,
+                "saved_segmentation_parameters_used": True,
+                "stored_detection_masks_used": True,
             }, indent=2) + "\n", encoding="utf-8")
             return 0
         import numpy as np
@@ -170,6 +217,9 @@ def main(arguments):
             raise RuntimeError("Quick analysis worker timed out.")
         if errors or window.result["path"] != output / "quick_pair_run":
             raise RuntimeError(str(errors) or "Quick analysis did not load its new results.")
+        quick_figures = run_figures(window.result["path"])
+        await_full_field_summary()
+        assert run_figures(window.result["path"]) == quick_figures, "Full-field rendering changed the new run's saved figures"
         quick_result = window.result["image"][0]
         for key in ("live_only", "dead_only", "double_positive", "total"):
             assert int(quick_result[key]) == preview_counts[key], (key, quick_result[key], preview_counts[key])
@@ -183,6 +233,10 @@ def main(arguments):
             "display_did_not_change_labels": True, "opening_preset_unchanged": True,
             "preview_counts": preview_counts, "quick_pair_analysis_passed": True,
             "quick_counts_match_preview": True, "persistent_preview_worker": True,
+            "full_field_summary_passed": True, "legacy_run_figures_unchanged": True,
+            "saved_segmentation_parameters_used": True,
+            "stored_detection_masks_used": True,
+            "summary_export_byte_identical": saved_exports,
             "initial_preview_seconds": initial_preview_seconds,
             "edit_timing_metric": "GUI control edit to current rendered preview, including debounce and display rendering",
             "edit_timings": edit_timings}, indent=2) + "\n", encoding="utf-8")

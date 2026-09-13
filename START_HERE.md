@@ -5,7 +5,7 @@ fluorescence TIFF images, with optional EBFP measurements.
 
 ## Use the app
 
-Download the version 1.3.0 Windows ZIP from this repository's Releases page,
+Download the version 1.3.1 Windows ZIP from this repository's Releases page,
 extract the entire archive, and open **Live-Dead Cell Counter.exe**. Python is
 included. Keep the executable and its `_internal` folder together.
 
@@ -20,9 +20,11 @@ projection. Pixel calibration is read from metadata and can be reviewed. Peak
 and region threshold sliders make segmentation adjustments easier.
 
 On **Results → Figure & detections**, use **Save summary figure…** to export
-the loaded run's summary as a PNG or SVG. The summary's microscopy panels show
-the original image crop, so changing segmentation settings changes the counts
-and detection overlays while those raw image panels stay the same.
+the loaded run's summary as a PNG or SVG. Its microscopy panels show the full
+representative field, matching the extent of that field's detection overlay.
+Older runs also get the full-field summary when reopened, using the saved counts
+and original TIFFs. Saved detection outlines and the exact threshold values are
+included. Leica summaries identify the analyzed Z slice or projection.
 
 Read [APP_GUIDE.md](APP_GUIDE.md) for the workflow, settings, and source/build
 instructions. [README.md](README.md) is the preserved original scientific
@@ -43,6 +45,15 @@ Generated environments, old application bundles, temporary preview arrays and
 ordinary run output folders are excluded from Git. Validation records describe
 the original local runs and may contain machine-specific paths. The portable
 Windows application is distributed as a release asset.
+
+## Version 1.3.1 update
+
+Summary image panels now show the entire field instead of a central crop, in
+both the preview and PNG/SVG exports. Summaries are prepared in the background
+and cached separately from completed runs; no cells are recounted and the
+original run files remain intact. Outlines and threshold annotations come from
+the saved masks and effective settings of that run. Keep source TIFFs at their recorded locations
+so the app can prepare the full-field panels.
 
 ## Version 1.3.0 update
 

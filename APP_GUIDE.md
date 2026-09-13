@@ -8,7 +8,7 @@ preserved.
 
 ## Open the portable app
 
-1. Extract **Live-Dead-Cell-Counter-1.3.0-Windows-x64.zip** completely into a new folder.
+1. Extract **Live-Dead-Cell-Counter-1.3.1-Windows-x64.zip** completely into a new folder.
 2. Open the extracted **Live-Dead Cell Counter** folder.
 3. Double-click **Live-Dead Cell Counter.exe**. Python is included; no installation or
    command line is needed.
@@ -233,9 +233,26 @@ to load an earlier run or **Save summary CSV** to export the displayed summary.
 Use **Save summary figure...** in **Figure & detections** to save the loaded
 run's summary as a full-resolution PNG or editable SVG. This always exports the
 summary, even while a detection overlay is selected. Choose a destination outside
-the run folder to keep its verification records intact. The summary contains a
-representative field's central crop; detections show each full field. The preview
-caption identifies the loaded run, and hovering over it shows the image path.
+the run folder to keep its verification records intact. The summary contains the
+entire representative field, with the same image extent as its detection overlay.
+LIVE/DEAD panels show outlines from the saved channel masks; the merged panel
+shows the saved object masks. The figure prints the peak and region thresholds
+used for detection, together with the smoothing and minimum-area settings.
+These come from the completed run's effective settings, so changing controls
+afterward cannot change its exported summary. Raw image backgrounds retain the
+run's display scaling; the outlines identify the detected regions.
+For batches, the representative field is identified in the figure; counts still
+summarize all analyzed fields. Leica figures identify the selected Z slice or
+projection and time point. The preview caption identifies the loaded run, and
+hovering over it shows the image path.
+
+This also works for older completed runs without repeating segmentation. The
+app prepares the full-field figure in the background and caches it separately;
+the saved counts and original run artifacts remain unchanged. The export button
+becomes available when the new summary is ready. Source TIFFs must remain at
+their recorded locations; a missing or changed source is reported in the run
+notes. Older pipeline figures inside the run folder retain their original crop;
+use **Save summary figure...** to save the full-field version.
 Use **Open run folder**
 for per-image and per-replicate CSV tables, individual
 objects, figures, masks, effective settings, and provenance records. Keep the
@@ -269,11 +286,11 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1 -Zip
 ```
 
 This installs the build requirements into `.venv`, builds the executable, and
-creates `dist/1.3.0/Live-Dead-Cell-Counter-1.3.0-Windows-x64.zip`. The executable is in
-`dist/1.3.0/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
+creates `dist/1.3.1/Live-Dead-Cell-Counter-1.3.1-Windows-x64.zip`. The executable is in
+`dist/1.3.1/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
 replace an existing app directory, so an older open app remains intact. To
 rebuild the same version, choose another folder, for example
-`-ReleaseFolder 1.3.0-rebuild1`. Use `-SkipInstall` to use an
+`-ReleaseFolder 1.3.1-rebuild1`. Use `-SkipInstall` to use an
 already prepared environment. All scientific dependency versions remain pinned
 in the unchanged `requirements-lock.txt`. Qt and dependency notices are included
 in `_internal/third_party_notices`.
@@ -288,7 +305,7 @@ copies. The included source has no newly assigned license.
 After building, audit the release contents and ZIP with:
 
 ```powershell
-.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.3.0\Live-Dead Cell Counter" --zip ".\dist\1.3.0\Live-Dead-Cell-Counter-1.3.0-Windows-x64.zip" --output ".\app_validation\release_1.3.0_audit.json"
+.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.3.1\Live-Dead Cell Counter" --zip ".\dist\1.3.1\Live-Dead-Cell-Counter-1.3.1-Windows-x64.zip" --output ".\app_validation\release_1.3.1_audit.json"
 ```
 
 This audit checks bundled sources, preserved original package files, excluded

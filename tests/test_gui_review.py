@@ -54,6 +54,11 @@ class WindowReviewTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.window = MainWindow()
+        self.window.summary_cache = self.root / "summary_cache"
+        # These tests isolate GUI routing from scientific rendering. Full-source
+        # extent and source verification are exercised in test_full_field_summary.
+        self.prepare_patch = patch.object(self.window, "prepare_summary", side_effect=self._prepare_fixture_summary)
+        self.prepare_patch.start()
 
     def tearDown(self):
         if self.window.process is not None:
@@ -61,9 +66,25 @@ class WindowReviewTests(unittest.TestCase):
             self.window.process.kill()
             self._wait_until(lambda: self.window.process is None, timeout_ms=10000)
         self.window.close()
+        self.prepare_patch.stop()
         self.window.deleteLater()
         self.app.processEvents()
         self.temp.cleanup()
+
+    def _prepare_fixture_summary(self):
+        run = self.window.result["path"]
+        cache = self.window.summary_cache / run.name
+        cache.mkdir(parents=True, exist_ok=True)
+        for ext in ("png", "svg"):
+            source = run / ("figure." + ext)
+            content = source.read_bytes() if source.is_file() else b'<svg xmlns="http://www.w3.org/2000/svg"/>'
+            (cache / ("figure." + ext)).write_bytes(content)
+        (cache / "figure_metadata.json").write_text(json.dumps({
+            "cache_key": run.name, "run": str(run), "view": "full_field",
+            "artifacts": {ext: {"sha256": hashlib.sha256((cache / ("figure." + ext)).read_bytes()).hexdigest()}
+                          for ext in ("png", "svg")},
+        }), encoding="utf-8")
+        self.assertTrue(self.window.accept_summary(cache, run.name))
 
     def _wait_until(self, predicate, timeout_ms=30000):
         loop = QEventLoop()
@@ -123,21 +144,23 @@ class WindowReviewTests(unittest.TestCase):
                 items = self.window.viewer.scene().items()
                 self.assertEqual(len(items), 1)
                 self.assertEqual(items[0].pixmap().toImage().pixelColor(0, 0).name(), color)
-                self.assertEqual(Path(self.window.preview_choice.currentData()), run / "figure.png")
+                self.assertEqual(Path(self.window.preview_choice.currentData()), self.window.summary_cache / run.name / "figure.png")
+                self.assertIn("full field", self.window.preview_caption.text())
 
     def test_missing_or_corrupt_summary_clears_previous_detection_preview(self):
         run = self._result_fixture("preview_failure")
         (run / "qc").mkdir()
         Image.new("RGB", (24, 24), "red").save(run / "qc" / "synthetic_field_detections.png")
         self.window.load_result(run)
+        preview_path = Path(self.window.summary_paths["png"])
         for invalid in ("missing", "corrupt"):
             with self.subTest(invalid=invalid):
                 self.window.preview_choice.setCurrentIndex(1)
                 self.assertEqual(len(self.window.viewer.scene().items()), 1)
                 if invalid == "missing":
-                    (run / "figure.png").unlink()
+                    preview_path.unlink()
                 else:
-                    (run / "figure.png").write_bytes(b"This is not a PNG.")
+                    preview_path.write_bytes(b"This is not a PNG.")
                 self.window.preview_choice.setCurrentIndex(0)
                 self.assertEqual(self.window.viewer.scene().items(), [])
                 self.assertIn("Preview unavailable", self.window.preview_caption.text())
@@ -163,7 +186,7 @@ class WindowReviewTests(unittest.TestCase):
                         patch.object(self.window, "error") as error:
                     self.window.save_summary_figure()
                 error.assert_not_called()
-                self.assertEqual(destination.read_bytes(), (current / ("figure" + suffix)).read_bytes())
+                self.assertEqual(destination.read_bytes(), Path(self.window.summary_paths[suffix[1:]]).read_bytes())
         self.assertEqual({path: path.read_bytes() for path in before}, before)
 
     def test_summary_export_cannot_overwrite_completed_run_artifacts(self):
@@ -180,6 +203,103 @@ class WindowReviewTests(unittest.TestCase):
                 error.assert_called_once()
                 self.assertIn("outside analysis run folders", str(error.call_args.args[0]))
                 self.assertEqual(destination.read_bytes() if destination.exists() else None, before)
+
+    def test_export_keeps_clicked_run_if_another_analysis_finishes_during_dialog(self):
+        first = self._result_fixture("export_first")
+        second = self._result_fixture("export_second")
+        Image.new("RGB", (24, 24), "blue").save(second / "figure.png")
+        self.window.load_result(first)
+        expected = Path(self.window.summary_paths["png"]).read_bytes()
+        destination = self.root / "first_summary.png"
+        def choose(*args):
+            self.window.load_result(second)
+            return str(destination), "PNG image (*.png)"
+        with patch("desktop.app.QFileDialog.getSaveFileName", side_effect=choose):
+            self.window.save_summary_figure()
+        self.assertEqual(destination.read_bytes(), expected)
+        self.assertEqual(self.window.result["path"], second)
+
+    def test_summary_worker_renders_existing_run_reuses_cache_and_recovers_corruption(self):
+        self.prepare_patch.stop()
+        run = self._result_fixture("full_field_worker")
+        source = self.root / "inputs"
+        source.mkdir()
+        row = {"image_id": "synthetic_field", "replicate_id": "synthetic_replicate", "ebfp": ""}
+        for channel in ("green", "red"):
+            path = source / (channel + ".tif")
+            pixels = np.zeros((32, 40), dtype=np.uint8)
+            pixels[0, :] = pixels[-1, :] = 255
+            Image.fromarray(pixels).save(path)
+            row[channel] = str(path)
+        services.write_manifest(run / "resolved_samples.csv", [row])
+        config = services.default_config()
+        config["input"]["expected_shape"] = [32, 40]
+        (run / "effective_config.json").write_text(json.dumps(config), encoding="utf-8")
+        (run / "labels").mkdir()
+        live = np.zeros((32, 40), dtype=np.int32)
+        dead = np.zeros_like(live)
+        objects = np.zeros_like(live)
+        live[6:9, 6:9] = 1
+        live[22:25, 22:25] = 2
+        dead[13:16, 13:16] = 1
+        dead[22:25, 22:25] = 2
+        objects[6:9, 6:9] = 1
+        objects[13:16, 13:16] = 2
+        objects[22:25, 22:25] = 3
+        np.savez_compressed(run / "labels" / "synthetic_field.npz", live=live, dead=dead, objects=objects)
+        before = {path: path.read_bytes() for path in run.rglob("*") if path.is_file()}
+        ticks = []
+        heartbeat = QTimer()
+        heartbeat.setInterval(10)
+        heartbeat.timeout.connect(lambda: ticks.append(1))
+        heartbeat.start()
+        self.window.load_result(run)
+        self.assertIsNotNone(self.window.summary_process)
+        self.assertFalse(self.window.figure_button.isEnabled())
+        self.assertEqual(self.window.viewer.scene().items(), [])
+        self.assertIn("Preparing full-field", self.window.preview_caption.text())
+        self.assertTrue(self._wait_until(lambda: self.window.summary_process is None))
+        heartbeat.stop()
+        self.assertGreater(len(ticks), 1)
+        self.assertTrue(self.window.figure_button.isEnabled(), self.window.result_notes.toPlainText())
+        paths = dict(self.window.summary_paths)
+        metadata = json.loads(Path(paths["metadata"]).read_text(encoding="utf-8"))
+        self.assertEqual(metadata["crop_yx"], [0, 32, 0, 40])
+        self.assertEqual(metadata["run_total_objects"], 3)
+        self.assertEqual(metadata["segmentation"], config["segmentation"])
+        self.assertEqual({path: path.read_bytes() for path in before}, before)
+        self.window.load_result(run)
+        self.assertIsNone(self.window.summary_process)
+        self.assertEqual(self.window.summary_paths, paths)
+        # A valid but substituted image must not be accepted as this run's cache.
+        Image.new("RGB", (24, 24), "red").save(paths["png"])
+        self.window.load_result(run)
+        self.assertIsNotNone(self.window.summary_process)
+        self.assertTrue(self._wait_until(lambda: self.window.summary_process is None))
+        self.assertTrue(self.window.figure_button.isEnabled(), self.window.result_notes.toPlainText())
+        self.assertNotEqual(self.window.summary_paths["png"], paths["png"])
+        Path(row["green"]).unlink()
+        self.window.load_result(run)
+        self.assertIsNone(self.window.summary_paths)
+        self.assertFalse(self.window.figure_button.isEnabled())
+        self.assertEqual(self.window.viewer.scene().items(), [])
+        self.assertIn("Full-field summary unavailable", self.window.preview_caption.text())
+
+    def test_run_switch_cancels_pending_summary_and_ignores_its_late_completion(self):
+        old = self._result_fixture("pending_old")
+        current = self._result_fixture("pending_current")
+        self.window.load_result(old)
+        pending = QProcess(self.window)
+        self.window.summary_process = pending
+        pending.start(sys.executable, ["-c", "import time; time.sleep(30)"])
+        self.assertTrue(pending.waitForStarted(5000))
+        self.window.load_result(current)
+        self.assertIsNone(self.window.summary_process)
+        paths = dict(self.window.summary_paths)
+        self.window.summary_finished(pending, old, Path(paths["png"]).parent, old.name, 0)
+        self.assertEqual(self.window.summary_paths, paths)
+        self.assertEqual(self.window.result["path"], current)
+        self.assertIn(current.name, self.window.preview_caption.text())
 
     def test_malformed_run_keeps_previous_results_and_visible_measurements(self):
         valid = self._result_fixture("valid")

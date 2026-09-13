@@ -22,11 +22,13 @@ is included; keep the executable and its `_internal` folder together.
   seconds on the development machine, using full-resolution images.
 - **Batch analysis:** process multiple fields and biological replicate groups
   with saved settings, counts, figures and provenance records.
-- **Figure export:** save the current run's summary directly as a PNG or SVG
-  from the Results page.
+- **Full-field summaries:** view the entire representative field and save it
+  directly as a PNG or SVG, with saved detection outlines and threshold values.
+  Older runs work too, without recounting cells.
 
 The repository includes source, tests, reference fixtures, the supplied sample
-pair, and validation evidence. Version 1.3.0 passed 117 tests and exact pixel
+pair, and validation evidence. Version 1.3.1 passed 128 tests, including full-field
+exports, saved thresholds and mask outlines. Version 1.3.0 also passed exact pixel
 checks on real LIF/LOF slices and Z projections. Earlier packaged reference
 validation remains available in the repository.
 

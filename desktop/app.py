@@ -2,9 +2,11 @@
 from pathlib import Path
 from copy import deepcopy
 import csv
+import hashlib
 import json
 import sys
 import time
+import uuid
 
 from PySide6.QtCore import QProcess, QProcessEnvironment, QStandardPaths, Qt, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices, QFont, QPainter, QPixmap
@@ -169,6 +171,11 @@ class MainWindow(QMainWindow):
         self.config_name = "Reference 48 h"
         self.result = None
         self.process = None
+        self.summary_process = None
+        self.summary_paths = None
+        self.summary_error = ""
+        self.summary_cache = Path(QStandardPaths.writableLocation(
+            QStandardPaths.StandardLocation.CacheLocation)) / "Live-Dead Cell Counter" / "full_field_summaries"
         self.job_log = None
         self.job_out = None
         self.job_kind = None
@@ -340,7 +347,7 @@ class MainWindow(QMainWindow):
             button("−", lambda: self.viewer.zoom(1 / 1.25)), button("+", lambda: self.viewer.zoom(1.25)), button("Fit", lambda: self.viewer.fit())))
         self.preview_caption = label("", "muted", True)
         self.figure_button = button("Save summary figure…", self.save_summary_figure)
-        self.figure_button.setToolTip("Save this run's summary as a full-resolution PNG or editable SVG.")
+        self.figure_button.setToolTip("Save the full field with this run's detection outlines and saved threshold values as PNG or SVG.")
         self.figure_button.setEnabled(False)
         contents.addLayout(row_layout(self.preview_caption, None, self.figure_button))
         self.viewer = ImageViewer()
@@ -737,6 +744,7 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "Analysis is running", "Use Stop run before closing, or wait for the current run to finish.")
             event.ignore()
         else:
+            self.stop_summary_worker()
             event.accept()
 
     def open_run(self):
@@ -751,6 +759,10 @@ class MainWindow(QMainWindow):
 
     def load_result(self, path):
         result = read_results(path)
+        self.stop_summary_worker()
+        self.summary_paths = None
+        self.summary_error = ""
+        self.figure_button.setEnabled(False)
         self.result = result
         self.result_title.setText(result["path"].name)
         self.result_title.setToolTip(str(result["path"]))
@@ -780,7 +792,7 @@ class MainWindow(QMainWindow):
         self.preview_choice.blockSignals(True)
         self.preview_choice.clear()
         self.viewer.scene().clear()
-        self.preview_choice.addItem("Summary figure", str(result["path"] / "figure.png"))
+        self.preview_choice.addItem("Summary figure", None)
         for item in sorted((result["path"] / "qc").glob("*.png")):
             self.preview_choice.addItem("Detections · " + item.stem.removesuffix("_detections"), str(item))
         if self.preview_choice.count() > 1:
@@ -789,11 +801,107 @@ class MainWindow(QMainWindow):
         self.select_preview()
         self.folder_button.setEnabled(True)
         self.csv_button.setEnabled(True)
-        self.figure_button.setEnabled(any((result["path"] / ("figure" + ext)).is_file() for ext in (".png", ".svg")))
         self.verify_button.setEnabled(self.process is None)
         self.inspect_button.setEnabled(True)
         self.result_tabs.setCurrentIndex(1)
         self.show_page(1)
+        self.prepare_summary()
+
+    def stop_summary_worker(self):
+        process, self.summary_process = self.summary_process, None
+        if process is not None:
+            process.kill()
+            process.waitForFinished(1000)
+            process.deleteLater()
+
+    def prepare_summary(self):
+        """Render saved measurements off the GUI thread, outside the audited run."""
+        from .full_field_summary import cache_key
+        run = self.result["path"]
+        try:
+            key = cache_key(run)
+            cache = self.summary_cache / key
+            cache.mkdir(parents=True, exist_ok=True)
+            for output in sorted(cache.iterdir()):
+                if output.is_dir() and not output.name.startswith(".") and self.accept_summary(output, key):
+                    return
+            output = cache / uuid.uuid4().hex
+            process = QProcess(self)
+            self.summary_process = process
+            process.setWorkingDirectory(str(ROOT))
+            environment = QProcessEnvironment.systemEnvironment()
+            environment.insert("MPLBACKEND", "Agg")
+            environment.insert("PYTHONUTF8", "1")
+            process.setProcessEnvironment(environment)
+            process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+            process.finished.connect(lambda code, status: self.summary_finished(process, run, output, key, code))
+            process.errorOccurred.connect(lambda error: self.summary_start_error(process, error))
+            timeout = QTimer(process)
+            timeout.setSingleShot(True)
+            timeout.timeout.connect(lambda: self.summary_timeout(process))
+            timeout.start(120000)
+            prefix = [] if getattr(sys, "frozen", False) else [str(ROOT / "run_app.py")]
+            process.start(sys.executable, [*prefix, "--full-field-summary", str(run), "--summary-output", str(output)])
+        except Exception as exc:
+            self.summary_failed(str(exc))
+
+    def accept_summary(self, output, key):
+        paths = {"png": output / "figure.png", "svg": output / "figure.svg",
+                 "metadata": output / "figure_metadata.json"}
+        try:
+            metadata = json.loads(paths["metadata"].read_text(encoding="utf-8"))
+            if (metadata.get("cache_key") != key or metadata.get("view") != "full_field"
+                    or metadata.get("run") != str(self.result["path"])
+                    or not all(p.is_file() and p.stat().st_size for p in paths.values())):
+                return False
+            for extension in ("png", "svg"):
+                with paths[extension].open("rb") as stream:
+                    digest = hashlib.file_digest(stream, "sha256").hexdigest()
+                if metadata.get("artifacts", {}).get(extension, {}).get("sha256") != digest:
+                    return False
+            pixmap = QPixmap()
+            if not pixmap.loadFromData(paths["png"].read_bytes()):
+                return False
+        except (OSError, ValueError, TypeError, AttributeError):
+            return False
+        self.summary_paths = {name: str(path) for name, path in paths.items()}
+        self.summary_error = ""
+        self.preview_choice.setItemData(0, self.summary_paths["png"])
+        self.figure_button.setEnabled(True)
+        if self.preview_choice.currentIndex() == 0:
+            self.select_preview()
+        return True
+
+    def summary_finished(self, process, run, output, key, code):
+        if self.summary_process is not process:
+            return
+        self.summary_process = None
+        message = bytes(process.readAllStandardOutput()).decode("utf-8", errors="replace").strip()
+        process.deleteLater()
+        if self.result is None or self.result["path"] != run:
+            return
+        if code != 0 or not self.accept_summary(output, key):
+            self.summary_failed(message[-2000:] or "The full-field summary could not be generated.")
+
+    def summary_start_error(self, process, error):
+        if self.summary_process is process and error == QProcess.ProcessError.FailedToStart:
+            self.summary_process = None
+            self.summary_failed(process.errorString())
+            process.deleteLater()
+
+    def summary_timeout(self, process):
+        if self.summary_process is process:
+            self.stop_summary_worker()
+            self.summary_failed("The full-field summary took too long to generate. Reopen the run to retry.")
+
+    def summary_failed(self, message):
+        self.summary_paths = None
+        self.summary_error = "Full-field summary unavailable. See run notes below."
+        self.preview_choice.setItemData(0, None)
+        self.figure_button.setEnabled(False)
+        self.result_notes.appendPlainText("Full-field summary: " + message)
+        if self.preview_choice.currentIndex() == 0:
+            self.select_preview()
 
     def populate_result_table(self, *_):
         if not self.result:
@@ -812,10 +920,15 @@ class MainWindow(QMainWindow):
 
     def select_preview(self, *_):
         self.viewer.scene().clear()
+        self.viewer.scene().setSceneRect(0, 0, 0, 0)
         self.preview_caption.clear()
+        self.preview_caption.setToolTip("")
         path = self.preview_choice.currentData()
+        if self.result and self.preview_choice.currentIndex() == 0 and not path:
+            self.preview_caption.setText(self.summary_error or "Preparing full-field summary…")
+            return
         if path:
-            description = "Summary figure (central crop)" if self.preview_choice.currentIndex() == 0 else self.preview_choice.currentText()
+            description = "Summary figure (full field · saved detections)" if self.preview_choice.currentIndex() == 0 else self.preview_choice.currentText()
             self.preview_caption.setText(f"{description} · {self.result['path'].name}")
             self.preview_caption.setToolTip(path)
             try:
@@ -828,10 +941,14 @@ class MainWindow(QMainWindow):
         if not self.result:
             return
         run = self.result["path"]
+        # A new analysis may finish while the native save dialog is open.
+        # Keep the export tied to the run for which the user clicked Save.
+        paths = dict(self.summary_paths or {})
         formats = {".png": "PNG image (*.png)", ".svg": "SVG vector figure (*.svg)"}
-        available = {ext: title for ext, title in formats.items() if (run / ("figure" + ext)).is_file()}
+        available = {ext: title for ext, title in formats.items()
+                     if paths and Path(paths[ext[1:]]).is_file()}
         if not available:
-            return self.error("This run has no saved summary figure. Check its run folder.")
+            return self.error(self.summary_error or "The full-field summary is still being prepared.")
         default_ext = next(iter(available))
         path, selected_filter = QFileDialog.getSaveFileName(
             self, "Save summary figure", run.name + "_summary" + default_ext,
@@ -849,7 +966,9 @@ class MainWindow(QMainWindow):
             self.check_export_path(destination, extension)
             if destination.resolve().is_relative_to(run):
                 raise ValueError("Save exported copies outside the completed run to preserve its verification records.")
-            destination.write_bytes((run / ("figure" + extension)).read_bytes())
+            if destination.resolve().parent == Path(paths["png"]).parent:
+                raise ValueError("Save exported copies outside the summary preview cache.")
+            destination.write_bytes(Path(paths[extension[1:]]).read_bytes())
             self.status_text.setText(f"Summary figure saved to {destination.resolve()}")
         except Exception as exc:
             self.error(exc)

@@ -5,6 +5,23 @@ import sys
 
 
 def main():
+    if "--full-field-summary" in sys.argv:
+        import argparse
+        import json
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--full-field-summary", type=Path, required=True)
+        parser.add_argument("--summary-output", type=Path, required=True)
+        args = parser.parse_args()
+        try:
+            from desktop.full_field_summary import build_full_field_summary
+            result = build_full_field_summary(args.full_field_summary, args.summary_output)
+            if sys.stdout is not None:
+                print(json.dumps(result))
+            return 0
+        except Exception as exc:
+            if sys.stderr is not None:
+                print(str(exc), file=sys.stderr)
+            return 1
     if "--preview-server" in sys.argv:
         import argparse
         parser = argparse.ArgumentParser()

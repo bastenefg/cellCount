@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "gui_rendered": true,
+  "worker_verification_passed": true,
+  "summary_export_byte_identical": [
+    ".png",
+    ".svg"
+  ],
+  "export_while_detection_selected": true,
+  "full_field_summary_passed": true,
+  "legacy_run_figures_unchanged": true,
+  "saved_segmentation_parameters_used": true,
+  "stored_detection_masks_used": true
+}
