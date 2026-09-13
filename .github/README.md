@@ -9,7 +9,7 @@ LIVE/DEAD fluorescence TIFF images, with optional EBFP analysis.
 Extract the entire release ZIP and open **Live-Dead Cell Counter.exe**. Python
 is included; keep the executable and its `_internal` folder together.
 
-![Quick analysis: choose paired TIFFs, preview segmentation, or run analysis](../app_validation/release_1.3.0/quick_setup.png)
+![Quick analysis: choose paired TIFFs, preview segmentation, or run analysis](images/quick-analysis.png)
 
 - **Leica SP8 import:** open LIF/LOF files, select channels and a Z slice or
   explicit maximum-intensity projection, and retain acquisition calibration.
