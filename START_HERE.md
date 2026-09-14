@@ -5,7 +5,7 @@ fluorescence TIFF images, with optional EBFP measurements.
 
 ## Use the app
 
-Download the version 1.3.1 Windows ZIP from this repository's Releases page,
+Download the version 1.3.2 Windows ZIP from this repository's Releases page,
 extract the entire archive, and open **Live-Dead Cell Counter.exe**. Python is
 included. Keep the executable and its `_internal` folder together.
 
@@ -45,6 +45,12 @@ Generated environments, old application bundles, temporary preview arrays and
 ordinary run output folders are excluded from Git. Validation records describe
 the original local runs and may contain machine-specific paths. The portable
 Windows application is distributed as a release asset.
+
+## Version 1.3.2 update
+
+Adds a recognizable green/red cell icon to the Windows executable, app window,
+and taskbar. The icon includes multiple sizes for clear display in Explorer
+and shortcuts. Counting and segmentation behavior are unchanged.
 
 ## Version 1.3.1 update
 

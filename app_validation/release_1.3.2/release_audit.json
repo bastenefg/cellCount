@@ -1,0 +1,142 @@
+{
+  "status": "passed",
+  "audit_scope": "Bundle source/data identity, original source preservation, dependency exclusions and exact ZIP contents. Runtime checks appear only when supplied separately.",
+  "app_version": "1.3.2",
+  "audit_python": "3.12.14",
+  "app_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.3.2\\Live-Dead Cell Counter",
+  "app_files": 1523,
+  "app_bytes": 283235697,
+  "executable_sha256": "492e1c22cfad2331074c49e6a2856607dbb2c36e984c0c30ffa9532928f35ffe",
+  "original_package_files_checked": 81,
+  "original_package_mismatches": [],
+  "bundled_sources_checked": 183,
+  "runtime_assets_checked": 3,
+  "bundled_source_mismatches": [],
+  "incompatible_icu_files": [],
+  "private_data_folders": [],
+  "missing_notices": [],
+  "zip": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.3.2\\Live-Dead-Cell-Counter-1.3.2-Windows-x64.zip",
+  "zip_bytes": 116690397,
+  "zip_sha256": "624407807cc953b892187821d63b449a32e64783db72cb9945c24e96e961327f",
+  "zip_crc_and_content_check": "passed",
+  "zip_mismatches": [],
+  "supplied_runtime_reports": [
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.3.2\\gui_startup.json",
+      "sha256": "4ae1bd2b4204eefcf8be3901752a60d8ae32ed0832d22ad27d7232f24ef6935a",
+      "report": {
+        "status": "passed",
+        "scope": "source GUI entry point",
+        "application_icon_matches": true,
+        "window_icon_matches": true,
+        "windows_taskbar_app_id": "LiveDeadMicroscopy.CellCounter"
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.3.2\\embedded_icon.json",
+      "sha256": "14ae648f3c5dda7293ba469d04ade2cb477e9cc8c57dcef7f309c17956d8e428",
+      "report": {
+        "status": "passed",
+        "icon": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\desktop\\assets\\live-dead-cell-counter.ico",
+        "icon_sha256": "01b8d3edc017b598d21e10f8c360216042a825a57d3e86b2b3014dc74d4842ae",
+        "ico_sizes": [
+          [
+            16,
+            16
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            24,
+            24
+          ],
+          [
+            32,
+            32
+          ],
+          [
+            40,
+            40
+          ],
+          [
+            48,
+            48
+          ],
+          [
+            64,
+            64
+          ],
+          [
+            96,
+            96
+          ],
+          [
+            128,
+            128
+          ],
+          [
+            256,
+            256
+          ]
+        ],
+        "executable": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.3.2\\Live-Dead Cell Counter\\Live-Dead Cell Counter.exe",
+        "embedded_icon": {
+          "status": "passed",
+          "group_id": 1,
+          "language_id": 0,
+          "frames_matched": 10,
+          "exact_payloads_match": true
+        },
+        "qt_window_icon": {
+          "status": "passed",
+          "scope": "source MainWindow",
+          "pixel_matched_sizes": [
+            [
+              16,
+              16
+            ],
+            [
+              20,
+              20
+            ],
+            [
+              24,
+              24
+            ],
+            [
+              32,
+              32
+            ],
+            [
+              40,
+              40
+            ],
+            [
+              48,
+              48
+            ],
+            [
+              64,
+              64
+            ],
+            [
+              96,
+              96
+            ],
+            [
+              128,
+              128
+            ],
+            [
+              256,
+              256
+            ]
+          ]
+        }
+      }
+    }
+  ],
+  "issues": []
+}

@@ -1,5 +1,7 @@
 # Live/Dead Cell Counter
 
+<img src="../desktop/assets/live-dead-cell-counter.png" alt="Green LIVE cell and red DEAD cell app icon" width="96" height="96">
+
 A Windows desktop app for counting and visually reviewing cells in paired
 LIVE/DEAD fluorescence TIFF images, with optional EBFP analysis.
 

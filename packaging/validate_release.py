@@ -70,8 +70,13 @@ def audit(args):
     if original_mismatches:
         issues.append("Original package files changed or are missing.")
     mapped = source_files()
+    runtime_assets = {
+        path: path.relative_to(ROOT)
+        for path in (ROOT / "desktop" / "assets").rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
+    }
     mismatches = []
-    for source, relative in mapped.items():
+    for source, relative in [*mapped.items(), *runtime_assets.items()]:
         target = internal / relative
         if not target.is_file() or hashes.get(target) != sha256(source):
             mismatches.append(str(relative).replace("\\", "/"))
@@ -139,7 +144,8 @@ def audit(args):
         "executable_sha256": hashes[executable],
         "original_package_files_checked": len(original_manifest),
         "original_package_mismatches": original_mismatches,
-        "bundled_sources_checked": len(mapped) + 1,
+        "bundled_sources_checked": len(mapped) + len(runtime_assets) + 1,
+        "runtime_assets_checked": len(runtime_assets),
         "bundled_source_mismatches": mismatches,
         "incompatible_icu_files": unwanted,
         "private_data_folders": private_roots,

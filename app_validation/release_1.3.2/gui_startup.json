@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "scope": "source GUI entry point",
+  "application_icon_matches": true,
+  "window_icon_matches": true,
+  "windows_taskbar_app_id": "LiveDeadMicroscopy.CellCounter"
+}

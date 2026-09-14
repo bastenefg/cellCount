@@ -9,7 +9,7 @@ import time
 import uuid
 
 from PySide6.QtCore import QProcess, QProcessEnvironment, QStandardPaths, Qt, QTimer, QUrl
-from PySide6.QtGui import QDesktopServices, QFont, QPainter, QPixmap
+from PySide6.QtGui import QDesktopServices, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QFileDialog, QFrame, QGraphicsScene,
     QGraphicsView, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMainWindow,
@@ -67,6 +67,11 @@ QTabBar::tab { background: #e7eeea; border: 0; padding: 10px 20px; margin-right:
 QTabBar::tab:selected { background: white; color: #146453; border-top: 2px solid #1c7967; font-weight: 600; }
 QToolTip { color: #243e34; background: #fffef5; border: 1px solid #d5dfd7; padding: 5px; }
 """
+
+
+def application_icon():
+    """The module-relative asset path is identical in source and frozen layouts."""
+    return QIcon(str(Path(__file__).resolve().parent / "assets" / "live-dead-cell-counter.ico"))
 
 
 def label(text, name=None, wrap=False):
@@ -164,6 +169,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Live/Dead Cell Counter")
+        self.setWindowIcon(application_icon())
         self.resize(1280, 910)
         self.setMinimumSize(1000, 650)
         self.rows = []
@@ -1036,9 +1042,17 @@ class MainWindow(QMainWindow):
 
 
 def main():
+    if sys.platform == "win32":
+        # Give source launches their own taskbar identity instead of Python's.
+        import ctypes
+        set_app_id = ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID
+        set_app_id.argtypes = [ctypes.c_wchar_p]
+        set_app_id.restype = ctypes.c_long
+        set_app_id("LiveDeadMicroscopy.CellCounter")
     app = QApplication(sys.argv)
     app.setApplicationName("Live/Dead Cell Counter")
     app.setOrganizationName("Live-Dead Microscopy")
+    app.setWindowIcon(application_icon())
     app.setStyle("Fusion")
     app.setStyleSheet(STYLE)
     window = MainWindow()

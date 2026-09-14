@@ -8,10 +8,12 @@ preserved.
 
 ## Open the portable app
 
-1. Extract **Live-Dead-Cell-Counter-1.3.1-Windows-x64.zip** completely into a new folder.
+1. Extract **Live-Dead-Cell-Counter-1.3.2-Windows-x64.zip** completely into a new folder.
 2. Open the extracted **Live-Dead Cell Counter** folder.
 3. Double-click **Live-Dead Cell Counter.exe**. Python is included; no installation or
    command line is needed.
+
+Look for the circular green/red cell icon in Explorer and the app's taskbar button.
 
 Keep the executable and its `_internal` folder together. Share the complete ZIP,
 not just the executable. The app runs locally and reads images on your computer.
@@ -286,11 +288,11 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1 -Zip
 ```
 
 This installs the build requirements into `.venv`, builds the executable, and
-creates `dist/1.3.1/Live-Dead-Cell-Counter-1.3.1-Windows-x64.zip`. The executable is in
-`dist/1.3.1/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
+creates `dist/1.3.2/Live-Dead-Cell-Counter-1.3.2-Windows-x64.zip`. The executable is in
+`dist/1.3.2/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
 replace an existing app directory, so an older open app remains intact. To
 rebuild the same version, choose another folder, for example
-`-ReleaseFolder 1.3.1-rebuild1`. Use `-SkipInstall` to use an
+`-ReleaseFolder 1.3.2-rebuild1`. Use `-SkipInstall` to use an
 already prepared environment. All scientific dependency versions remain pinned
 in the unchanged `requirements-lock.txt`. Qt and dependency notices are included
 in `_internal/third_party_notices`.
@@ -305,7 +307,7 @@ copies. The included source has no newly assigned license.
 After building, audit the release contents and ZIP with:
 
 ```powershell
-.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.3.1\Live-Dead Cell Counter" --zip ".\dist\1.3.1\Live-Dead-Cell-Counter-1.3.1-Windows-x64.zip" --output ".\app_validation\release_1.3.1_audit.json"
+.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.3.2\Live-Dead Cell Counter" --zip ".\dist\1.3.2\Live-Dead-Cell-Counter-1.3.2-Windows-x64.zip" --output ".\app_validation\release_1.3.2_audit.json"
 ```
 
 This audit checks bundled sources, preserved original package files, excluded

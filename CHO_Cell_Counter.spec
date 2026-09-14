@@ -27,6 +27,7 @@ for name in ('README.md', 'APP_GUIDE.md', 'requirements.txt', 'requirements-lock
              '.python-version'):
     datas.append((str(project / name), '.'))
 datas += directory_data(notices, 'third_party_notices')
+datas += directory_data(project / 'desktop' / 'assets', 'desktop/assets')
 # Include editable interface/build sources for collaborators and rebuilds.
 for name in ('run_app.py', 'CHO_Cell_Counter.spec', 'build_app.ps1', 'Launch App.cmd'):
     datas.append((str(project / name), 'source'))
@@ -60,6 +61,7 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name='Live-Dead Cell Counter',
+    icon=str(project / 'desktop' / 'assets' / 'live-dead-cell-counter.ico'),
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
