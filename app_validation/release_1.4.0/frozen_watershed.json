@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "fixture": "Two touching synthetic spheres, one connected input region",
+  "checks": [
+    "Portable worker loads compiled scikit-image watershed",
+    "Touching spheres split into two objects",
+    "Labels cover all foreground and no background",
+    "Saved settings and provenance available"
+  ],
+  "elapsed_seconds": 2.24187559998245,
+  "counts": {
+    "green_only": 2,
+    "red_only": 0,
+    "dual_positive_candidate": 0,
+    "unresolved": 0,
+    "total_groups": 2,
+    "green_objects": 2,
+    "red_objects": 0,
+    "candidate_count_min": 2,
+    "candidate_count_max": 2,
+    "boundary_groups": 0
+  },
+  "algorithm": "6-connected hysteresis / physical EDT seeds / compiled watershed / 3D surface-gap association"
+}

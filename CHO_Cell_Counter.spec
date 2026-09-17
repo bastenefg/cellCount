@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
 import runpy
+from PyInstaller.utils.hooks import copy_metadata
 
 project = Path(SPECPATH)
 notices = project / 'build' / 'third_party_notices'
@@ -16,6 +17,8 @@ def directory_data(path, destination):
 
 
 datas = []
+for distribution in ('numpy', 'scipy', 'scikit-image'):
+    datas += copy_metadata(distribution)
 for folder in ('reference', 'configs', 'tests', 'validation'):
     datas += directory_data(project / folder, folder)
 # The unchanged pipeline resolves ROOT from __file__ and hashes these sources.

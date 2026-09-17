@@ -15,6 +15,12 @@ is included; keep the executable and its `_internal` folder together.
 
 - **Leica SP8 import:** open LIF/LOF files, select channels and a Z slice or
   explicit maximum-intensity projection, and retain acquisition calibration.
+- **Review in Z:** scroll synchronized LIVE/DEAD slices, inspect side sections
+  and depth profiles, and annotate projected overlaps. Background loading and
+  cached stack planes keep navigation responsive.
+- **3D candidates:** count calibrated volumes separately from the original 2D
+  workflow, with threshold previews, saved label volumes and explicit unresolved
+  associations. This new mode needs review against your experimental images.
 - **Threshold sliders:** adjust peak/region thresholds while keeping exact
   numeric controls; previews update after releasing the slider.
 - **Quick analysis:** select LIVE and DEAD TIFFs without a CSV or sample IDs.
@@ -28,11 +34,15 @@ is included; keep the executable and its `_internal` folder together.
   directly as a PNG or SVG, with saved detection outlines and threshold values.
   Older runs work too, without recounting cells.
 
+![Synthetic Z review example: green and red cells occupy the same XY position at different depths](images/z-review.png)
+
 The repository includes source, tests, reference fixtures, the supplied sample
-pair, and validation evidence. Version 1.3.1 passed 128 tests, including full-field
-exports, saved thresholds and mask outlines. Version 1.3.0 also passed exact pixel
-checks on real LIF/LOF slices and Z projections. Earlier packaged reference
-validation remains available in the repository.
+pair, and validation evidence. Version 1.4.0 passed **187 tests**, including
+depth separation, touching objects, calibrated distances, saved thresholds,
+cache integrity and GUI lifecycle checks. Real 1024² slice navigation took about
+21 ms median; a two-channel 25-plane 3D analysis took about 7 seconds on the
+development machine. See the [performance measurements and their limitations](../app_validation/release_1.4.0/performance_validation.json).
+Earlier Leica pixel checks and packaged reference validation remain available.
 
 The [original scientific pipeline documentation](../README.md) is preserved.
 Its bundled CHO preset is a reference example; review thresholds and pixel

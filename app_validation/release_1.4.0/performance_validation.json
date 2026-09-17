@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "app_version": "1.4.0",
+  "scope": "Engineering performance and data-integrity checks only; biological accuracy was not assessed.",
+  "timing_context": {
+    "environment": "Local Windows machine",
+    "cache_state": "File-system caches were warm. First stack preparation means no prepared volume cache, not a cold disk read.",
+    "variability": "Elapsed times vary with hardware, storage, background activity, image content and selected settings. Analysis and reopen values are individual runs; slider statistics summarize 100 changes.",
+    "memory": "Peak working set covers the whole validation process, including imported libraries. It is not isolated algorithm memory."
+  },
+  "analysis_method": "The final 3D method filters components below the selected minimum volume before applying the retained-component workload limit; thresholds and workload limits were not weakened.",
+  "stack_preparation": [
+    {
+      "shape_zyx": [5, 1024, 1024],
+      "channels": 2,
+      "dtype": "uint8",
+      "first_preparation_seconds": 0.1631,
+      "verified_cache_reuse_seconds": 0.0736,
+      "first_preparation_used_volume_cache": false,
+      "cached_preparation_reused_volume_cache": true,
+      "every_plane_equal_to_direct_reader": true,
+      "both_imported_projections_verified": true,
+      "source_sha256_unchanged": true,
+      "source_file_metadata_unchanged": true
+    },
+    {
+      "shape_zyx": [25, 1024, 1024],
+      "channels": 2,
+      "dtype": "uint8",
+      "first_preparation_seconds": 0.6983,
+      "verified_cache_reuse_seconds": 0.2431,
+      "first_preparation_used_volume_cache": false,
+      "cached_preparation_reused_volume_cache": true,
+      "every_plane_equal_to_direct_reader": true,
+      "both_imported_projections_verified": true,
+      "source_sha256_unchanged": true,
+      "source_file_metadata_unchanged": true
+    }
+  ],
+  "microscope_stack_3d_workflow": {
+    "shape_zyx": [25, 1024, 1024],
+    "channels": 2,
+    "dtype": "uint8",
+    "used_default_settings": true,
+    "analysis_completed": true,
+    "analysis_seconds": 6.8627,
+    "integrity_verification_seconds": 0.5129,
+    "process_peak_working_set_mib": 488.65,
+    "all_output_hashes_verified": true,
+    "label_shape_and_dtype_verified": true,
+    "import_provenance_preserved": true,
+    "source_sha256_and_file_metadata_unchanged": true,
+    "gui_reopen_completed": true,
+    "gui_reopen_seconds": 0.9927,
+    "gui_reopen_used_verified_source_cache": true,
+    "gui_saved_settings_restored_exactly": true,
+    "gui_saved_label_files_reused_exactly": true,
+    "gui_reopen_performed_recount": false
+  },
+  "slice_navigation": {
+    "shape_zyx": [25, 1024, 1024],
+    "slider_changes_per_case": 100,
+    "includes_qt_paint": true,
+    "full_field": {
+      "median_ms": 21.0,
+      "p95_ms": 33.623,
+      "maximum_ms": 61.488
+    },
+    "full_field_threshold_preview": {
+      "median_ms": 22.917,
+      "p95_ms": 33.181,
+      "maximum_ms": 37.929
+    },
+    "crop_128_pixels": {
+      "median_ms": 5.488,
+      "p95_ms": 6.508,
+      "maximum_ms": 8.851
+    }
+  },
+  "synthetic_volume_benchmark": {
+    "shape_zyx": [62, 512, 512],
+    "analysis_seconds": 2.9083,
+    "integrity_verification_seconds": 0.3806
+  }
+}

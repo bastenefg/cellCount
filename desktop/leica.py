@@ -21,6 +21,7 @@ from PIL import Image
 ROLES = ("green", "red", "ebfp")
 PROVENANCE_NAME = "import_provenance.json"
 SCHEMA_VERSION = 1
+SPATIAL_UNIT_UM = {"m": 1e6, "mm": 1e3, "um": 1.0, "µm": 1.0, "μm": 1.0, "nm": 1e-3}
 
 
 class LeicaImportCancelled(RuntimeError):
@@ -47,7 +48,6 @@ def _same_identity(actual, expected):
 
 
 def _pixel_size(image):
-    factors = {"m": 1e6, "mm": 1e3, "um": 1.0, "µm": 1.0, "μm": 1.0, "nm": 1e-3}
     values = {}
     for element in image.xml_element.findall("./Data/Image/ImageDescription/Dimensions/DimensionDescription"):
         attrs = element.attrib
@@ -55,12 +55,44 @@ def _pixel_size(image):
             continue
         try:
             count = int(attrs["NumberOfElements"])
-            value = abs(float(attrs["Length"])) * factors[attrs["Unit"]] / (count - 1)
+            value = abs(float(attrs["Length"])) * SPATIAL_UNIT_UM[attrs["Unit"]] / (count - 1)
             if math.isfinite(value) and value > 0:
                 values[attrs["DimID"]] = value
         except (ValueError, KeyError, ZeroDivisionError):
             continue
     return [values["2"], values["1"]] if "1" in values and "2" in values else None
+
+
+def z_calibration(image):
+    """Return measured Z positions and positive pitch, never infer them from XY.
+
+    Leica Length spans the first through last sample. Signed positions retain
+    acquisition direction; one plane has no inferable Z sampling interval.
+    """
+    missing = {"z_spacing_um": None, "z_positions_um": None}
+    elements = image.xml_element.findall("./Data/Image/ImageDescription/Dimensions/DimensionDescription")
+    z_elements = [element for element in elements if element.attrib.get("DimID") == "3"]
+    if len(z_elements) != 1:
+        return missing
+    try:
+        attrs = z_elements[0].attrib
+        count = int(attrs["NumberOfElements"])
+        if count != image.sizes.get("Z", 1) or not 1 <= count <= 100000:
+            return missing
+        factor = SPATIAL_UNIT_UM[attrs["Unit"]]
+        origin = float(attrs["Origin"]) * factor
+        length = float(attrs["Length"]) * factor
+        if not math.isfinite(origin) or not math.isfinite(length):
+            return missing
+        if count == 1:
+            return {"z_spacing_um": None, "z_positions_um": [origin]}
+        spacing = abs(length) / (count - 1)
+        if not math.isfinite(spacing) or spacing <= 0 or not math.isfinite(origin + length):
+            return missing
+        return {"z_spacing_um": spacing,
+                "z_positions_um": np.linspace(origin, origin + length, count).tolist()}
+    except (ValueError, TypeError, KeyError, OverflowError):
+        return missing
 
 
 def _series_info(image, index):
@@ -72,6 +104,7 @@ def _series_info(image, index):
         info["sizes"] = sizes = {str(axis): int(size) for axis, size in image.sizes.items()}
         info["dtype"] = dtype = str(image.dtype)
         info["pixel_size_um"] = _pixel_size(image)
+        info.update(z_calibration(image))
         if not {"X", "Y"}.issubset(sizes) or sizes["X"] < 1 or sizes["Y"] < 1:
             raise ValueError("This series has no complete XY image plane.")
         if sizes.get("S", 1) > 1:
@@ -375,6 +408,7 @@ def import_selection(request, output_base, progress=None, cancelled=None):
         record = {"schema_version": SCHEMA_VERSION, "reader": {"name": "liffile", "version": liffile.__version__},
                   "source": {**source, "identity_method": "Path, byte size and modification time; source file not SHA256 hashed."},
                   "selection": selection, "channel_metadata": info["channels"],
+                  "spatial_metadata": {key: info[key] for key in ("z_spacing_um", "z_positions_um")},
                   "dimensionality": ("2D optical slice" if selection["mode"] == "slice" else
                                      "2D maximum-intensity projection; not a 3D cell count"),
                   "exports": exports, "cache_key": key, "result": result}

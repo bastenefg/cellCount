@@ -5,6 +5,17 @@ import sys
 
 
 def main():
+    if "--stack-smoke-test" in sys.argv:
+        from desktop.stack_smoke import main as stack_smoke_main
+        return stack_smoke_main(sys.argv[1:])
+    if "--volume-analysis" in sys.argv:
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--volume-analysis", type=Path, required=True)
+        args = parser.parse_args()
+        os.environ["MPLBACKEND"] = "Agg"
+        from desktop.volume_analysis import run_job
+        return run_job(args.volume_analysis)
     if "--full-field-summary" in sys.argv:
         import argparse
         import json

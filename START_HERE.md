@@ -5,7 +5,7 @@ fluorescence TIFF images, with optional EBFP measurements.
 
 ## Use the app
 
-Download the version 1.3.2 Windows ZIP from this repository's Releases page,
+Download the version 1.4.0 Windows ZIP from this repository's Releases page,
 extract the entire archive, and open **Live-Dead Cell Counter.exe**. Python is
 included. Keep the executable and its `_internal` folder together.
 
@@ -45,6 +45,19 @@ Generated environments, old application bundles, temporary preview arrays and
 ordinary run output folders are excluded from Git. Validation records describe
 the original local runs and may contain machine-specific paths. The portable
 Windows application is distributed as a release asset.
+
+## Version 1.4.0 update
+
+Adds Z-stack review and a separate 3D candidate counting mode. Open **Review Z /
+count in 3D…** after Leica import or from saved results. Compare synchronized
+optical slices, side sections and depth profiles; record uncertain overlaps.
+Background loading and a disk cache keep slice navigation independent of full
+volume analysis. Original LIF/LOF files must remain available.
+
+The optional 3D mode uses calibrated physical spacing, its own intensity
+thresholds and volume settings, and saves new label volumes, object tables and
+a summary figure. Associations remain candidates for review; unresolved groups
+are reported explicitly. The original 2D method and previous results are preserved.
 
 ## Version 1.3.2 update
 

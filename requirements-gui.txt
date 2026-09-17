@@ -1,5 +1,10 @@
-# Adds only the desktop interface; the scientific lock remains authoritative.
+# Desktop and optional 3D dependencies; the original scientific lock is unchanged.
 -r requirements-lock.txt
 PySide6-Essentials==6.11.2
 shiboken6==6.11.2
 liffile==2026.7.14
+scikit-image==0.26.0
+networkx==3.6.1
+imageio==2.37.4
+tifffile==2026.9.15
+lazy-loader==0.5

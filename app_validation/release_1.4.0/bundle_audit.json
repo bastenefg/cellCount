@@ -1,0 +1,184 @@
+{
+  "status": "passed",
+  "audit_scope": "Bundle source/data identity, original source preservation, dependency exclusions and exact ZIP contents. Runtime checks appear only when supplied separately.",
+  "app_version": "1.4.0",
+  "audit_python": "3.12.14",
+  "app_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.4.0-final\\Live-Dead Cell Counter",
+  "app_files": 1618,
+  "app_bytes": 297397432,
+  "executable_sha256": "7422c9c0cf43fd9e606abd8296202cafe7b587a261452e22b369c4e6e65a6a8c",
+  "original_package_files_checked": 81,
+  "original_package_mismatches": [],
+  "bundled_sources_checked": 190,
+  "runtime_assets_checked": 3,
+  "bundled_source_mismatches": [],
+  "incompatible_icu_files": [],
+  "private_data_folders": [],
+  "missing_notices": [],
+  "zip": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.4.0-final\\Live-Dead-Cell-Counter-1.4.0-Windows-x64.zip",
+  "zip_bytes": 123046225,
+  "zip_sha256": "784f65fab14fcaeacb045ed4b63bf563d80b5ef03006fe33d8d5d20483c84f80",
+  "zip_crc_and_content_check": "passed",
+  "zip_mismatches": [],
+  "supplied_runtime_reports": [
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.4.0\\frozen_stack_smoke.json",
+      "sha256": "f686ef03120b68c72e1476b73e81f359c970078a188a49b855be0f034140027d",
+      "report": {
+        "status": "passed",
+        "fixture": "Synthetic two-channel 3D shapes; no biological validation implied",
+        "timings_seconds": {
+          "slice_change_median": 0.004470549989491701,
+          "slice_change_p95": 0.006510939981671982,
+          "3d_worker_with_startup_and_figure": 2.3126596999936737
+        },
+        "counts": {
+          "green_only": 2,
+          "red_only": 2,
+          "dual_positive_candidate": 1,
+          "unresolved": 0,
+          "total_groups": 5,
+          "green_objects": 3,
+          "red_objects": 3,
+          "candidate_count_min": 5,
+          "candidate_count_max": 6,
+          "boundary_groups": 0
+        },
+        "gui_heartbeat_ticks": 115,
+        "checks": [
+          "Vertically separated same-XY cells remain separate",
+          "Spanning-Z objects counted once",
+          "Shared-center dual signal retained as candidate",
+          "Saved exact 3D settings and masks",
+          "Responsive GUI during worker",
+          "Cached slice navigation does not recalculate depth profiles",
+          "Independent manual review export",
+          "Byte-identical figure export",
+          "Source volumes preserved",
+          "Parameter edits remove stale mask overlays"
+        ]
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.4.0\\frozen_watershed.json",
+      "sha256": "a6b69c1fdf413ec4e0f071af758bcbb29f4d6552193dabe331e687155db48dd8",
+      "report": {
+        "status": "passed",
+        "fixture": "Two touching synthetic spheres, one connected input region",
+        "checks": [
+          "Portable worker loads compiled scikit-image watershed",
+          "Touching spheres split into two objects",
+          "Labels cover all foreground and no background",
+          "Saved settings and provenance available"
+        ],
+        "elapsed_seconds": 2.24187559998245,
+        "counts": {
+          "green_only": 2,
+          "red_only": 0,
+          "dual_positive_candidate": 0,
+          "unresolved": 0,
+          "total_groups": 2,
+          "green_objects": 2,
+          "red_objects": 0,
+          "candidate_count_min": 2,
+          "candidate_count_max": 2,
+          "boundary_groups": 0
+        },
+        "algorithm": "6-connected hysteresis / physical EDT seeds / compiled watershed / 3D surface-gap association"
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\build\\stack_release_reference\\reference_validation.json",
+      "sha256": "12a499c6c1a3bc2fedf0a1adba57268a191d6fef384719cd29ddca5f93f93904",
+      "report": {
+        "all_legacy_object_columns_match": true,
+        "ebfp_calls_checked": 486,
+        "float_tolerance": {
+          "atol": 1e-12,
+          "rtol": 1e-12
+        },
+        "objects_checked": 1297,
+        "reference_images": [
+          {
+            "exact_masks": [
+              "live",
+              "dead",
+              "objects"
+            ],
+            "image_id": "S5",
+            "summary_columns_checked": [
+              "total",
+              "live_only",
+              "dead_only",
+              "double_positive",
+              "viability_percent",
+              "ebfp_all_count",
+              "ebfp_all_percent",
+              "ebfp_live_count",
+              "ebfp_live_percent",
+              "double_positive_percent",
+              "ebfp_dead_count",
+              "ebfp_dead_percent",
+              "detected_objects_per_mm2",
+              "viability_excluding_double_percent",
+              "green_any_percent"
+            ]
+          },
+          {
+            "exact_masks": [
+              "live",
+              "dead",
+              "objects"
+            ],
+            "image_id": "S6",
+            "summary_columns_checked": [
+              "total",
+              "live_only",
+              "dead_only",
+              "double_positive",
+              "viability_percent",
+              "ebfp_all_count",
+              "ebfp_all_percent",
+              "ebfp_live_count",
+              "ebfp_live_percent",
+              "double_positive_percent",
+              "ebfp_dead_count",
+              "ebfp_dead_percent",
+              "detected_objects_per_mm2",
+              "viability_excluding_double_percent",
+              "green_any_percent"
+            ]
+          },
+          {
+            "exact_masks": [
+              "live",
+              "dead",
+              "objects"
+            ],
+            "image_id": "S7",
+            "summary_columns_checked": [
+              "total",
+              "live_only",
+              "dead_only",
+              "double_positive",
+              "viability_percent",
+              "ebfp_all_count",
+              "ebfp_all_percent",
+              "ebfp_live_count",
+              "ebfp_live_percent",
+              "double_positive_percent",
+              "ebfp_dead_count",
+              "ebfp_dead_percent",
+              "detected_objects_per_mm2",
+              "viability_excluding_double_percent",
+              "green_any_percent"
+            ]
+          }
+        ],
+        "rendered_image_bytes_are_not_part_of_numeric_reference_check": true,
+        "status": "passed"
+      }
+    }
+  ],
+  "issues": []
+}

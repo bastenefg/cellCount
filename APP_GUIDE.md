@@ -1,4 +1,4 @@
-# Live/Dead Cell Counter 1.3
+# Live/Dead Cell Counter 1.4
 
 A 64-bit Windows desktop interface for paired LIVE/DEAD fluorescence images and
 optional EBFP analysis. The app can review other cell types; its bundled CHO
@@ -8,7 +8,7 @@ preserved.
 
 ## Open the portable app
 
-1. Extract **Live-Dead-Cell-Counter-1.3.2-Windows-x64.zip** completely into a new folder.
+1. Extract **Live-Dead-Cell-Counter-1.4.0-Windows-x64.zip** completely into a new folder.
 2. Open the extracted **Live-Dead Cell Counter** folder.
 3. Double-click **Live-Dead Cell Counter.exe**. Python is included; no installation or
    command line is needed.
@@ -73,7 +73,7 @@ single-plane TIFFs. Leica imports prepare those inputs automatically. The bundle
 composites and direct multi-page TIFF input are unsupported. Use the Leica
 importer below for .lif/.lof Z stacks. Use a separately named configuration
 when acquisition or calibration differs; review thresholds against controls before
-analyzing a complete comparison. The GUI does not change the numerical method.
+analyzing a complete comparison. This 2D workflow preserves the original numerical method.
 
 EBFP can be absent for some or all fields. Leave its entry blank when it was not
 acquired: missing means **not measured**, not a negative result. An acquired
@@ -89,7 +89,7 @@ Batch / CSV. Open a Leica file (or drop it into the import window), then:
    choose the one to analyze. The image list loads without reading all pixels.
 2. Assign the acquired channels to LIVE, DEAD and optional EBFP. The initial
    LIVE/DEAD choices are the first two channels; **check these assignments** using
-   your staining and acquisition settings. Names such as Ch0/Ch1 do not identify
+  your staining and acquisition settings. Names such as Ch0/Ch1 do not identify
    a dye. Confirm the assignments after reviewing the previews.
 3. For a Z stack, choose **Single Z plane** and use the Z slider, or explicitly
    choose **Maximum intensity projection** and its first/last Z planes. Select a
@@ -97,6 +97,60 @@ Batch / CSV. Open a Leica file (or drop it into the import window), then:
 4. Check **Pixel size (µm)**. Values come from Leica metadata when available and
    can be edited here. If metadata is absent, confirm the displayed preset value.
 5. Click **Use these images**, then preview segmentation and run analysis as usual.
+
+## Review depth and count 3D candidates
+
+After importing a Leica stack, click **Review Z / count in 3D…** on New analysis.
+You can also open it from Results for a saved Leica run. A 2D analysis is not
+required first. Select a maximum projection covering the desired Z range during
+import: the stack viewer uses that same range, time point and channel mapping.
+Importing a single optical slice gives a single-slice review, not a 3D count.
+
+The viewer reopens the original LIF/LOF and caches the selected LIVE and DEAD
+planes on disk. Keep that original file at its recorded location and reconnect
+an external drive before opening it. A projected TIFF cannot reconstruct depth.
+The cache preserves the full image resolution and intensity values; only screen
+previews may be reduced to fit. Loading runs in the background. Slice changes
+reuse cached arrays rather than rereading the Leica container or recounting cells.
+
+Use the Z slider to compare LIVE, DEAD and merged slices. The view selector
+switches from the full field to a 256, 128 or 64 pixel crop around the inspection
+point, preserving source pixel detail while tuning thresholds. Select an existing
+2D detection, or click the image to move the inspection point. Side sections
+and intensity-versus-depth profiles help distinguish vertically separated cells.
+Depth is displayed in micrometers when valid Z calibration is available; unknown
+calibration permits slice-index review but prevents a 3D count. Different peak
+depths alone do not prove that there are two cells.
+
+Review labels record **Separate in Z**, **Same-cell signal supported**, or
+**Uncertain**. Export the review separately. These annotations do not rewrite a
+completed run or silently change its counts.
+
+The **3D analysis** controls create a separate, provisional candidate analysis.
+Set LIVE/DEAD thresholds using the slice preview, then request the full-volume
+analysis. Its intensity thresholds are separate from the original 2D pipeline's
+background-corrected contrast thresholds. Existing 2D values are not silently
+transferred. Minimum object volume and separation distances use physical units.
+The 3D method connects signal across slices, separates volume candidates and
+associates channels in three dimensions. It does not sum independent slice counts.
+
+Results distinguish green-only, red-only, dual-positive candidates and unresolved
+associations. A spatial association is evidence for review, not proof of cell
+identity. Crowded groups and partial cells at volume boundaries need inspection.
+Reopen a saved 3D folder through **Results → Open run…**, or **Open 3D result…**
+in the stack viewer. The app verifies saved artifacts and reopens the corresponding
+source stack. The output records parameters, calibrated source selection, object tables, label
+volumes and a summary figure generated from those saved labels. EBFP scoring and
+replicate-pooled viability remain features of the original 2D workflow; the new
+3D candidate mode does not report a definitive viability percentage.
+
+For Thermo L3224, calcein indicates esterase activity and EthD-1 indicates membrane
+damage. Confirmed red-positive cells are membrane-compromised even if green
+signal remains; this assay does not by itself identify an apoptotic stage.
+See the [manufacturer's assay information](https://documents.thermofisher.com/TFS-Assets/LSG/manuals/mp03224.pdf).
+Sparse Z sampling, optical blur, channel misregistration and bleed-through can
+leave cases unresolved. Review representative stacks and appropriate staining
+controls before using 3D candidate counts for experimental conclusions.
 
 A single-plane acquisition is imported directly. A projection takes the maximum
 stored value at each XY pixel independently in each selected channel. These are
@@ -214,7 +268,7 @@ means the stored TIFF pixel value before this pipeline's own processing, not
 necessarily an unprocessed camera measurement.
 
 Visual inspection supports reviewing background-like detections in this
-dataset. The GUI preserves the original numerical method and makes its
+dataset. The 2D GUI preserves the original numerical method and makes its
 parameters inspectable; it does not supply a validated replacement viability.
 The source distribution's `app_validation/segmentation_review/` folder contains
 input-image panels, unchanged segmentation contours and diagnostic measurements.
@@ -288,11 +342,11 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1 -Zip
 ```
 
 This installs the build requirements into `.venv`, builds the executable, and
-creates `dist/1.3.2/Live-Dead-Cell-Counter-1.3.2-Windows-x64.zip`. The executable is in
-`dist/1.3.2/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
+creates `dist/1.4.0/Live-Dead-Cell-Counter-1.4.0-Windows-x64.zip`. The executable is in
+`dist/1.4.0/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
 replace an existing app directory, so an older open app remains intact. To
 rebuild the same version, choose another folder, for example
-`-ReleaseFolder 1.3.2-rebuild1`. Use `-SkipInstall` to use an
+`-ReleaseFolder 1.4.0-rebuild1`. Use `-SkipInstall` to use an
 already prepared environment. All scientific dependency versions remain pinned
 in the unchanged `requirements-lock.txt`. Qt and dependency notices are included
 in `_internal/third_party_notices`.
@@ -307,7 +361,7 @@ copies. The included source has no newly assigned license.
 After building, audit the release contents and ZIP with:
 
 ```powershell
-.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.3.2\Live-Dead Cell Counter" --zip ".\dist\1.3.2\Live-Dead-Cell-Counter-1.3.2-Windows-x64.zip" --output ".\app_validation\release_1.3.2_audit.json"
+.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.4.0\Live-Dead Cell Counter" --zip ".\dist\1.4.0\Live-Dead-Cell-Counter-1.4.0-Windows-x64.zip" --output ".\app_validation\release_1.4.0\bundle_audit.json"
 ```
 
 This audit checks bundled sources, preserved original package files, excluded

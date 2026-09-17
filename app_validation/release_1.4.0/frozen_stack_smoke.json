@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "fixture": "Synthetic two-channel 3D shapes; no biological validation implied",
+  "timings_seconds": {
+    "slice_change_median": 0.004470549989491701,
+    "slice_change_p95": 0.006510939981671982,
+    "3d_worker_with_startup_and_figure": 2.3126596999936737
+  },
+  "counts": {
+    "green_only": 2,
+    "red_only": 2,
+    "dual_positive_candidate": 1,
+    "unresolved": 0,
+    "total_groups": 5,
+    "green_objects": 3,
+    "red_objects": 3,
+    "candidate_count_min": 5,
+    "candidate_count_max": 6,
+    "boundary_groups": 0
+  },
+  "gui_heartbeat_ticks": 115,
+  "checks": [
+    "Vertically separated same-XY cells remain separate",
+    "Spanning-Z objects counted once",
+    "Shared-center dual signal retained as candidate",
+    "Saved exact 3D settings and masks",
+    "Responsive GUI during worker",
+    "Cached slice navigation does not recalculate depth profiles",
+    "Independent manual review export",
+    "Byte-identical figure export",
+    "Source volumes preserved",
+    "Parameter edits remove stale mask overlays"
+  ]
+}

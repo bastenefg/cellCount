@@ -1,4 +1,4 @@
-"""Local desktop interface. All measurements are delegated to pipeline.cli."""
+"""Local interface for the original 2D pipeline and separate stack analysis."""
 from pathlib import Path
 from copy import deepcopy
 import csv
@@ -284,6 +284,10 @@ class MainWindow(QMainWindow):
                                       button("Preview segmentation…", self.preview_segmentation, True)))
         self.input_modes.addTab(fields, "Batch / CSV")
         layout.addWidget(self.input_modes, 1)
+        self.stack_input_button = button("Review Z / count in 3D…", self.review_input_stack)
+        self.stack_input_button.setToolTip("Open an imported Leica stack without first running a 2D analysis.")
+        layout.addLayout(row_layout(self.stack_input_button,
+            label("Leica stacks: inspect depth and count 3D candidates.", "muted", True), None))
         settings, content = card()
         self.preset_title = label("Analysis settings · Reference 48 h", "section")
         content.addLayout(row_layout(self.preset_title, None, button("Load settings", self.load_config), button("Review / edit", self.edit_config)))
@@ -355,7 +359,10 @@ class MainWindow(QMainWindow):
         self.figure_button = button("Save summary figure…", self.save_summary_figure)
         self.figure_button.setToolTip("Save the full field with this run's detection outlines and saved threshold values as PNG or SVG.")
         self.figure_button.setEnabled(False)
-        contents.addLayout(row_layout(self.preview_caption, None, self.figure_button))
+        self.stack_result_button = button("Review Z / count in 3D…", self.review_result_stack)
+        self.stack_result_button.setEnabled(False)
+        self.stack_result_button.setToolTip("Reopen the original Leica stack to inspect projected overlaps.")
+        contents.addLayout(row_layout(self.preview_caption, None, self.stack_result_button, self.figure_button))
         self.viewer = ImageViewer()
         contents.addWidget(self.viewer, 1)
         self.result_tabs.addTab(visual, "Figure && detections")
@@ -452,6 +459,39 @@ class MainWindow(QMainWindow):
                 self.status_text.setText("Field list and reviewed settings loaded for a new run. Existing results are preserved.")
         except Exception as exc:
             self.error("Segmentation review needs the original channel images and saved settings. " + str(exc))
+
+    def review_input_stack(self):
+        if self.process:
+            return
+        try:
+            from .stack_dialog import StackReviewDialog
+            rows, config = self.analysis_inputs()
+            if not config.get("leica_imports"):
+                raise ValueError("Import the original Leica .lif or .lof first. A projected TIFF alone has no depth information.")
+            selected = 0 if self.input_modes.currentIndex() == 0 else max(0, self.field_table.currentRow())
+            dialog = StackReviewDialog(rows=rows, config=config, initial_field=rows[selected]["image_id"],
+                                       output_base=Path(self.output_base.text()), parent=self)
+            self._open_stack_dialog(dialog)
+        except Exception as exc:
+            self.error(exc)
+
+    def review_result_stack(self):
+        if not self.result or self.process:
+            return
+        try:
+            from .stack_dialog import StackReviewDialog
+            field = self.preview_choice.currentText().removeprefix("Detections · ")
+            dialog = StackReviewDialog(run=self.result["path"], initial_field=field,
+                                       output_base=Path(self.output_base.text()), parent=self)
+            self._open_stack_dialog(dialog)
+        except Exception as exc:
+            self.error(exc)
+
+    def _open_stack_dialog(self, dialog):
+        screen = self.screen().availableGeometry()
+        dialog.resize(min(1480, screen.width() - 40), min(960, screen.height() - 50))
+        dialog.exec()
+        dialog.deleteLater()
 
     def error(self, error):
         QMessageBox.warning(self, "Please review", str(error))
@@ -668,6 +708,8 @@ class MainWindow(QMainWindow):
         self.quick_start.run_button.setEnabled(not busy)
         self.quick_start.leica_button.setEnabled(not busy)
         self.batch_leica_button.setEnabled(not busy)
+        self.stack_input_button.setEnabled(not busy)
+        self.stack_result_button.setEnabled(not busy and bool(self.result and self.result.get("leica_imports")))
         self.reference_button.setEnabled(not busy)
         self.verify_button.setEnabled(not busy and self.result is not None)
         self.cancel_button.setVisible(busy)
@@ -757,6 +799,11 @@ class MainWindow(QMainWindow):
         path = QFileDialog.getExistingDirectory(self, "Open a completed run", self.output_base.text())
         if path:
             try:
+                if (Path(path) / "result.json").is_file() and (Path(path) / "summary.json").is_file():
+                    from .stack_dialog import StackReviewDialog
+                    self._open_stack_dialog(StackReviewDialog(volume_run=Path(path),
+                        output_base=Path(self.output_base.text()), parent=self))
+                    return
                 self.load_result(Path(path))
                 if not self.process:
                     self.status_text.setText("Saved results loaded. Use Verify files to check their integrity.")
@@ -809,6 +856,7 @@ class MainWindow(QMainWindow):
         self.csv_button.setEnabled(True)
         self.verify_button.setEnabled(self.process is None)
         self.inspect_button.setEnabled(True)
+        self.stack_result_button.setEnabled(self.process is None and bool(result.get("leica_imports")))
         self.result_tabs.setCurrentIndex(1)
         self.show_page(1)
         self.prepare_summary()
