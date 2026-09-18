@@ -72,6 +72,12 @@ def main(arguments):
                            for role, path in info["paths"].items()}
         dialog = StackReviewDialog(config={"leica_imports": []}, output_base=output,
                                    cache_dir=output / "cache")
+        # This fixture intentionally exercises compatibility with pre-1.4.1
+        # raw-intensity 3D results. New analyses use the main window's shared
+        # projection controls and ordinary Run action.
+        dialog._legacy_raw = True
+        dialog._inspection_only = False
+        dialog._update_inspection_mode()
         dialog.setWindowTitle("Z review — synthetic validation example")
         dialog.resize(1400, 920)
         dialog.fields.addItem(info["field_id"], None)

@@ -5,7 +5,7 @@ fluorescence TIFF images, with optional EBFP measurements.
 
 ## Use the app
 
-Download the version 1.4.0 Windows ZIP from this repository's Releases page,
+Download the version 1.4.1 Windows ZIP from this repository's Releases page,
 extract the entire archive, and open **Live-Dead Cell Counter.exe**. Python is
 included. Keep the executable and its `_internal` folder together.
 
@@ -19,12 +19,25 @@ series, LIVE/DEAD channels and either one Z slice or an explicit maximum-intensi
 projection. Pixel calibration is read from metadata and can be reviewed. Peak
 and region threshold sliders make segmentation adjustments easier.
 
+For a stack, tune those controls in the usual **Preview segmentation**, click
+**Use settings for next run**, then choose **2D · projection / single image** or
+**3D · original Z stack** under **Count in**. Click the same **Run analysis** button
+for either mode. The 3D run uses those exact saved settings on the original
+optical sections; **Inspect Z stack…** lets you review the resulting masks in
+depth. There is no second threshold setup for a new 3D run.
+
+The projection remains a fast way to tune parameters. Its masks and counts can
+differ from a 3D run because projection combines signal and background from
+different depths. Check completed 3D masks before interpreting cell identities.
+
 On **Results → Figure & detections**, use **Save summary figure…** to export
-the loaded run's summary as a PNG or SVG. Its microscopy panels show the full
+the loaded 2D run's summary as a PNG or SVG. Its microscopy panels show the full
 representative field, matching the extent of that field's detection overlay.
 Older runs also get the full-field summary when reopened, using the saved counts
 and original TIFFs. Saved detection outlines and the exact threshold values are
 included. Leica summaries identify the analyzed Z slice or projection.
+For 3D runs, select a field and export its PNG summary with the saved 3D masks
+and shared thresholds. The usual Results page also shows pooled candidate tables.
 
 Read [APP_GUIDE.md](APP_GUIDE.md) for the workflow, settings, and source/build
 instructions. [README.md](README.md) is the preserved original scientific
@@ -46,6 +59,22 @@ ordinary run output folders are excluded from Git. Validation records describe
 the original local runs and may contain machine-specific paths. The portable
 Windows application is distributed as a release asset.
 
+## Version 1.4.1 update
+
+Unifies the detection controls and Run button for 2D and 3D counting. Review
+thresholds on the maximum projection, choose the counting dimension, and run
+one field or a batch through the usual workflow. 3D results open on the standard
+Results page with per-field figures, candidate tables and access to Z review.
+
+3D uses each slice's background-corrected contrast with the saved channel
+smoothing and thresholds. Minimum area applies to the largest XY cross-section
+of an object; Z calibration governs depth-dependent separation and matching.
+Green-only, red-only, dual-positive candidates and unresolved associations remain
+separate categories. No definitive 3D viability percentage is inferred.
+
+Existing 2D runs and older 1.4.0 raw-intensity 3D results remain readable with
+their original settings. Saved figures are never regenerated with new controls.
+
 ## Version 1.4.0 update
 
 Adds Z-stack review and a separate 3D candidate counting mode. Open **Review Z /
@@ -54,8 +83,8 @@ optical slices, side sections and depth profiles; record uncertain overlaps.
 Background loading and a disk cache keep slice navigation independent of full
 volume analysis. Original LIF/LOF files must remain available.
 
-The optional 3D mode uses calibrated physical spacing, its own intensity
-thresholds and volume settings, and saves new label volumes, object tables and
+The original 1.4.0 3D mode used calibrated physical spacing, its own intensity
+thresholds and volume settings, and saved new label volumes, object tables and
 a summary figure. Associations remain candidates for review; unresolved groups
 are reported explicitly. The original 2D method and previous results are preserved.
 

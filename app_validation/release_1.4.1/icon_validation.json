@@ -1,0 +1,101 @@
+{
+  "status": "passed",
+  "icon": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\desktop\\assets\\live-dead-cell-counter.ico",
+  "icon_sha256": "01b8d3edc017b598d21e10f8c360216042a825a57d3e86b2b3014dc74d4842ae",
+  "ico_sizes": [
+    [
+      16,
+      16
+    ],
+    [
+      20,
+      20
+    ],
+    [
+      24,
+      24
+    ],
+    [
+      32,
+      32
+    ],
+    [
+      40,
+      40
+    ],
+    [
+      48,
+      48
+    ],
+    [
+      64,
+      64
+    ],
+    [
+      96,
+      96
+    ],
+    [
+      128,
+      128
+    ],
+    [
+      256,
+      256
+    ]
+  ],
+  "executable": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.4.1\\Live-Dead Cell Counter\\Live-Dead Cell Counter.exe",
+  "embedded_icon": {
+    "status": "passed",
+    "group_id": 1,
+    "language_id": 0,
+    "frames_matched": 10,
+    "exact_payloads_match": true
+  },
+  "qt_window_icon": {
+    "status": "passed",
+    "scope": "source MainWindow",
+    "pixel_matched_sizes": [
+      [
+        16,
+        16
+      ],
+      [
+        20,
+        20
+      ],
+      [
+        24,
+        24
+      ],
+      [
+        32,
+        32
+      ],
+      [
+        40,
+        40
+      ],
+      [
+        48,
+        48
+      ],
+      [
+        64,
+        64
+      ],
+      [
+        96,
+        96
+      ],
+      [
+        128,
+        128
+      ],
+      [
+        256,
+        256
+      ]
+    ]
+  }
+}

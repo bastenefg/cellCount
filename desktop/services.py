@@ -216,6 +216,9 @@ def prepare_analysis(base, name, rows, config, extended=False):
 
 def process_command(arguments, log_path):
     prefix = [] if getattr(sys, "frozen", False) else [str(ROOT / "run_app.py")]
+    if arguments and arguments[0] in ("analyze-3d", "verify-3d"):
+        flag = "--stack-analysis" if arguments[0] == "analyze-3d" else "--verify-stack-analysis"
+        return sys.executable, [*prefix, flag, str(arguments[1]), "--log", str(log_path)]
     return sys.executable, [*prefix, "--pipeline", *map(str, arguments), "--log", str(log_path)]
 
 

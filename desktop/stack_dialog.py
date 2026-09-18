@@ -5,6 +5,7 @@ Leica reads and volume segmentation never execute on the GUI thread.
 """
 from copy import deepcopy
 import csv
+import hashlib
 from datetime import datetime, timezone
 import json
 import math
@@ -133,13 +134,9 @@ class StackLoader(QThread):
             result = prepare_stack(self.record, self.cache, progress=self.progress.emit,
                                    cancelled=self.isInterruptionRequested)
             result["import_record"] = deepcopy(self.record)
-            # Initial threshold sampling and importing the scientific backend
-            # belong to the reader thread, never to an interactive slice event.
-            try:
-                from .volume_analysis import default_settings
-                result["_ui_defaults"] = default_settings(result)
-            except ValueError:
-                result["_ui_defaults"] = None
+            # New analyses use the ordinary projection preview's exact settings.
+            # Inspection never invents a second threshold preset.
+            result["_ui_defaults"] = None
             if self.volume_run:
                 from .volume_analysis import read_volume_result
                 volume_result = read_volume_result(self.volume_run)
@@ -202,12 +199,19 @@ class StackReviewDialog(QDialog):
         if self.run_path:
             config = json.loads((self.run_path / "effective_config.json").read_text(encoding="utf-8"))
         self._volume_to_load = Path(volume_run).resolve() if volume_run else None
+        previous_settings = None
         if self._volume_to_load:
             previous = json.loads((self._volume_to_load / "provenance.json").read_text(encoding="utf-8"))["stack_info"]
             if not previous.get("import_record"):
                 raise ValueError("This 3D output has no Leica import record. Reopen its original imported field instead.")
-            config = {"leica_imports": [previous["import_record"]]}
+            previous_settings = json.loads((self._volume_to_load / "settings.json").read_text(encoding="utf-8"))
+            config = deepcopy(previous_settings.get("config", {}))
+            config["leica_imports"] = [previous["import_record"]]
         self.config = deepcopy(config or {})
+        self._legacy_raw = bool(previous_settings is not None and previous_settings.get("mode") != "projection_config")
+        self._inspection_only = not self._legacy_raw
+        self._shared_settings = (deepcopy(previous_settings) if previous_settings and previous_settings.get("mode") == "projection_config"
+                                 else {"mode": "projection_config", "config": deepcopy(self.config)} if self.config.get("segmentation") else None)
         self.records = self.config.get("leica_imports", [])
         self.origin_mode = "saved_2d_run" if self.run_path else "imported_inputs"
         self.output_base = Path(output_base or (self.run_path.parent if self.run_path else Path.home() / "Documents" / "Live-Dead Cell Counter" / "runs"))
@@ -228,7 +232,7 @@ class StackReviewDialog(QDialog):
         self._result_settings = None
         self._review_target = None
         self.x = self.y = 0
-        self.setWindowTitle("Review in Z · 3D candidates")
+        self.setWindowTitle("Inspect Z stack")
         self.resize(1160, 900)
         self._build()
         for record in self.records:
@@ -287,6 +291,8 @@ class StackReviewDialog(QDialog):
         view.addLayout(detection_row)
         self.context = caption("", True)
         view.addWidget(self.context)
+        self.shared_settings_caption = caption("", True)
+        view.addWidget(self.shared_settings_caption)
         grid = QGridLayout()
         self.views = {}
         for column, (key, title) in enumerate((("green", "LIVE · XY"), ("red", "DEAD · XY"), ("merged", "Merged · XY"))):
@@ -347,6 +353,24 @@ class StackReviewDialog(QDialog):
         bottom.addWidget(close)
         outer.addLayout(bottom)
         self._set_ready(False)
+        self._update_inspection_mode()
+
+    def _update_inspection_mode(self):
+        self.tabs.setTabVisible(1, self._legacy_raw)
+        self.analyze_button.setVisible(self._legacy_raw)
+        self.save_figure.setVisible(bool(self.result) or self._legacy_raw)
+        if self._shared_settings:
+            config = self._shared_settings["config"]
+            segmentation = config.get("segmentation", {})
+            parts = []
+            for role, title in (("green", "LIVE"), ("red", "DEAD")):
+                params = segmentation.get(role, {})
+                parts.append(f"{title} region / peak {params.get('low', '?')} / {params.get('high', '?')}; σ {params.get('sigma_px', '?')} px; minimum {params.get('min_area_px', '?')} px²")
+            self.shared_settings_caption.setText("Saved projection settings · " + " · ".join(parts) +
+                ". Adjust these in Preview segmentation, then choose 2D or 3D and Run analysis.")
+        else:
+            self.shared_settings_caption.setText("Tune detection in Preview segmentation, then choose 2D or 3D beside the usual Run analysis button." if self._inspection_only else
+                "Legacy 3D result: these independent raw-intensity settings are retained for this saved analysis.")
 
     def _build_analysis_tab(self):
         page = QWidget()
@@ -444,10 +468,10 @@ class StackReviewDialog(QDialog):
         self.analysis_z.setEnabled(ready)
         self.export_review.setEnabled(ready)
         self.object_choice.setEnabled(ready)
-        self.preview_mask.setEnabled(ready)
+        self.preview_mask.setEnabled(ready and self._legacy_raw)
         calibrated = (ready and self.stack_info and self.stack_info.get("spacing_um", [None])[0] is not None
                       and self.stack_info["shape_zyx"][0] > 1)
-        self.analyze_button.setEnabled(bool(calibrated and self.process is None))
+        self.analyze_button.setEnabled(bool(calibrated and self.process is None and not self._inspection_only))
 
     def _field_changed(self, *_):
         record = self.fields.currentData()
@@ -518,6 +542,11 @@ class StackReviewDialog(QDialog):
             self.analysis_z.setRange(0, depth - 1)
             self.z_slider.setValue(depth // 2)
             self._configure_analysis(defaults)
+            if self._shared_settings:
+                saved_display = self._shared_settings["config"].get("display", {})
+                for role in ("green", "red"):
+                    if role in saved_display:
+                        self.stack_info.setdefault("display", {})[role] = deepcopy(saved_display[role])
             if volume_result:
                 self.result = volume_result
                 self._result_settings = deepcopy(defaults)
@@ -530,6 +559,7 @@ class StackReviewDialog(QDialog):
             self._populate_objects()
             self._render_sections()
             self._set_ready(True)
+            self._update_inspection_mode()
             spacing = info.get("spacing_um", [None, 1, 1])
             units = f"XYZ spacing {spacing[2]:.3g}, {spacing[1]:.3g}, {spacing[0]:.3g} µm" if spacing[0] else "Z spacing unavailable: side views use plane indices; 3D analysis disabled"
             self.context.setText(f"{depth} selected optical sections · {width} × {height} px · {units}. Click an XY panel to inspect a location.")
@@ -547,6 +577,12 @@ class StackReviewDialog(QDialog):
         self._loaded(self.worker, deepcopy(info))
 
     def _configure_analysis(self, defaults=None):
+        if defaults and defaults.get("mode") == "projection_config":
+            self._shared_settings = deepcopy(defaults)
+            self._legacy_raw = False
+            self._inspection_only = True
+            self.preview_mask.setChecked(False)
+            return
         self._initializing = True
         try:
             if defaults is None:
@@ -569,6 +605,8 @@ class StackReviewDialog(QDialog):
             self._initializing = False
 
     def analysis_settings(self):
+        if self._shared_settings is not None:
+            return deepcopy(self._shared_settings)
         settings = {role: {"low": self.thresholds[role, "low"].value(),
                           "high": self.thresholds[role, "high"].value(),
                           "sigma_um": self.sigmas[role].value(),
@@ -592,7 +630,7 @@ class StackReviewDialog(QDialog):
             self._render_sections(update_profile=False)
 
     def _threshold_changed(self):
-        if self._initializing:
+        if self._initializing or self._inspection_only:
             return
         self.preview_mask.setChecked(True)
         self._settings_changed()
@@ -785,6 +823,7 @@ class StackReviewDialog(QDialog):
             "x": self.x, "y": self.y, "z_index_in_selection": self.z_slider.value(),
             "roi_radius_px": self.radius.value(), "stack": deepcopy(self.stack_info),
             "analysis_result": deepcopy(self.result), "analysis_settings": deepcopy(self._result_settings),
+            "projection_settings": deepcopy(self.config),
             "reviewed_at": datetime.now(timezone.utc).isoformat()}
 
     def _safe_export(self, destination):
@@ -840,6 +879,9 @@ class StackReviewDialog(QDialog):
             self.status.setText(str(exc))
 
     def start_analysis(self):
+        if self._inspection_only:
+            self.status.setText("Use the usual Preview segmentation controls, choose 3D on New analysis, then Run analysis.")
+            return
         if not self.stack_info or self.process is not None:
             return
         settings = self.analysis_settings()
@@ -1001,14 +1043,21 @@ class StackReviewDialog(QDialog):
         if not self.result:
             return
         source = Path(self.result["figure"])
+        try:
+            expected = json.loads(Path(self.result["checksums"]).read_text(encoding="utf-8"))["figure.png"]
+        except Exception as exc:
+            self.status.setText("Cannot verify the saved 3D figure before export: " + str(exc))
+            return
         filename, _ = QFileDialog.getSaveFileName(self, "Save 3D candidate figure", str(self.output_base / "3d_candidates.png"), "PNG image (*.png)")
         if filename:
             try:
                 if Path(filename).suffix.lower() != ".png":
                     raise ValueError("Save the 3D figure with a .png filename.")
-                import shutil
                 destination = self._safe_export(filename)
-                shutil.copyfile(source, destination)
+                content = source.read_bytes()
+                if hashlib.sha256(content).hexdigest() != expected:
+                    raise ValueError("The saved 3D figure changed after analysis. Reopen or verify this result before exporting.")
+                destination.write_bytes(content)
                 self.status.setText(f"Saved 3D figure with its completed analysis settings: {destination}")
             except Exception as exc:
                 self.status.setText(str(exc))

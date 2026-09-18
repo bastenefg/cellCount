@@ -9,10 +9,13 @@ mechanism. No viability percentage is inferred from unresolved associations.
 from __future__ import annotations
 
 import csv
+from copy import deepcopy
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import shutil
 import sys
@@ -23,7 +26,7 @@ from scipy import ndimage as ndi
 
 
 SCHEMA_VERSION = 1
-ALGORITHM_VERSION = "1.0.0"
+ALGORITHM_VERSION = "1.1.0"
 MAX_VOXELS = 128_000_000
 MAX_COMPONENT_VOXELS = 16_000_000
 MAX_COMPONENTS = 100_000
@@ -144,9 +147,54 @@ def _default_settings(stack_info, arrays, spacing):
     return result
 
 
+def settings_from_config(stack_info, config):
+    """Freeze the ordinary projection controls for calibrated 3D analysis.
+
+    The config is retained in full, including display settings. Segmentation
+    thresholds keep their original background-subtracted contrast units.
+    Pixel distances use the geometric mean XY pitch when extended into Z;
+    min_area_px is the largest XY cross-section of each 3D object.
+    """
+    spacing = _spacing(stack_info)
+    settings = _shared_settings({"mode": "projection_config", "config": config})
+    _check_shared_input(settings["config"], stack_info.get("shape_zyx"), stack_info.get("dtype"), spacing)
+    return settings
+
+
+def _check_shared_input(config, shape, dtype, spacing):
+    if shape is not None and list(shape)[1:] != config["input"]["expected_shape"]:
+        raise ValueError("The projection configuration dimensions differ from the source stack.")
+    if dtype is not None and str(dtype) != config["input"]["dtype"]:
+        raise ValueError("The projection configuration detector type differs from the source stack.")
+    if not np.allclose(config["input"]["pixel_size_um"], spacing[1:], rtol=1e-5, atol=1e-8):
+        raise ValueError("The projection XY calibration differs from the source stack. Reopen the Leica import before 3D analysis.")
+
+
+def _shared_settings(settings):
+    from pipeline.io import validate_config
+    config = deepcopy(settings.get("config"))
+    if not isinstance(config, dict):
+        raise ValueError("Projection-based 3D analysis requires the saved segmentation configuration.")
+    validate_config(config)
+    for role in ("green", "red"):
+        for key in ("low", "high", "sigma_px", "min_area_px"):
+            _number(config["segmentation"][role][key], f"{role} {key}", positive=True)
+    for key in ("background_sigma_px", "peak_window_px", "min_peak_distance_px"):
+        _number(config["segmentation"][key], key, positive=True)
+    for key in ("max_distance_px", "overlap_window_radius_px"):
+        _number(config["matching"][key], key, positive=True)
+    # Round-trip makes every saved value independent of GUI-owned state and
+    # refuses NaN/Infinity before launching a background analysis.
+    return json.loads(json.dumps({"mode": "projection_config", "config": config}, allow_nan=False))
+
+
 def _settings(settings, dtype):
     if not isinstance(settings, dict):
         raise ValueError("3D settings must be an object.")
+    if settings.get("mode") == "projection_config":
+        return _shared_settings(settings)
+    if settings.get("mode") not in (None, "raw_intensity"):
+        raise ValueError("Unsupported 3D segmentation mode.")
     if settings.get("background_sigma_um", 0) != 0:
         raise ValueError("3D thresholds use absolute intensities; background subtraction is not supported.")
     result = {"min_seed_distance_um": _number(settings.get("min_seed_distance_um", 8), "Seed spacing", positive=True),
@@ -230,6 +278,89 @@ def _smooth(volume, sigma_um, spacing, path, cancelled, resources=None):
     return result
 
 
+def projection_contrast(plane, role, config):
+    """The exact 2D working contrast used by the ordinary segmentation tool.
+
+    Deliberately float64 with SciPy's default reflect boundary mode, as in
+    pipeline.core.segment. Each source plane is processed independently.
+    """
+    raw = np.asarray(plane, dtype=float)
+    if raw.ndim != 2:
+        raise ValueError("Projection contrast requires a two-dimensional image.")
+    segmentation = config["segmentation"]
+    return (ndi.gaussian_filter(raw, segmentation[role]["sigma_px"])
+            - ndi.gaussian_filter(raw, segmentation["background_sigma_px"]))
+
+
+def _contrast_volume(volume, role, config, path, cancelled, resources):
+    result = np.lib.format.open_memmap(path, mode="w+", dtype=np.float64, shape=volume.shape)
+    resources.append(result)
+    # SciPy's independent 2D Gaussian filters release the GIL. A bounded batch
+    # of at most four planes avoids accumulating an entire stack of futures or
+    # allocating a second in-memory volume. Tiny fixtures stay single-threaded.
+    workers = min(4, os.cpu_count() or 1, volume.shape[0]) if volume.shape[1] * volume.shape[2] >= 65_536 else 1
+    def compute(z):
+        _check(cancelled)
+        return projection_contrast(volume[z], role, config)
+    if workers == 1:
+        for z in range(volume.shape[0]):
+            result[z] = compute(z)
+    else:
+        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="cell-contrast") as executor:
+            for start in range(0, volume.shape[0], workers):
+                _check(cancelled)
+                for z, plane in zip(range(start, min(start + workers, volume.shape[0])),
+                                    executor.map(compute, range(start, min(start + workers, volume.shape[0])))):
+                    _check(cancelled)
+                    result[z] = plane
+    # This scratch map is consumed within the same process and then deleted;
+    # forcing a disk flush here adds I/O without improving output durability.
+    return result
+
+
+def _spaced_candidates(candidates, strength, spacing, separation):
+    candidates.sort(key=lambda point: (-strength[point], point))
+    bins, accepted = {}, []
+    offsets = [(a, b, c) for a in (-1, 0, 1) for b in (-1, 0, 1) for c in (-1, 0, 1)]
+    for point in candidates:
+        physical = np.asarray(point) * spacing
+        key = tuple(np.floor(physical / separation).astype(int))
+        neighbors = (old for offset in offsets for old in bins.get(tuple(k + o for k, o in zip(key, offset)), ()))
+        if any(np.sum((physical - old) ** 2) < separation ** 2 for old in neighbors):
+            continue
+        accepted.append(point)
+        bins.setdefault(key, []).append(physical)
+        if len(accepted) > MAX_SEEDS:
+            raise ValueError("Too many seeds in one connected region. Raise the threshold or peak spacing.")
+    return accepted
+
+
+def _contrast_seeds(contrast, region, spacing, segmentation, high):
+    xy_pitch = math.sqrt(spacing[1] * spacing[2])
+    radius = segmentation["peak_window_px"] // 2
+    # Always compare the immediately neighboring Z planes. Omitting that
+    # comparison on coarsely sampled stacks would seed one copy per plane.
+    z_radius = max(1, int(math.floor(radius * xy_pitch / spacing[0])))
+    window = (2 * z_radius + 1, segmentation["peak_window_px"], segmentation["peak_window_px"])
+    maxima = ((contrast == ndi.maximum_filter(contrast, size=window, mode="constant"))
+              & region & (contrast >= high))
+    plateaus, count = ndi.label(maxima, structure=np.ones((3, 3, 3)))
+    if count > MAX_COMPONENTS:
+        raise ValueError("Too many local intensity peaks. Raise the threshold or peak window.")
+    candidates = []
+    for ident, bounds in enumerate(ndi.find_objects(plateaus), 1):
+        if bounds is None:
+            continue
+        points = np.argwhere(plateaus[bounds] == ident)
+        center = points.mean(axis=0)
+        point = points[np.argmin(np.sum(((points - center) * spacing) ** 2, axis=1))]
+        candidates.append(tuple(int(value + axis.start) for value, axis in zip(point, bounds)))
+    if not candidates:
+        candidates = [tuple(int(value) for value in np.unravel_index(
+            np.argmax(np.where(region, contrast, -np.inf)), region.shape))]
+    return _spaced_candidates(candidates, contrast, spacing, segmentation["min_peak_distance_px"] * xy_pitch)
+
+
 def _seed_points(distance, region, spacing, separation):
     maxima = (distance == ndi.maximum_filter(distance, size=3, mode="constant")) & region
     plateaus, count = ndi.label(maxima, structure=ndi.generate_binary_structure(3, 1))
@@ -284,19 +415,24 @@ def _segment(volume, role, settings, spacing, directory, progress, cancelled):
 
 
 def _segment_inner(volume, role, settings, spacing, directory, progress, cancelled, resources):
-    params, shape = settings[role], volume.shape
+    shared = settings.get("mode") == "projection_config"
+    segmentation = settings["config"]["segmentation"] if shared else None
+    params, shape = segmentation[role] if shared else settings[role], volume.shape
     voxel_volume = math.prod(spacing)
-    min_voxels = max(1, int(math.ceil(params["min_volume_um3"] / voxel_volume - 1e-10)))
+    min_voxels = (params["min_area_px"] if shared else
+                  max(1, int(math.ceil(params["min_volume_um3"] / voxel_volume - 1e-10))))
     work_path = directory / ("_working_" + role + ".npy")
     component_path = directory / ("_components_" + role + ".npy")
-    working = _smooth(volume, params["sigma_um"], spacing, work_path, cancelled, resources)
+    working = (_contrast_volume(volume, role, settings["config"], work_path, cancelled, resources) if shared else
+               _smooth(volume, params["sigma_um"], spacing, work_path, cancelled, resources))
     mask = np.empty(shape, bool)
     for slab in _slabs(shape):
         _check(cancelled)
         np.greater_equal(working[slab], params["low"], out=mask[slab])
     components = np.lib.format.open_memmap(component_path, mode="w+", dtype=np.int32, shape=shape)
     resources.append(components)
-    count = ndi.label(mask, structure=ndi.generate_binary_structure(3, 1), output=components)
+    connectivity = np.ones((3, 3, 3)) if shared else ndi.generate_binary_structure(3, 1)
+    count = ndi.label(mask, structure=connectivity, output=components)
     del mask
     _check(cancelled)
     if count > MAX_RAW_COMPONENTS:
@@ -332,15 +468,30 @@ def _segment_inner(volume, role, settings, spacing, directory, progress, cancell
         region = components[bounds] == component_id
         if np.count_nonzero(region) < min_voxels or float(working[bounds][region].max()) < params["high"]:
             continue
-        # A zero halo gives correct distances when a component fills its ROI.
-        padded = np.pad(region, 1)
-        distance = ndi.distance_transform_edt(padded, sampling=spacing)[1:-1, 1:-1, 1:-1]
-        seeds = _seed_points(distance, region, spacing, settings["min_seed_distance_um"])
-        if len(seeds) == 1:
-            assigned = region.astype(np.int32)
+        if shared:
+            if int(region.sum(axis=(1, 2)).max()) < params["min_area_px"]:
+                continue
+            strength = working[bounds]
+            seeds = _contrast_seeds(strength, region, spacing, segmentation, params["high"])
+            if len(seeds) == 1:
+                assigned = region.astype(np.int32)
+            else:
+                from skimage.segmentation import watershed
+                markers = np.zeros(region.shape, np.int32)
+                for ident, point in enumerate(seeds, 1):
+                    markers[point] = ident
+                assigned = watershed(-strength, markers=markers, mask=region, connectivity=3)
+                _check(cancelled)
         else:
-            assigned = _priority_watershed(distance, region, seeds, cancelled)
-        del distance, padded
+            # A zero halo gives correct distances when a component fills its ROI.
+            padded = np.pad(region, 1)
+            distance = ndi.distance_transform_edt(padded, sampling=spacing)[1:-1, 1:-1, 1:-1]
+            seeds = _seed_points(distance, region, spacing, settings["min_seed_distance_um"])
+            if len(seeds) == 1:
+                assigned = region.astype(np.int32)
+            else:
+                assigned = _priority_watershed(distance, region, seeds, cancelled)
+            del distance, padded
         sizes = np.bincount(assigned.ravel(), minlength=len(seeds) + 1)
         local_bounds = ndi.find_objects(assigned, max_label=len(seeds))
         offset = np.array([axis.start for axis in bounds])
@@ -350,18 +501,24 @@ def _segment_inner(volume, role, settings, spacing, directory, progress, cancell
                 continue
             absolute_bounds = tuple(slice(axis.start + base, axis.stop + base) for axis, base in zip(sub_bounds, offset))
             submask = assigned[sub_bounds] == ident
+            max_xy_area = int(submask.sum(axis=(1, 2)).max())
+            if shared and max_xy_area < params["min_area_px"]:
+                continue
             intensities = working[absolute_bounds][submask]
             if float(intensities.max()) < params["high"]:
                 continue
             boundary = any(axis.start == 0 or axis.stop == full for axis, full in zip(absolute_bounds, shape))
-            if boundary and settings["exclude_border"]:
+            if boundary and (segmentation["exclude_border"] if shared else settings["exclude_border"]):
                 continue
-            coords = np.argwhere(submask).mean(axis=0) + np.array([axis.start for axis in absolute_bounds])
+            local_coords = np.argwhere(submask)
+            coords = (np.average(local_coords, axis=0, weights=intensities) if shared else local_coords.mean(axis=0))
+            coords = coords + np.array([axis.start for axis in absolute_bounds])
             object_id = len(records) + 1
             lut[ident] = object_id
             records.append({"id": object_id, "centroid": coords.tolist(), "bounds": absolute_bounds,
                             "voxels": int(sizes[ident]), "volume_um3": float(sizes[ident] * voxel_volume),
-                            "touches_boundary": boundary, "peak_intensity": float(intensities.max())})
+                            "touches_boundary": boundary, "peak_intensity": float(intensities.max()),
+                            "max_xy_area_px": max_xy_area})
         mapped = lut[assigned]
         np.copyto(labels[bounds], mapped, where=mapped > 0)
         if progress and component_id % 100 == 0:
@@ -376,13 +533,63 @@ def _segment_inner(volume, role, settings, spacing, directory, progress, cancell
     return labels, records
 
 
+def _shared_edges(green_labels, red_labels, green, red, spacing, config, cancelled):
+    """Apply the ordinary centroid/window/dilation controls in XYZ space.
+
+    XY window and dilation sizes retain their pixel meaning. Their Z extents
+    and centroid distance use the geometric mean XY pitch. No Hungarian
+    winner is imposed when several objects satisfy these same controls.
+    """
+    matching = config["matching"]
+    pitch = math.sqrt(spacing[1] * spacing[2])
+    radius = int(matching["overlap_window_radius_px"])
+    dilation = int(matching["dilation_px"])
+    z_radius = int(math.ceil(radius * pitch / spacing[0]))
+    z_dilation = int(math.floor(dilation * pitch / spacing[0] + 1e-12))
+    max_distance = matching["max_distance_px"] * pitch
+    z_dilation = min(z_dilation, green_labels.shape[0] - 1)
+    footprint_shape = (2 * z_dilation + 1, 2 * dilation + 1, 2 * dilation + 1)
+    if math.prod(footprint_shape) > MAX_COMPONENT_VOXELS:
+        raise ValueError("The calibrated 3D dilation neighborhood is too large. Reduce dilation or the selected Z range.")
+    footprint = np.ones(footprint_shape, bool)
+    lookup = {item["id"]: item for item in red}
+    shape, edges, adjacency = green_labels.shape, {}, {}
+    for item in green:
+        _check(cancelled)
+        center = np.rint(item["centroid"]).astype(int)
+        bounds = tuple(slice(max(0, int(mid - rad)), min(size, int(mid + rad + 1)))
+                       for mid, rad, size in zip(center, (z_radius, radius, radius), shape))
+        if math.prod(axis.stop - axis.start for axis in bounds) > MAX_COMPONENT_VOXELS:
+            raise ValueError("The 3D matching window is too large. Reduce the overlap window radius.")
+        live = green_labels[bounds] == item["id"]
+        near = ndi.binary_dilation(live, structure=footprint) if dilation else live
+        red_ids = np.unique(red_labels[bounds][near])
+        for red_id in red_ids[red_ids > 0]:
+            red_id = int(red_id)
+            delta = (np.asarray(lookup[red_id]["centroid"]) - item["centroid"]) * spacing
+            if np.linalg.norm(delta) > max_distance + 1e-10:
+                continue
+            # Count the full intersection for correct group union volumes;
+            # the user-selected local window is only an admission criterion.
+            overlap = int(np.count_nonzero((green_labels[item["bounds"]] == item["id"])
+                                          & (red_labels[item["bounds"]] == red_id)))
+            edges[(item["id"], red_id)] = overlap
+            gkey, rkey = ("green", item["id"]), ("red", red_id)
+            adjacency.setdefault(gkey, set()).add(rkey)
+            adjacency.setdefault(rkey, set()).add(gkey)
+    return edges, adjacency
+
+
 def _associate(green_labels, red_labels, green, red, spacing, settings, cancelled):
     """Sparse physical surface-gap graph; no all-pairs centroid matrix."""
     edges, adjacency = {}, {}
-    gap = settings["match_distance_um"]
+    shared = settings.get("mode") == "projection_config"
+    if shared:
+        edges, adjacency = _shared_edges(green_labels, red_labels, green, red, spacing, settings["config"], cancelled)
+    gap = settings.get("match_distance_um", 0)
     padding = np.ceil(gap / np.asarray(spacing)).astype(int)
     shape = green_labels.shape
-    for item in green:
+    for item in ([] if shared else green):
         _check(cancelled)
         bounds = tuple(slice(max(0, sl.start - int(pad)), min(size, sl.stop + int(pad)))
                        for sl, pad, size in zip(item["bounds"], padding, shape))
@@ -420,9 +627,11 @@ def _associate(green_labels, red_labels, green, red, spacing, settings, cancelle
         gids = sorted(ident for role, ident in members if role == "green")
         rids = sorted(ident for role, ident in members if role == "red")
         if not rids:
-            status, reason = "green_only", "No DEAD object within the selected 3D surface gap."
+            status, reason = "green_only", ("No DEAD object satisfies the saved 3D centroid, dilation and overlap-window controls." if shared else
+                                            "No DEAD object within the selected 3D surface gap.")
         elif not gids:
-            status, reason = "red_only", "No LIVE object within the selected 3D surface gap."
+            status, reason = "red_only", ("No LIVE object satisfies the saved 3D centroid, dilation and overlap-window controls." if shared else
+                                          "No LIVE object within the selected 3D surface gap.")
         elif len(gids) == len(rids) == 1 and edges.get((gids[0], rids[0]), 0):
             status, reason = "dual_positive_candidate", "One LIVE and one DEAD object overlap in 3D; same-cell identity needs review."
         elif len(gids) == len(rids) == 1:
@@ -432,9 +641,18 @@ def _associate(green_labels, red_labels, green, red, spacing, settings, cancelle
         member_rows = [lookup[key] for key in members]
         weights = [row["voxels"] for row in member_rows]
         center = np.average([row["centroid"] for row in member_rows], weights=weights, axis=0)
-        shared = sum(edges[(gid, rid)] for gid in gids for _, rid in adjacency.get(("green", gid), ()))
+        shared_voxels = sum(edges[(gid, rid)] for gid in gids for _, rid in adjacency.get(("green", gid), ()))
+        if shared and gids and rids:
+            # An intersection may fail the centroid/window test yet belong to
+            # a transitive ambiguous group. Include every member intersection
+            # when measuring that group's union, not just accepted edges.
+            shared_voxels = 0
+            for gid in gids:
+                bounds = lookup[("green", gid)]["bounds"]
+                shared_voxels += int(np.count_nonzero((green_labels[bounds] == gid)
+                                                      & np.isin(red_labels[bounds], rids)))
         # Within each channel labels do not overlap; pair intersections are disjoint.
-        volume_um3 = (sum(weights) - shared) * math.prod(spacing)
+        volume_um3 = (sum(weights) - shared_voxels) * math.prod(spacing)
         row = {"object_id": len(records) + 1, "status": status,
                "green_ids": ";".join(map(str, gids)), "red_ids": ";".join(map(str, rids)),
                "volume_um3": float(volume_um3), "candidate_count_min": max(len(gids), len(rids)),
@@ -462,6 +680,8 @@ def _figure(arrays, labels, settings, summary, path):
     stride = max(1, int(math.ceil(max(arrays["green"].shape[1:]) / 1024)))
     projections = {role: np.max(array[:, ::stride, ::stride], axis=0) for role, array in arrays.items()}
     rgb = np.zeros((*projections["green"].shape, 3), np.float32)
+    shared = settings.get("mode") == "projection_config"
+    segmentation = settings["config"]["segmentation"] if shared else None
     for role, channel in (("green", 1), ("red", 0)):
         low, high = summary["display"][role]
         rgb[:, :, channel] = np.clip((projections[role].astype(np.float32) - low) / (high - low), 0, 1)
@@ -473,20 +693,33 @@ def _figure(arrays, labels, settings, summary, path):
         present = np.any(labels[role][:, ::stride, ::stride] > 0, axis=0)
         if present.any() and not present.all():
             ax.contour(present, levels=[0.5], colors=["#62e6ff" if role == "green" else "#ffd166"], linewidths=0.45)
-        params = settings[role]
-        ax.set_title(f"{'LIVE' if role == 'green' else 'DEAD'} · 3D mask projection\nLow {params['low']:g} / high {params['high']:g}; σ {params['sigma_um']:g} µm", fontsize=9)
+        params = segmentation[role] if shared else settings[role]
+        threshold_text = (f"Contrast low {params['low']:g} / high {params['high']:g}; σ {params['sigma_px']:g} px" if shared else
+                          f"Low {params['low']:g} / high {params['high']:g}; σ {params['sigma_um']:g} µm")
+        ax.set_title(f"{'LIVE' if role == 'green' else 'DEAD'} · 3D mask projection\n{threshold_text}", fontsize=9)
     axes[2].imshow(rgb, interpolation="nearest")
     axes[2].set_title("Raw maximum projection\nDepth is inspected in the Z viewer", fontsize=9)
     for ax in axes:
         ax.set_axis_off()
     counts = summary["counts"]
     figure.suptitle("3D LIVE / DEAD fluorescence-object analysis", fontsize=15, y=0.92)
+    if summary.get("field_id"):
+        figure.text(0.5, 0.875, f"Field: {summary['field_id']}", ha="center", fontsize=9)
     figure.text(0.5, 0.82, f"Green only: {counts['green_only']}    Red only: {counts['red_only']}    "
                 f"Dual candidates: {counts['dual_positive_candidate']}    Unresolved groups: {counts['unresolved']}",
                 ha="center", fontsize=10)
-    figure.text(0.5, 0.08, "Candidates require review; no viability percentage or apoptosis diagnosis is inferred.\n"
-                f"Min. volume LIVE / DEAD: {settings['green']['min_volume_um3']:g} / {settings['red']['min_volume_um3']:g} µm³; "
-                f"seed spacing: {settings['min_seed_distance_um']:g} µm; maximum channel gap: {settings['match_distance_um']:g} µm\n"
+    if shared:
+        matching = settings["config"]["matching"]
+        detail = (f"Shared projection controls; background σ {segmentation['background_sigma_px']:g} px; "
+                  f"min. XY area LIVE / DEAD {segmentation['green']['min_area_px']} / {segmentation['red']['min_area_px']} px\n"
+                  f"Peak window {segmentation['peak_window_px']} px; peak separation {segmentation['min_peak_distance_px']:g} px; "
+                  f"match distance {matching['max_distance_px']:g} px; dilation {matching['dilation_px']} px; "
+                  f"overlap window {matching['overlap_window_radius_px']:g} px; exclude XYZ border {segmentation['exclude_border']}\n")
+    else:
+        detail = (f"Min. volume LIVE / DEAD: {settings['green']['min_volume_um3']:g} / {settings['red']['min_volume_um3']:g} µm³; "
+                  f"seed spacing: {settings['min_seed_distance_um']:g} µm; maximum channel gap: {settings['match_distance_um']:g} µm\n")
+    figure.text(0.5, 0.065 if shared else 0.08, "Candidates require review; no viability percentage or apoptosis diagnosis is inferred.\n"
+                + detail +
                 f"Spacing Z/Y/X: {' / '.join(f'{v:g}' for v in summary['spacing_um'])} µm; "
                 f"volume: {' × '.join(map(str, summary['shape_zyx']))} voxels (Z/Y/X)\n"
                 f"{summary.get('selection_description', '')}", ha="center", fontsize=8, linespacing=1.6)
@@ -508,7 +741,11 @@ def analyze_volume(stack_info, settings, output_dir, progress=None, cancelled=No
 
 def _analyze_volume(stack_info, settings, output_dir, progress, cancelled, arrays, spacing):
     settings = _settings(settings, arrays["green"].dtype)
-    display = {role: _display_bounds(stack_info, role, array.dtype) for role, array in arrays.items()}
+    shared = settings.get("mode") == "projection_config"
+    if shared:
+        _check_shared_input(settings["config"], arrays["green"].shape, arrays["green"].dtype, spacing)
+    display = ({role: list(settings["config"]["display"][role]) for role in ("green", "red")} if shared else
+               {role: _display_bounds(stack_info, role, array.dtype) for role, array in arrays.items()})
     output = Path(output_dir).expanduser().resolve()
     if output.exists():
         raise FileExistsError("3D output already exists. Choose a new folder; saved results are preserved.")
@@ -528,7 +765,7 @@ def _analyze_volume(stack_info, settings, output_dir, progress, cancelled, array
         raise ValueError("Insufficient free memory for this 3D volume. Close other applications or select fewer Z slices.")
     output.parent.mkdir(parents=True, exist_ok=True)
     # Scratch storage: two label volumes plus one temporary component volume.
-    estimated_disk = math.prod(arrays["green"].shape) * 16 + 16_000_000
+    estimated_disk = math.prod(arrays["green"].shape) * (24 if shared else 16) + 16_000_000
     if shutil.disk_usage(output.parent).free < estimated_disk:
         raise ValueError("Insufficient disk space for memory-mapped 3D masks and scratch storage.")
     stage = Path(tempfile.mkdtemp(prefix=".volume-pending-" + output.name + "-", dir=output.parent))
@@ -553,6 +790,7 @@ def _analyze_volume(stack_info, settings, output_dir, progress, cancelled, array
         selection_description = f"Selected source Z slices {z_start + 1}–{z_stop}; time point {selection.get('time_index', 0) + 1}"
         summary = {"schema_version": SCHEMA_VERSION, "algorithm_version": ALGORITHM_VERSION,
                    "analysis": "experimental_3d_fluorescence_objects", "counts": counts, "display": display,
+                   "field_id": str(stack_info.get("field_id", "")),
                    "shape_zyx": list(arrays["green"].shape), "spacing_um": list(spacing),
                    "source_dtype": str(arrays["green"].dtype),
                    "selection_description": selection_description,
@@ -561,20 +799,32 @@ def _analyze_volume(stack_info, settings, output_dir, progress, cancelled, array
                    "threshold_semantics": "Absolute detector intensity after optional 3D Gaussian smoothing; no background subtraction.",
                    "matching_semantics": "Maximum Euclidean distance between segmented LIVE/DEAD voxel centers in micrometers; zero requires a shared voxel. This is not a measured membrane-to-membrane distance.",
                    "coordinates": "Zero-based local Z/Y/X voxels. z_um is distance from the first selected slice along acquisition order, not signed microscope Z; y_um/x_um are relative pixel-center positions."}
+        if shared:
+            summary.update({"segmentation_mode": "projection_config",
+                "threshold_semantics": "Exact saved projection contrast controls, applied independently to each source Z plane: Gaussian(raw, sigma_px) minus Gaussian(raw, background_sigma_px), float64 reflect boundaries, no Z smoothing. Projection and background estimation do not commute; 2D and 3D masks can differ.",
+                "minimum_size_semantics": "min_area_px is the maximum XY cross-section of each segmented 3D object; it is not summed across slices or converted to a minimum volume.",
+                "peak_semantics": "Intensity maxima use the saved XY peak_window_px. Z half-window is max(1, floor((peak_window_px // 2) * sqrt(Y_pitch * X_pitch) / Z_pitch)). Equal adjacent maxima form one plateau. Minimum peak distance is min_peak_distance_px * sqrt(Y_pitch * X_pitch) in Euclidean 3D; compiled intensity watershed uses 26-connectivity.",
+                "matching_semantics": "Saved max_distance_px times sqrt(Y_pitch * X_pitch) bounds 3D centroid distance. Overlap is required in a window of saved XY radius and ceil(radius * sqrt(Y_pitch * X_pitch) / Z_pitch) in Z. Saved box dilation uses dilation_px in XY and floor(dilation_px * sqrt(Y_pitch * X_pitch) / Z_pitch) in Z. One-to-many associations and matches without shared voxels remain unresolved.",
+                "border_semantics": "exclude_border removes objects touching any X/Y edge or either selected Z face.",
+                "distance_reference_xy_um": math.sqrt(spacing[1] * spacing[2]),
+                "ebfp_semantics": "3D mode analyzes LIVE and DEAD only; saved EBFP controls are retained for provenance but no 3D EBFP enrichment is calculated."})
         _write_csv(stage / "objects.csv", rows, OBJECT_COLUMNS)
         for role in ("green", "red"):
             output_rows = [{"id": row["id"], **dict(zip("zyx", row["centroid"])), "volume_um3": row["volume_um3"],
-                            "voxels": row["voxels"], "touches_boundary": row["touches_boundary"], "peak_intensity": row["peak_intensity"]}
+                            "voxels": row["voxels"], "touches_boundary": row["touches_boundary"], "peak_intensity": row["peak_intensity"],
+                            **({"peak_contrast": row["peak_intensity"], "max_xy_area_px": row["max_xy_area_px"]} if shared else {})}
                            for row in detections[role]]
             _write_csv(stage / (role + "_objects.csv"), output_rows,
-                       ("id", "z", "y", "x", "volume_um3", "voxels", "touches_boundary", "peak_intensity"))
+                       ("id", "z", "y", "x", "volume_um3", "voxels", "touches_boundary", "peak_intensity")
+                       + (("peak_contrast", "max_xy_area_px") if shared else ()))
         (stage / "settings.json").write_text(json.dumps(settings, indent=2), encoding="utf-8")
         (stage / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
         from importlib.metadata import version
         (stage / "provenance.json").write_text(json.dumps({"schema_version": SCHEMA_VERSION, "algorithm_version": ALGORITHM_VERSION,
             "software": {name: version(name) for name in ("numpy", "scipy", "scikit-image")}, "stack_info": stack_info,
             "input_files": {role: {**identity, "sha256": input_digests[role]} for role, identity in identities.items()},
-            "algorithm": "6-connected hysteresis / physical EDT seeds / compiled watershed / 3D surface-gap association"}, indent=2), encoding="utf-8")
+            "algorithm": ("Saved projection contrast per plane / 26-connected regions / calibrated intensity peaks / compiled intensity watershed / saved centroid-window-dilation association" if shared else
+                          "6-connected hysteresis / physical EDT seeds / compiled watershed / 3D surface-gap association")}, indent=2), encoding="utf-8")
         _check(cancelled)
         if progress:
             progress("Saving threshold-matched 3D summary figure…")
@@ -609,6 +859,8 @@ def read_volume_result(path, verify=True):
 
     Absolute paths in result.json are informational; paths returned here always
     point inside the selected folder. No source pixels are needed for export.
+    ``verify=False`` defers only the large label-volume hashes; configuration,
+    counts, provenance and figure are always checked before display/export.
     """
     folder = Path(path).expanduser().resolve()
     if folder.is_file():
@@ -626,7 +878,10 @@ def read_volume_result(path, verify=True):
                     not isinstance(expected, str) or len(expected) != 64 or
                     any(character not in "0123456789abcdef" for character in expected)):
                 raise ValueError("The 3D integrity manifest contains invalid entries.")
-            if not target.is_file() or (verify and _sha256(target) != expected):
+        for filename, expected in checksums.items():
+            target = folder / filename
+            check_digest = verify or filename not in (ARTIFACTS["labels_green"], ARTIFACTS["labels_red"])
+            if not target.is_file() or (check_digest and _sha256(target) != expected):
                 raise ValueError(f"Saved 3D artifact failed integrity verification: {filename}")
         summary = json.loads((folder / "summary.json").read_text(encoding="utf-8"))
         settings = json.loads((folder / "settings.json").read_text(encoding="utf-8"))

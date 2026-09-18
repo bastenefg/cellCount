@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "mode": "source subprocess",
+  "scope": "Engineering workflow check; no biological accuracy assessment.",
+  "shape_zyx_by_field": [
+    [
+      25,
+      1024,
+      1024
+    ]
+  ],
+  "elapsed_seconds_including_startup": 13.227429399994435,
+  "cache_context": "Warm filesystem caches; existing verified stack cache reused when available.",
+  "checks": [
+    "Normal 3D Run CLI processes all selected fields",
+    "Exact shared projection settings saved",
+    "Field identity recorded in each summary",
+    "PNG generated from completed masks",
+    "All output integrity checks passed",
+    "Original acquisition size and timestamps preserved",
+    "Verification CLI passed",
+    "Both label volumes and object tables byte-identical to source baseline"
+  ]
+}

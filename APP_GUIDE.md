@@ -1,4 +1,4 @@
-# Live/Dead Cell Counter 1.4
+# Live/Dead Cell Counter 1.4.1
 
 A 64-bit Windows desktop interface for paired LIVE/DEAD fluorescence images and
 optional EBFP analysis. The app can review other cell types; its bundled CHO
@@ -8,7 +8,7 @@ preserved.
 
 ## Open the portable app
 
-1. Extract **Live-Dead-Cell-Counter-1.4.0-Windows-x64.zip** completely into a new folder.
+1. Extract **Live-Dead-Cell-Counter-1.4.1-Windows-x64.zip** completely into a new folder.
 2. Open the extracted **Live-Dead Cell Counter** folder.
 3. Double-click **Live-Dead Cell Counter.exe**. Python is included; no installation or
    command line is needed.
@@ -48,9 +48,12 @@ preserved. Review the selected preset's thresholds and physical calibration for
 your acquisition before using its measurements.
 
 Click **Preview segmentation** to inspect and adjust detections, then **Use
-settings for next run** when ready. Choose an output location and run name, and
-click **Run analysis**. The app writes the input manifest and effective settings
-with the results automatically.
+settings for next run** when ready. Under **Count in**, choose **2D · projection /
+single image** or **3D · original Z stack**, choose an output location and run
+name, and click **Run analysis**. Both counting modes use the settings from this
+preview. A 3D run requires imported Leica stacks with known Z spacing; an ordinary
+TIFF pair supports 2D counting. The app saves the input selection and effective
+settings with the results automatically.
 
 For multiple fields or replicates, choose **Batch / CSV**, then use **+ Add
 field** to add one row per field and select its images. You can also import an
@@ -59,16 +62,18 @@ Each image ID must be unique. IDs use letters, numbers, dots, hyphens,
 or underscores, and start with a letter or number.
 
 Give nonoverlapping fields from the same independently prepared gel the same
-replicate ID. The analysis pools counts within each replicate, then reports an
-equally weighted replicate mean and sample SD. One replicate has no
-between-replicate SD. Run each condition/timepoint separately.
+replicate ID. In 2D mode the analysis pools counts within each replicate, then
+reports an equally weighted replicate mean and sample SD. One replicate has no
+between-replicate SD. A 3D batch pools candidate categories within replicates
+without estimating viability. Run each condition/timepoint separately.
 
 Use **Load settings** to select a configuration or **Review / edit** to inspect
 and adapt a copy. Click **Preview segmentation** to review the object boundaries
 and adjust detection settings before running the full analysis (see below).
 Select a new output folder and click **Run analysis**. The
-app checks inputs before starting. The counting engine uses registered, scalar,
-single-plane TIFFs. Leica imports prepare those inputs automatically. The bundled reference and default batch configuration expect
+app checks inputs before starting. The original 2D counting engine uses registered, scalar,
+single-plane TIFFs. Leica imports prepare those inputs automatically and retain
+the connection to the original stack for 3D counting. The bundled reference and default batch configuration expect
 1024 × 1024 uint8 images with the reference acquisition and calibration. RGB
 composites and direct multi-page TIFF input are unsupported. Use the Leica
 importer below for .lif/.lof Z stacks. Use a separately named configuration
@@ -98,13 +103,47 @@ Batch / CSV. Open a Leica file (or drop it into the import window), then:
    can be edited here. If metadata is absent, confirm the displayed preset value.
 5. Click **Use these images**, then preview segmentation and run analysis as usual.
 
-## Review depth and count 3D candidates
+## Use the same controls for 2D and 3D counting
 
-After importing a Leica stack, click **Review Z / count in 3D…** on New analysis.
+For a Leica stack, select **Maximum intensity projection** and the desired Z
+range during import. Then:
+
+1. Open the usual **Preview segmentation**. Tune LIVE/DEAD thresholds, smoothing,
+   background estimation, minimum area and matching while viewing the projection.
+2. Click **Use settings for next run**.
+3. Under **Count in**, choose **2D · projection / single image** to count the
+   projection, or **3D · original Z stack** to count through its source volume.
+4. Click the ordinary **Run analysis** button. Results open on the usual Results
+   page. A batch processes each field's selected stack once; Z slices are not
+   separate fields or replicates.
+
+There is one set of detection controls. A full 3D analysis runs only when you
+request a run; moving a threshold slider does not repeatedly process the whole
+stack. The projection preview continues to reuse its cached images and unchanged
+channel results.
+
+In 3D mode the saved smoothing and background settings are applied separately
+to each XY slice, followed by the same peak and region contrast thresholds.
+There is no smoothing between Z slices. Signal is connected and separated in
+three dimensions rather than counted independently on each plane. Minimum area
+means that a 3D object must have at least one XY cross-section of that area; it
+is not converted into an assumed cell volume. Peak spacing and match distance
+extend into 3D using the geometric mean XY pixel size as their distance unit;
+the recorded Z spacing determines distances between planes. The saved results
+record the effective peak, matching-window and dilation rules.
+
+**The same settings do not imply identical projected and 3D masks.** A maximum
+projection changes both signal and estimated background, and can combine cells
+at different depths. Use the projection to tune the controls, then inspect the
+completed 3D masks in optical sections before interpreting the candidates.
+
+## Inspect the stack and review 3D candidates
+
+After importing a Leica stack, click **Inspect Z stack…** on New analysis.
 You can also open it from Results for a saved Leica run. A 2D analysis is not
-required first. Select a maximum projection covering the desired Z range during
-import: the stack viewer uses that same range, time point and channel mapping.
-Importing a single optical slice gives a single-slice review, not a 3D count.
+required first. The viewer uses the imported range, time point and channel
+mapping. Importing a single optical slice gives a single-slice review, not a
+3D count.
 
 The viewer reopens the original LIF/LOF and caches the selected LIVE and DEAD
 planes on disk. Keep that original file at its recorded location and reconnect
@@ -126,23 +165,24 @@ Review labels record **Separate in Z**, **Same-cell signal supported**, or
 **Uncertain**. Export the review separately. These annotations do not rewrite a
 completed run or silently change its counts.
 
-The **3D analysis** controls create a separate, provisional candidate analysis.
-Set LIVE/DEAD thresholds using the slice preview, then request the full-volume
-analysis. Its intensity thresholds are separate from the original 2D pipeline's
-background-corrected contrast thresholds. Existing 2D values are not silently
-transferred. Minimum object volume and separation distances use physical units.
-The 3D method connects signal across slices, separates volume candidates and
-associates channels in three dimensions. It does not sum independent slice counts.
+The stack viewer shows the completed 3D masks and the saved shared settings.
+To change them, use the usual **Preview segmentation** or **Inspect segmentation**,
+apply the reviewed settings and create a new run. Saved results keep their
+original masks and figures. Older 1.4.0 results remain readable with their
+separate raw-intensity and volume settings; reopening does not convert or recount
+those analyses.
 
 Results distinguish green-only, red-only, dual-positive candidates and unresolved
 associations. A spatial association is evidence for review, not proof of cell
 identity. Crowded groups and partial cells at volume boundaries need inspection.
-Reopen a saved 3D folder through **Results → Open run…**, or **Open 3D result…**
-in the stack viewer. The app verifies saved artifacts and reopens the corresponding
-source stack. The output records parameters, calibrated source selection, object tables, label
-volumes and a summary figure generated from those saved labels. EBFP scoring and
-replicate-pooled viability remain features of the original 2D workflow; the new
-3D candidate mode does not report a definitive viability percentage.
+Reopen a saved 3D folder through **Results → Open run…**. Choose a field to inspect
+its candidates, summary and depth. The app verifies saved artifacts before
+loading them. The output records parameters, calibrated source selections,
+object tables, label volumes and per-field summary figures generated from those
+saved labels. Batch tables pool candidate categories within the supplied
+replicate groups; they do not turn uncertainty into a definitive cell count.
+EBFP scoring and replicate-pooled viability remain features of the original
+2D workflow. The 3D candidate mode does not report a definitive viability percentage.
 
 For Thermo L3224, calcein indicates esterase activity and EthD-1 indicates membrane
 damage. Confirmed red-positive cells are membrane-compromised even if green
@@ -153,9 +193,10 @@ leave cases unresolved. Review representative stacks and appropriate staining
 controls before using 3D candidate counts for experimental conclusions.
 
 A single-plane acquisition is imported directly. A projection takes the maximum
-stored value at each XY pixel independently in each selected channel. These are
-**2D projected object counts, not 3D cell counts**: cells above one another can
-merge. Z slices are not automatically pooled as independent cells or replicates.
+stored value at each XY pixel independently in each selected channel. With
+**Count in** set to 2D, counting this projection can merge cells above one
+another. Choose 3D to use the source depth. Z slices are not automatically
+pooled as independent cells or replicates.
 The run records the selected series, channel mapping, Z range, time and calibration.
 
 Only selected channels/planes are read. Maximum projections stream one plane at
@@ -217,23 +258,24 @@ Adjust one detection setting at a time and inspect its effect:
 |---|---|
 | Peak threshold | Minimum peak contrast above the estimated background. Raising it rejects weaker detections. |
 | Region threshold | Contrast required to grow a region around a peak. It must not exceed the peak threshold. |
-| Minimum area (px²) | Minimum accepted segmented object area; raising it rejects smaller masks. |
-| Smoothing (px) | Gaussian smoothing of the selected channel before background subtraction. |
+| Minimum area (px²) | Minimum accepted object area in 2D; in 3D, at least one XY cross-section must reach this area. |
+| Smoothing (px) | Gaussian smoothing before background subtraction; 3D applies it to each XY slice separately. |
 | Background (px) | Background-estimation scale, shared by both channels. |
 | Peak spacing / Peak window | Separation of local peaks, shared by both channels. Greater spacing can reduce splitting. |
-| Match distance (px) | Allowed distance for LIVE/DEAD matching, still subject to the existing overlap rule. |
-| Exclude border objects | Whether detections touching the image border are excluded, for both channels. |
+| Match distance (px) | Allowed LIVE/DEAD distance. 2D retains its existing overlap rule; 3D uses calibrated spatial matching and keeps ambiguous associations unresolved. |
+| Exclude border objects | Excludes detections touching the image border; 3D also checks the first and last selected Z planes. |
 
 The first four controls apply to the selected channel. Background, splitting,
 matching and border controls affect the combined result. **Auto-update** reruns
 the preview after a short pause in editing; turn it off and click **Update preview** to compare
 several edits together. The preview processes the complete selected field,
-even when you are zoomed in. Its counts are field-level LIVE/DEAD counts; EBFP
-and replicate summaries are calculated by a full run.
+even when you are zoomed in. Its counts describe the displayed 2D field or
+projection, including when you intend to run in 3D. Full-volume counts are
+calculated only by a 3D run. EBFP and replicate viability are available in 2D runs.
 
 Repeated previews reuse loaded images and unchanged channel segmentations, so
 editing only DEAD settings does not reprocess LIVE. Complete-image counts are
-retained, and the saved analysis still runs the original pipeline. The first
+retained, and a 2D analysis still runs the original pipeline. The first
 preview takes longer because it starts the analysis session. Edits that change
 both channels or unusually dense fields can take longer than edits to one channel.
 
@@ -277,7 +319,7 @@ input-image panels, unchanged segmentation contours and diagnostic measurements.
 
 Review the counts, summary figure, and numbered detection overlays. Check dim
 objects, touching neighbors, debris, double-positive matches, edge exclusions,
-and unscorable EBFP objects before accepting a new dataset. Apparent viability is
+and unscorable EBFP objects before accepting a new dataset. In 2D mode, apparent viability is
 **live only / (live only + dead only + double positive)**. Double positives remain
 a separate reported category.
 
@@ -286,8 +328,15 @@ Use **Results** to inspect a completed run: **Counts** shows the tables and
 segmentation** opens the interactive review with the saved run's inputs and
 effective settings. Use **Open run…**
 to load an earlier run or **Save summary CSV** to export the displayed summary.
-Use **Save summary figure...** in **Figure & detections** to save the loaded
-run's summary as a full-resolution PNG or editable SVG. This always exports the
+For a 3D run, select a field to view its candidate summary or open **Inspect Z
+stack…** to see saved masks in depth. The summary CSV pools candidate categories
+within replicate groups. **Save summary figure…** exports the selected field's
+3D summary as PNG, using its saved masks and exact shared settings. The figure
+identifies its field and selected source range. A 3D summary image is an overview
+projection; its counts come from the volume.
+
+For a 2D run, use **Save summary figure...** in **Figure & detections** to save the
+loaded run's full-resolution PNG or editable SVG. This always exports the
 summary, even while a detection overlay is selected. Choose a destination outside
 the run folder to keep its verification records intact. The summary contains the
 entire representative field, with the same image extent as its detection overlay.
@@ -315,9 +364,11 @@ objects, figures, masks, effective settings, and provenance records. Keep the
 complete run folder and the original images. Every run needs a new output folder;
 existing results are never overwritten by the pipeline.
 
-**Verify files** checks saved inputs, analysis code, and output hashes. It does
-not rerun the measurement or establish biological accuracy. It needs the source
-images at their recorded locations. Repeat the reference run after moving to a
+**Verify files** checks saved inputs, analysis code, and output hashes for 2D
+runs; 3D verification checks the saved result artifacts. It does not rerun the
+measurement or establish biological accuracy. The 2D input check needs the source
+images at their recorded locations; reopening optical sections or rerunning a
+3D analysis also needs the original Leica source. Repeat the reference run after moving to a
 new computer to check the execution environment. The original README explains
 the method, assumptions, and limitations in full.
 
@@ -342,11 +393,11 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1 -Zip
 ```
 
 This installs the build requirements into `.venv`, builds the executable, and
-creates `dist/1.4.0/Live-Dead-Cell-Counter-1.4.0-Windows-x64.zip`. The executable is in
-`dist/1.4.0/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
+creates `dist/1.4.1/Live-Dead-Cell-Counter-1.4.1-Windows-x64.zip`. The executable is in
+`dist/1.4.1/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
 replace an existing app directory, so an older open app remains intact. To
 rebuild the same version, choose another folder, for example
-`-ReleaseFolder 1.4.0-rebuild1`. Use `-SkipInstall` to use an
+`-ReleaseFolder 1.4.1-rebuild1`. Use `-SkipInstall` to use an
 already prepared environment. All scientific dependency versions remain pinned
 in the unchanged `requirements-lock.txt`. Qt and dependency notices are included
 in `_internal/third_party_notices`.
@@ -361,7 +412,7 @@ copies. The included source has no newly assigned license.
 After building, audit the release contents and ZIP with:
 
 ```powershell
-.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.4.0\Live-Dead Cell Counter" --zip ".\dist\1.4.0\Live-Dead-Cell-Counter-1.4.0-Windows-x64.zip" --output ".\app_validation\release_1.4.0\bundle_audit.json"
+.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.4.1\Live-Dead Cell Counter" --zip ".\dist\1.4.1\Live-Dead-Cell-Counter-1.4.1-Windows-x64.zip" --output ".\app_validation\release_1.4.1\bundle_audit.json"
 ```
 
 This audit checks bundled sources, preserved original package files, excluded

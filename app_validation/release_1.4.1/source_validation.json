@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "app_version": "1.4.1",
+  "tests_current_total": 220,
+  "suite_run": {
+    "tests": 219,
+    "result": "passed",
+    "log": "all_tests.log"
+  },
+  "additional_test_after_suite_started": {
+    "tests": 1,
+    "result": "passed",
+    "log": "cancel_gui_test.log"
+  },
+  "original_files_checked": 81,
+  "original_file_mismatches": [],
+  "scope": "Source regression and original scientific-file preservation; packaged checks recorded separately."
+}

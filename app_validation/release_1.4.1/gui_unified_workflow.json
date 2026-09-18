@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "scope": "Main-window Quick analysis and real QProcess worker; microscope images and counts are not included.",
+  "gui_heartbeat_ticks": 194,
+  "checks": [
+    "Quick Run honors 3D selector",
+    "Accepted segmentation settings saved exactly",
+    "Worker runs without blocking GUI",
+    "Results open on the standard Results page",
+    "Per-field PNG and optional Z review enabled"
+  ]
+}

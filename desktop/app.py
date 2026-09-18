@@ -185,6 +185,8 @@ class MainWindow(QMainWindow):
         self.job_log = None
         self.job_out = None
         self.job_kind = None
+        self.job_request = None
+        self.job_verifies_volume = False
         self.cancelled = False
         self.log_offset = 0
         self.log_tail = ""
@@ -261,6 +263,13 @@ class MainWindow(QMainWindow):
 
     def _setup_page(self):
         page, layout = self._page("From images to counts.", "Load a pair of LIVE / DEAD images, inspect the cells, and save your results.")
+        self.analysis_mode = QComboBox()
+        self.analysis_mode.setAccessibleName("Counting dimension")
+        self.analysis_mode.addItem("2D · projection / single image", "2d")
+        self.analysis_mode.addItem("3D · original Z stack", "3d")
+        self.mode_description = label("", "muted", True)
+        layout.addLayout(row_layout(label("Count in", "section"), self.analysis_mode, None))
+        layout.addWidget(self.mode_description)
         self.input_modes = QTabWidget()
         self.quick_start = QuickStartWidget()
         self.quick_start.setObjectName("card")
@@ -280,14 +289,15 @@ class MainWindow(QMainWindow):
         self.field_table.setMinimumHeight(140)
         self.field_table.cellDoubleClicked.connect(lambda *_: self.edit_field())
         contents.addWidget(self.field_table, 1)
+        self.batch_run_button = button("Run analysis →", self.run_analysis, True)
         contents.addLayout(row_layout(button("Edit selected", self.edit_field), button("Remove selected", self.remove_field), None,
-                                      button("Preview segmentation…", self.preview_segmentation, True)))
+                                      button("Preview segmentation…", self.preview_segmentation), self.batch_run_button))
         self.input_modes.addTab(fields, "Batch / CSV")
         layout.addWidget(self.input_modes, 1)
-        self.stack_input_button = button("Review Z / count in 3D…", self.review_input_stack)
+        self.stack_input_button = button("Inspect Z stack…", self.review_input_stack)
         self.stack_input_button.setToolTip("Open an imported Leica stack without first running a 2D analysis.")
         layout.addLayout(row_layout(self.stack_input_button,
-            label("Leica stacks: inspect depth and count 3D candidates.", "muted", True), None))
+            label("Optional: inspect optical sections and overlapping signals.", "muted", True), None))
         settings, content = card()
         self.preset_title = label("Analysis settings · Reference 48 h", "section")
         content.addLayout(row_layout(self.preset_title, None, button("Load settings", self.load_config), button("Review / edit", self.edit_config)))
@@ -312,7 +322,16 @@ class MainWindow(QMainWindow):
         layout.addWidget(output)
         self.input_modes.currentChanged.connect(lambda _: self.update_config_summary())
         self.quick_start.changed.connect(self.update_config_summary)
+        self.analysis_mode.currentIndexChanged.connect(self.update_analysis_mode)
+        self.update_analysis_mode()
         return page
+
+    def update_analysis_mode(self, *_):
+        volume = self.analysis_mode.currentData() == "3d"
+        self.mode_description.setText(
+            "Use Preview segmentation to tune the projection as usual. The 3D run applies those saved settings through each original Leica Z stack; associations that need review stay flagged. EBFP scoring remains available in 2D."
+            if volume else "Use Preview segmentation to tune the image, then Run analysis. The same reviewed settings can also be used for 3D counting when an original Leica stack is available.")
+        self.extended.setEnabled(not volume)
 
     def _results_page(self):
         page, layout = self._page("Inspect the results.", "Review counts and numbered detections before interpreting a new dataset.")
@@ -324,10 +343,13 @@ class MainWindow(QMainWindow):
         layout.addLayout(row_layout(self.result_title, None, button("Open run…", self.open_run), self.verify_button, self.folder_button))
         metrics = QHBoxLayout()
         self.metric_labels = []
+        self.metric_titles = []
         for title in ("Apparent viability", "EBFP among green only", "Counted objects", "Replicate groups"):
             frame, content = card()
             content.setContentsMargins(15, 14, 15, 14)
-            content.addWidget(label(title, "muted"))
+            heading = label(title, "muted")
+            content.addWidget(heading)
+            self.metric_titles.append(heading)
             value, detail = label("—", "metricValue"), label("Awaiting a run", "muted", True)
             content.addWidget(value)
             content.addWidget(detail)
@@ -345,7 +367,8 @@ class MainWindow(QMainWindow):
         self.result_table = table(["Field", "Replicate", "Green only", "Red only", "Both", "Total", "Viability %", "EBFP / green %"])
         self.result_table.setMinimumHeight(150)
         contents.addWidget(self.result_table, 1)
-        contents.addWidget(label("Viability = green only / total. Double-positive objects receive red priority. Blank EBFP stays not measured.", "muted", True))
+        self.counts_note = label("Viability = green only / total. Double-positive objects receive red priority. Blank EBFP stays not measured.", "muted", True)
+        contents.addWidget(self.counts_note)
         self.result_tabs.addTab(summary, "Counts")
         visual, contents = card()
         self.preview_choice = QComboBox()
@@ -359,7 +382,7 @@ class MainWindow(QMainWindow):
         self.figure_button = button("Save summary figure…", self.save_summary_figure)
         self.figure_button.setToolTip("Save the full field with this run's detection outlines and saved threshold values as PNG or SVG.")
         self.figure_button.setEnabled(False)
-        self.stack_result_button = button("Review Z / count in 3D…", self.review_result_stack)
+        self.stack_result_button = button("Inspect Z stack…", self.review_result_stack)
         self.stack_result_button.setEnabled(False)
         self.stack_result_button.setToolTip("Reopen the original Leica stack to inspect projected overlaps.")
         contents.addLayout(row_layout(self.preview_caption, None, self.stack_result_button, self.figure_button))
@@ -441,7 +464,7 @@ class MainWindow(QMainWindow):
             rows = read_manifest(out / "resolved_samples.csv")
             config = json.loads((out / "effective_config.json").read_text(encoding="utf-8"))
             selected = 0
-            choice = self.preview_choice.currentText().removeprefix("Detections · ")
+            choice = self._selected_volume_field().get("image_id") if self.result.get("mode") == "3d" else self.preview_choice.currentText().removeprefix("Detections · ")
             for i, row in enumerate(rows):
                 if row["image_id"] == choice:
                     selected = i
@@ -452,6 +475,7 @@ class MainWindow(QMainWindow):
             if dialog.exec():
                 self.rows, self.config = rows, dialog.result_config()
                 self.config_name = "Visually reviewed settings"
+                self.analysis_mode.setCurrentIndex(self.analysis_mode.findData(self.result.get("mode", "2d")))
                 self.refresh_fields()
                 self.update_config_summary()
                 self.run_name.setText(new_run_name())
@@ -480,9 +504,14 @@ class MainWindow(QMainWindow):
             return
         try:
             from .stack_dialog import StackReviewDialog
-            field = self.preview_choice.currentText().removeprefix("Detections · ")
-            dialog = StackReviewDialog(run=self.result["path"], initial_field=field,
-                                       output_base=Path(self.output_base.text()), parent=self)
+            if self.result.get("mode") == "3d":
+                field = self._selected_volume_field()
+                dialog = StackReviewDialog(volume_run=field["path"],
+                                           output_base=Path(self.output_base.text()), parent=self)
+            else:
+                field = self.preview_choice.currentText().removeprefix("Detections · ")
+                dialog = StackReviewDialog(run=self.result["path"], initial_field=field,
+                                           output_base=Path(self.output_base.text()), parent=self)
             self._open_stack_dialog(dialog)
         except Exception as exc:
             self.error(exc)
@@ -659,8 +688,14 @@ class MainWindow(QMainWindow):
             return
         try:
             rows, config = self.analysis_inputs()
-            out, args, log = prepare_analysis(self.output_base.text(), self.run_name.text().strip(), rows, config, self.extended.isChecked())
-            self.start_job("analyze", args, out, log)
+            if self.analysis_mode.currentData() == "3d":
+                from .analysis_3d import prepare_analysis_3d
+                cache = Path(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.CacheLocation)) / "stack_review"
+                out, args, log = prepare_analysis_3d(self.output_base.text(), self.run_name.text().strip(), rows, config, cache_dir=cache)
+                self.start_job("analyze3d", args, out, log)
+            else:
+                out, args, log = prepare_analysis(self.output_base.text(), self.run_name.text().strip(), rows, config, self.extended.isChecked())
+                self.start_job("analyze", args, out, log)
         except Exception as exc:
             self.error(exc)
 
@@ -682,6 +717,8 @@ class MainWindow(QMainWindow):
 
     def start_job(self, kind, args, out, log):
         self.job_kind, self.job_out, self.job_log = kind, Path(out), Path(log)
+        self.job_request = Path(args[1]) if kind == "analyze3d" else None
+        self.job_verifies_volume = kind == "verify" and bool(args) and args[0] == "verify-3d"
         self.cancelled = False
         self.log_offset = 0
         self.log_tail = ""
@@ -704,8 +741,10 @@ class MainWindow(QMainWindow):
         self.show_page(2)
 
     def set_busy(self, busy):
+        self.analysis_mode.setEnabled(not busy)
         self.run_button.setEnabled(not busy)
         self.quick_start.run_button.setEnabled(not busy)
+        self.batch_run_button.setEnabled(not busy)
         self.quick_start.leica_button.setEnabled(not busy)
         self.batch_leica_button.setEnabled(not busy)
         self.stack_input_button.setEnabled(not busy)
@@ -736,7 +775,7 @@ class MainWindow(QMainWindow):
             elapsed = int(time.monotonic() - self.started)
             stage = "Validating inputs and starting analysis"
             for line in self.log_tail.splitlines():
-                if line.startswith(("Analyzing ", "Computing ", "REFERENCE PASSED", "Verified ")):
+                if line.startswith(("Analyzing ", "Computing ", "Preparing ", "Segmenting ", "Checking ", "Saving ", "REFERENCE PASSED", "Verified ")):
                     stage = line[:115]
             self.status_text.setText(f"{stage} · {elapsed // 60}:{elapsed % 60:02d} elapsed")
 
@@ -754,6 +793,12 @@ class MainWindow(QMainWindow):
         self.timer.stop()
         self.set_busy(False)
         if self.cancelled:
+            if self.job_kind == "analyze3d":
+                try:
+                    from .analysis_3d import finish_cancelled_batch
+                    finish_cancelled_batch(self.job_out)
+                except Exception as exc:
+                    self.log_box.appendPlainText("Temporary 3D files could not be fully cleaned: " + str(exc))
             self.status_text.setText("Run stopped. Any partial output is incomplete; use a new run name to retry.")
             self.log_box.appendPlainText("\nStopped by user. Partial outputs are not completed results.")
             if self.job_kind != "verify":
@@ -767,7 +812,8 @@ class MainWindow(QMainWindow):
             self.error(self.log_tail[-2400:] or "The analysis worker exited unexpectedly. See Run activity.")
             return
         if self.job_kind == "verify":
-            self.status_text.setText("File verification passed: source images, analysis code and saved outputs match their recorded hashes.")
+            self.status_text.setText("File verification passed: saved 3D masks, settings, tables and figures match their recorded hashes."
+                                    if self.job_verifies_volume else "File verification passed: source images, analysis code and saved outputs match their recorded hashes.")
             if self.result and self.result["path"] == self.job_out:
                 self.result_notes.appendPlainText("File verification passed just now. This checks integrity; it does not recompute measurements.")
                 self.show_page(1)
@@ -785,7 +831,13 @@ class MainWindow(QMainWindow):
             return
         if QMessageBox.question(self, "Stop this run?", "Stop the current worker? Any partial output will remain incomplete. You can retry with a new run name.") == QMessageBox.StandardButton.Yes:
             self.cancelled = True
-            self.process.kill()
+            if self.job_kind == "analyze3d" and self.job_request:
+                self.job_request.with_name(self.job_request.stem + "_cancel").write_text("cancel\n", encoding="utf-8")
+                process = self.process
+                self.status_text.setText("Stopping 3D analysis and cleaning temporary files…")
+                QTimer.singleShot(10000, lambda: process.kill() if self.process is process else None)
+            else:
+                self.process.kill()
 
     def closeEvent(self, event):
         if self.process:
@@ -811,14 +863,21 @@ class MainWindow(QMainWindow):
                 self.error(exc)
 
     def load_result(self, path):
+        if (Path(path) / "volume_run.json").is_file():
+            return self.load_volume_result(path)
         result = read_results(path)
+        result["mode"] = "2d"
         self.stop_summary_worker()
         self.summary_paths = None
         self.summary_error = ""
         self.figure_button.setEnabled(False)
+        self.figure_button.setToolTip("Save the full field with this run's detection outlines and saved threshold values as PNG or SVG.")
         self.result = result
         self.result_title.setText(result["path"].name)
         self.result_title.setToolTip(str(result["path"]))
+        for title, text in zip(self.metric_titles, ("Apparent viability", "EBFP among green only", "Counted objects", "Replicate groups")):
+            title.setText(text)
+        self.counts_note.setText("Viability = green only / total. Double-positive objects receive red priority. Blank EBFP stays not measured.")
         for index, key in enumerate(("viability_percent", "ebfp_live_percent")):
             value, detail = metric(result["stats"], key)
             self.metric_labels[index][0].setText(value)
@@ -860,6 +919,54 @@ class MainWindow(QMainWindow):
         self.result_tabs.setCurrentIndex(1)
         self.show_page(1)
         self.prepare_summary()
+
+    def load_volume_result(self, path):
+        from .analysis_3d import read_analysis_3d
+        result = read_analysis_3d(Path(path))
+        result["mode"] = "3d"
+        result["leica_imports"] = result["config"].get("leica_imports", [])
+        self.stop_summary_worker()
+        self.summary_paths = None
+        self.summary_error = ""
+        self.result = result
+        self.figure_button.setToolTip("Save the selected field's 3D summary as PNG, with its saved masks and exact reviewed settings.")
+        self.result_title.setText(result["path"].name + " · 3D")
+        self.result_title.setToolTip(str(result["path"]))
+        counts = result["summary"].get("counts", result["summary"])
+        for index, (key, title) in enumerate((("green_only", "LIVE only"), ("red_only", "DEAD only"),
+                ("dual_positive_candidate", "Dual candidates"), ("unresolved", "Unresolved groups"))):
+            self.metric_titles[index].setText(title)
+            self.metric_labels[index][0].setText(f"{int(counts.get(key, 0)):,}")
+            self.metric_labels[index][1].setText("3D signal objects" if index < 2 else "Review spatial continuity in Z")
+        self.counts_note.setText("3D candidates use the same saved settings as the projection preview. Count bounds reflect ambiguous associations; no definitive viability percentage is inferred. EBFP is not scored in this mode.")
+        notes = ["Saved 3D results loaded; file integrity has not been checked in this session.",
+                 f"Candidate count range: {counts.get('candidate_count_min', '?')}–{counts.get('candidate_count_max', '?')}. Review dual candidates and unresolved groups."]
+        notes.extend(result["meta"].get("warnings", []))
+        self.result_notes.setPlainText("\n".join(notes))
+        self.populate_result_table()
+        self.preview_choice.blockSignals(True)
+        self.preview_choice.clear()
+        self.viewer.scene().clear()
+        for field in result["fields"]:
+            index = self.preview_choice.count()
+            self.preview_choice.addItem("3D summary · " + field["image_id"], str(field["result"]["figure"]))
+            self.preview_choice.setItemData(index, field["image_id"], Qt.ItemDataRole.UserRole + 1)
+        self.preview_choice.blockSignals(False)
+        self.select_preview()
+        self.folder_button.setEnabled(True)
+        self.csv_button.setEnabled(True)
+        self.verify_button.setEnabled(self.process is None)
+        self.inspect_button.setEnabled(True)
+        self.stack_result_button.setEnabled(self.process is None and bool(result["fields"]))
+        self.result_tabs.setCurrentIndex(1)
+        self.show_page(1)
+
+    def _selected_volume_field(self):
+        if not self.result or self.result.get("mode") != "3d":
+            return {}
+        ident = self.preview_choice.currentData(Qt.ItemDataRole.UserRole + 1)
+        return next((field for field in self.result["fields"] if field["image_id"] == ident),
+                    self.result["fields"][0] if self.result["fields"] else {})
 
     def stop_summary_worker(self):
         process, self.summary_process = self.summary_process, None
@@ -962,9 +1069,18 @@ class MainWindow(QMainWindow):
             return
         is_image = self.table_level.currentIndex() == 0
         rows = self.result["image" if is_image else "replicate"]
+        volume = self.result.get("mode") == "3d"
+        headers = (["Field", "Replicate", "LIVE only", "DEAD only", "Dual candidates", "Unresolved", "Groups", "Min candidates", "Max candidates"]
+                   if volume else ["Field", "Replicate", "Green only", "Red only", "Both", "Total", "Viability %", "EBFP / green %"])
+        self.result_table.setColumnCount(len(headers))
+        self.result_table.setHorizontalHeaderLabels(headers)
         self.result_table.setRowCount(len(rows))
         for i, record in enumerate(rows):
-            values = [record.get("image_id", "Pooled"), record.get("replicate_id", ""), *(record[key] for key in ("live_only", "dead_only", "double_positive", "total")), number(record.get("viability_percent")), number(record.get("ebfp_live_percent"))]
+            if volume:
+                values = [record.get("image_id", "Pooled"), record.get("replicate_id", ""),
+                          *(record.get(key, 0) for key in ("green_only", "red_only", "dual_positive_candidate", "unresolved", "total_groups", "candidate_count_min", "candidate_count_max"))]
+            else:
+                values = [record.get("image_id", "Pooled"), record.get("replicate_id", ""), *(record[key] for key in ("live_only", "dead_only", "double_positive", "total")), number(record.get("viability_percent")), number(record.get("ebfp_live_percent"))]
             for j, value in enumerate(values):
                 item = QTableWidgetItem(str(value))
                 if j >= 2:
@@ -978,11 +1094,16 @@ class MainWindow(QMainWindow):
         self.preview_caption.clear()
         self.preview_caption.setToolTip("")
         path = self.preview_choice.currentData()
+        volume = self.result and self.result.get("mode") == "3d"
+        if volume:
+            self.summary_paths = {"png": path} if path else None
+            self.figure_button.setEnabled(bool(path and Path(path).is_file()))
         if self.result and self.preview_choice.currentIndex() == 0 and not path:
             self.preview_caption.setText(self.summary_error or "Preparing full-field summary…")
             return
         if path:
-            description = "Summary figure (full field · saved detections)" if self.preview_choice.currentIndex() == 0 else self.preview_choice.currentText()
+            description = (self.preview_choice.currentText() if volume else
+                           "Summary figure (full field · saved detections)" if self.preview_choice.currentIndex() == 0 else self.preview_choice.currentText())
             self.preview_caption.setText(f"{description} · {self.result['path'].name}")
             self.preview_caption.setToolTip(path)
             try:
@@ -1000,12 +1121,21 @@ class MainWindow(QMainWindow):
         paths = dict(self.summary_paths or {})
         formats = {".png": "PNG image (*.png)", ".svg": "SVG vector figure (*.svg)"}
         available = {ext: title for ext, title in formats.items()
-                     if paths and Path(paths[ext[1:]]).is_file()}
+                     if paths.get(ext[1:]) and Path(paths[ext[1:]]).is_file()}
         if not available:
             return self.error(self.summary_error or "The full-field summary is still being prepared.")
         default_ext = next(iter(available))
+        expected_png = None
+        if self.result.get("mode") == "3d":
+            try:
+                field = self._selected_volume_field()
+                checks = json.loads(Path(field["result"]["checksums"]).read_text(encoding="utf-8"))
+                expected_png = checks["figure.png"]
+            except Exception as exc:
+                return self.error("Cannot verify the selected 3D figure before export: " + str(exc))
+        field_suffix = "_" + self._selected_volume_field().get("image_id", "field") if self.result.get("mode") == "3d" else ""
         path, selected_filter = QFileDialog.getSaveFileName(
-            self, "Save summary figure", run.name + "_summary" + default_ext,
+            self, "Save summary figure", run.name + field_suffix + "_summary" + default_ext,
             ";;".join(available.values()))
         if not path:
             return
@@ -1022,7 +1152,10 @@ class MainWindow(QMainWindow):
                 raise ValueError("Save exported copies outside the completed run to preserve its verification records.")
             if destination.resolve().parent == Path(paths["png"]).parent:
                 raise ValueError("Save exported copies outside the summary preview cache.")
-            destination.write_bytes(Path(paths[extension[1:]]).read_bytes())
+            content = Path(paths[extension[1:]]).read_bytes()
+            if expected_png and hashlib.sha256(content).hexdigest() != expected_png:
+                raise ValueError("The saved 3D figure changed after analysis. Reopen or verify the run before exporting.")
+            destination.write_bytes(content)
             self.status_text.setText(f"Summary figure saved to {destination.resolve()}")
         except Exception as exc:
             self.error(exc)
@@ -1030,13 +1163,14 @@ class MainWindow(QMainWindow):
     def save_summary(self):
         if not self.result:
             return
+        run = self.result["path"]
         name = "image_summary.csv" if self.table_level.currentIndex() == 0 else "replicate_summary.csv"
         path, _ = QFileDialog.getSaveFileName(self, "Save a copy of the summary", name, "CSV table (*.csv)")
         if path:
             try:
                 self.check_export_path(path, ".csv")
-                source = self.result["path"] / name
-                if Path(path).resolve().is_relative_to(self.result["path"]):
+                source = run / name
+                if Path(path).resolve().is_relative_to(run):
                     raise ValueError("Save exported copies outside the completed run to preserve its verification records.")
                 Path(path).write_bytes(source.read_bytes())
             except Exception as exc:
@@ -1048,7 +1182,8 @@ class MainWindow(QMainWindow):
                 out = self.result["path"]
                 log = Path(self.output_base.text()).expanduser().resolve() / (new_run_name("verify") + ".log")
                 log.parent.mkdir(parents=True, exist_ok=True)
-                self.start_job("verify", ["verify", "--run", str(out)], out, log)
+                arguments = ["verify-3d", str(out)] if self.result.get("mode") == "3d" else ["verify", "--run", str(out)]
+                self.start_job("verify", arguments, out, log)
             except Exception as exc:
                 self.error(exc)
 
@@ -1059,7 +1194,7 @@ class MainWindow(QMainWindow):
         if destination.is_relative_to(ROOT / "reference"):
             raise ValueError("Save your files outside the bundled reference folder.")
         # Editing an export inside any run would invalidate its audit record.
-        if any((parent / "run_manifest.json").exists() for parent in destination.parents):
+        if any(any((parent / filename).exists() for filename in ("run_manifest.json", "volume_run.json", "result.json")) for parent in destination.parents):
             raise ValueError("Save exported copies outside analysis run folders.")
 
     def open_result_folder(self):

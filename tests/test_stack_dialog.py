@@ -42,6 +42,10 @@ class StackDialogTests(unittest.TestCase):
             np.save(path, getattr(self, role))
             self.info["paths"][role] = str(path)
         self.dialog = StackReviewDialog(config={}, output_base=self.root, cache_dir=self.root / "cache")
+        # Preserve regression coverage for the independent controls offered only
+        # when reopening old raw-intensity 3D results.
+        self.dialog._legacy_raw = True
+        self.dialog._inspection_only = False
         self.dialog.fields.blockSignals(True)
         self.dialog.fields.addItem("synthetic_field")
         self.dialog.fields.blockSignals(False)

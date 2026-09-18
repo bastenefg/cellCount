@@ -1,0 +1,6 @@
+test_cancelled_batch_cleanup_runs_only_after_worker_completion (tests.test_analysis_modes.AnalysisModeTests.test_cancelled_batch_cleanup_runs_only_after_worker_completion) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.409s
+
+OK

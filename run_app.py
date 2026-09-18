@@ -5,6 +5,29 @@ import sys
 
 
 def main():
+    if "--stack-analysis" in sys.argv or "--verify-stack-analysis" in sys.argv:
+        import argparse
+        parser = argparse.ArgumentParser()
+        modes = parser.add_mutually_exclusive_group(required=True)
+        modes.add_argument("--stack-analysis", type=Path)
+        modes.add_argument("--verify-stack-analysis", type=Path)
+        parser.add_argument("--log", type=Path, required=True)
+        args = parser.parse_args()
+        args.log.parent.mkdir(parents=True, exist_ok=True)
+        os.environ["MPLBACKEND"] = "Agg"
+        with args.log.open("w", encoding="utf-8", buffering=1) as stream:
+            sys.stdout = sys.stderr = stream
+            from desktop.analysis_3d import run_request, read_analysis_3d
+            if args.stack_analysis:
+                return run_request(args.stack_analysis)
+            try:
+                result = read_analysis_3d(args.verify_stack_analysis, verify=True)
+                print(f"Verified 3D analysis: {len(result['fields'])} fields and all saved settings, masks and figures.", flush=True)
+                return 0
+            except Exception:
+                import traceback
+                traceback.print_exc()
+                return 1
     if "--stack-smoke-test" in sys.argv:
         from desktop.stack_smoke import main as stack_smoke_main
         return stack_smoke_main(sys.argv[1:])
