@@ -14,9 +14,9 @@ import sys
 import uuid
 
 import numpy as np
-from PySide6.QtCore import QProcess, QProcessEnvironment, QRectF, QStandardPaths, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import QPointF, QProcess, QProcessEnvironment, QRectF, QStandardPaths, Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QColor, QImage, QPainter, QPen, QPixmap
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog,
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog,
     QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit,
     QPushButton, QScrollArea, QSlider, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
@@ -94,8 +94,9 @@ def caption(text="", muted=False):
 
 
 class SectionView(QWidget):
-    """Paint already-rendered pixels with physical aspect and exact click mapping."""
+    """Navigate cached pixels while retaining coordinates in the complete image."""
     picked = Signal(float, float)
+    viewportChanged = Signal(float, float, float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -104,17 +105,55 @@ class SectionView(QWidget):
         self.aspect = 1.0
         self.crosshair = None
         self.target = QRectF()
+        self.source_rect = QRectF(0, 0, 1, 1)
+        self.zoom_factor = 1.0
+        self.view_center = (.5, .5)
+        self._press_position = None
+        self._dragging = False
+        self._press_button = None
+        self.setToolTip("Scroll to zoom at the pointer. Drag to pan; click to inspect. Use Fit views to reset.")
 
-    def set_frame(self, rgb, aspect=None, crosshair=None):
+    def set_frame(self, rgb, aspect=None, crosshair=None, source_rect=None):
         rgb = np.ascontiguousarray(rgb, dtype=np.uint8)
         self.pixmap = QPixmap.fromImage(QImage(rgb.data, rgb.shape[1], rgb.shape[0],
             rgb.strides[0], QImage.Format.Format_RGB888).copy())
         self.aspect = aspect or rgb.shape[1] / rgb.shape[0]
         self.crosshair = crosshair
+        self.source_rect = QRectF(source_rect) if source_rect is not None else QRectF(0, 0, 1, 1)
         self.update()
+
+    def _target_rect(self):
+        width = min(float(self.width()), self.height() * self.aspect)
+        height = width / self.aspect
+        return QRectF((self.width() - width) / 2, (self.height() - height) / 2, width, height)
+
+    def visible_rect(self):
+        size = 1 / self.zoom_factor
+        return QRectF(self.view_center[0] - size / 2, self.view_center[1] - size / 2, size, size)
+
+    def set_viewport(self, zoom, center, emit=False):
+        zoom = max(1.0, min(64.0, float(zoom)))
+        margin = .5 / zoom
+        center = tuple(max(margin, min(1 - margin, float(value))) for value in center)
+        if zoom == self.zoom_factor and center == self.view_center:
+            return
+        self.zoom_factor, self.view_center = zoom, center
+        self.update()
+        if emit:
+            self.viewportChanged.emit(zoom, *center)
+
+    def reset_view(self):
+        self.set_viewport(1, (.5, .5), emit=True)
+
+    def _image_position(self, position):
+        target = self._target_rect()
+        return (self.view_center[0] + (position.x() - target.center().x()) / (target.width() * self.zoom_factor),
+                self.view_center[1] + (position.y() - target.center().y()) / (target.height() * self.zoom_factor))
 
     def clear(self):
         self.pixmap = None
+        self._press_position = None
+        self.set_viewport(1, (.5, .5))
         self.update()
 
     def paintEvent(self, event):
@@ -124,21 +163,71 @@ class SectionView(QWidget):
             painter.setPen(QColor("#c7d7d9"))
             painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "No stack loaded")
             return
-        width = min(float(self.width()), self.height() * self.aspect)
-        height = width / self.aspect
-        self.target = QRectF((self.width() - width) / 2, (self.height() - height) / 2, width, height)
-        painter.drawPixmap(self.target, self.pixmap, QRectF(self.pixmap.rect()))
+        self.target = self._target_rect()
+        width, height = self.target.width() * self.zoom_factor, self.target.height() * self.zoom_factor
+        left = self.target.center().x() - self.view_center[0] * width
+        top = self.target.center().y() - self.view_center[1] * height
+        painter.setClipRect(self.target)
+        region = self.source_rect
+        destination = QRectF(left + region.left() * width, top + region.top() * height,
+                             region.width() * width, region.height() * height)
+        painter.drawPixmap(destination, self.pixmap, QRectF(self.pixmap.rect()))
         if self.crosshair:
             painter.setPen(QPen(QColor("#ffffff"), 1, Qt.PenStyle.DashLine))
-            x = self.target.left() + self.crosshair[0] * width
-            y = self.target.top() + self.crosshair[1] * height
+            x = left + self.crosshair[0] * width
+            y = top + self.crosshair[1] * height
             painter.drawLine(int(x), int(self.target.top()), int(x), int(self.target.bottom()))
             painter.drawLine(int(self.target.left()), int(y), int(self.target.right()), int(y))
 
     def mousePressEvent(self, event):
-        if self.pixmap is not None and self.target.contains(event.position()):
-            self.picked.emit((event.position().x() - self.target.left()) / self.target.width(),
-                             (event.position().y() - self.target.top()) / self.target.height())
+        if (self.pixmap is not None and self._target_rect().contains(event.position())
+                and event.button() in (Qt.MouseButton.LeftButton, Qt.MouseButton.MiddleButton, Qt.MouseButton.RightButton)):
+            self._press_position = QPointF(event.position())
+            self._press_center = self.view_center
+            self._press_button = event.button()
+            self._dragging = False
+            event.accept()
+        else:
+            event.ignore()
+
+    def mouseMoveEvent(self, event):
+        if self._press_position is None:
+            return event.ignore()
+        delta = event.position() - self._press_position
+        if delta.manhattanLength() >= QApplication.startDragDistance():
+            self._dragging = True
+        if self._dragging:
+            target = self._target_rect()
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
+            self.set_viewport(self.zoom_factor,
+                (self._press_center[0] - delta.x() / (target.width() * self.zoom_factor),
+                 self._press_center[1] - delta.y() / (target.height() * self.zoom_factor)), emit=True)
+        event.accept()
+
+    def mouseReleaseEvent(self, event):
+        if self._press_position is None:
+            return event.ignore()
+        if (not self._dragging and self._press_button == Qt.MouseButton.LeftButton
+                and self._target_rect().contains(event.position())):
+            self.picked.emit(*self._image_position(event.position()))
+        self._press_position = None
+        self._dragging = False
+        self.unsetCursor()
+        event.accept()
+
+    def wheelEvent(self, event):
+        if self.pixmap is None or not self._target_rect().contains(event.position()):
+            return event.ignore()
+        delta = event.angleDelta().y() / 120 if event.angleDelta().y() else event.pixelDelta().y() / 60
+        if not delta:
+            return event.ignore()
+        anchor = self._image_position(event.position())
+        zoom = max(1, min(64, self.zoom_factor * 1.25 ** max(-12, min(12, delta))))
+        target = self._target_rect()
+        center = (anchor[0] - (event.position().x() - target.center().x()) / (target.width() * zoom),
+                  anchor[1] - (event.position().y() - target.center().y()) / (target.height() * zoom))
+        self.set_viewport(zoom, center, emit=True)
+        event.accept()
 
 
 class ProfileView(QWidget):
@@ -336,8 +425,13 @@ class StackReviewDialog(QDialog):
         self.zoom = QComboBox()
         for text, size in (("Full field", None), ("256 px crop", 256), ("128 px crop", 128), ("64 px crop", 64)):
             self.zoom.addItem(text, size)
-        self.zoom.currentIndexChanged.connect(self._render_slice)
+        self.zoom.currentIndexChanged.connect(self._xy_crop_changed)
         row.addWidget(self.zoom)
+        self.zoom_text = caption("XY 100%", True)
+        row.addWidget(self.zoom_text)
+        self.fit_button = QPushButton("Fit views")
+        self.fit_button.clicked.connect(self.fit_views)
+        row.addWidget(self.fit_button)
         self.stop = QPushButton("Stop")
         self.stop.setEnabled(False)
         self.stop.clicked.connect(self._stop)
@@ -372,18 +466,21 @@ class StackReviewDialog(QDialog):
         view.addLayout(identity_row)
         self.shared_settings_caption = caption("", True)
         view.addWidget(self.shared_settings_caption)
+        view.addWidget(caption("Scroll over an image to zoom · drag to pan · click to inspect. Use Fit views to reset. LIVE, DEAD and merged XY views stay aligned.", True))
         grid = QGridLayout()
         self.views = {}
         for column, (key, title) in enumerate((("green", "LIVE · XY"), ("red", "DEAD · XY"), ("merged", "Merged · XY"))):
             grid.addWidget(caption(title), 0, column)
             pane = SectionView()
             pane.picked.connect(self._pick_visible_xy)
+            pane.viewportChanged.connect(self._xy_viewport_changed)
             grid.addWidget(pane, 1, column)
             self.views[key] = pane
         for column, (key, title) in enumerate((("xz", "XZ · through selected Y"), ("yz", "YZ · through selected X"))):
             grid.addWidget(caption(title), 2, column)
             pane = SectionView()
             pane.picked.connect(self._pick_xz if key == "xz" else self._pick_yz)
+            pane.viewportChanged.connect(lambda *_: self._render_sections(update_profile=False))
             grid.addWidget(pane, 3, column)
             self.views[key] = pane
         grid.addWidget(caption("LIVE / DEAD intensity through depth"), 2, 2)
@@ -484,6 +581,7 @@ class StackReviewDialog(QDialog):
             pane = SectionView()
             pane.setMinimumHeight(150)
             pane.picked.connect(self._pick_visible_xy)
+            pane.viewportChanged.connect(self._xy_viewport_changed)
             self.analysis_views[role] = pane
             previews.addWidget(pane, 1, column)
         layout.addLayout(previews)
@@ -634,6 +732,9 @@ class StackReviewDialog(QDialog):
             defaults = info.pop("_ui_defaults", None)
             volume_result = info.pop("_ui_result", None)
             self.stack_info, self.arrays = info, arrays
+            for pane in (*self.views.values(), *self.analysis_views.values()):
+                pane.set_viewport(1, (.5, .5))
+            self.zoom_text.setText("XY 100%")
             depth, height, width = info["shape_zyx"]
             self.x, self.y = width // 2, height // 2
             self.z_slider.setRange(0, depth - 1)
@@ -752,6 +853,52 @@ class StackReviewDialog(QDialog):
         edge[:, 0] = edge[:, -1] = True
         rgb[edge & (labels > 0)] = color
 
+    @staticmethod
+    def _visible_selection(pane, height, width):
+        """Read only the visible native pixels, with bounded rendering work."""
+        region = pane.visible_rect()
+        x0 = max(0, min(width - 1, math.floor(region.left() * width)))
+        y0 = max(0, min(height - 1, math.floor(region.top() * height)))
+        x1 = max(x0 + 1, min(width, math.ceil(region.right() * width)))
+        y1 = max(y0 + 1, min(height, math.ceil(region.bottom() * height)))
+        step = max(1, math.ceil(max(y1 - y0, x1 - x0) / 600))
+        return (slice(y0, y1), slice(x0, x1),
+                QRectF(x0 / width, y0 / height, (x1 - x0) / width, (y1 - y0) / height), step)
+
+    def _xy_viewport_changed(self, zoom, x, y):
+        for pane in (*[self.views[role] for role in ("green", "red", "merged")], *self.analysis_views.values()):
+            pane.set_viewport(zoom, (x, y))
+        self.zoom_text.setText(f"XY {zoom * 100:.0f}%")
+        self._render_slice()
+
+    def _xy_crop_changed(self, *_):
+        self._xy_viewport_changed(1, .5, .5)
+
+    def fit_views(self):
+        self.zoom.blockSignals(True)
+        self.zoom.setCurrentIndex(0)
+        self.zoom.blockSignals(False)
+        for pane in (*self.views.values(), *self.analysis_views.values()):
+            pane.set_viewport(1, (.5, .5))
+        self.zoom_text.setText("XY 100%")
+        self._render_sections(update_profile=False)
+
+    def _center_views_on_selection(self, include_sections=True):
+        """A newly chosen candidate stays visible at the current magnification."""
+        depth, height, width = self.stack_info["shape_zyx"]
+        crop = self.zoom.currentData()
+        crop_h, crop_w = min(height, crop or height), min(width, crop or width)
+        x0 = int(np.clip(self.x - crop_w // 2, 0, width - crop_w))
+        y0 = int(np.clip(self.y - crop_h // 2, 0, height - crop_h))
+        center = ((self.x - x0 + .5) / crop_w, (self.y - y0 + .5) / crop_h)
+        for pane in (*[self.views[role] for role in ("green", "red", "merged")], *self.analysis_views.values()):
+            pane.set_viewport(pane.zoom_factor, center)
+        if not include_sections:
+            return
+        z = self.z_slider.value()
+        for key, coordinate in (("xz", (self.x + .5) / width), ("yz", (self.y + .5) / height)):
+            self.views[key].set_viewport(self.views[key].zoom_factor, (coordinate, (z + .5) / depth))
+
     def _render_slice(self, *_):
         if not self.arrays:
             return
@@ -762,8 +909,8 @@ class StackReviewDialog(QDialog):
         y0 = int(np.clip(self.y - crop_h // 2, 0, height - crop_h))
         x0 = int(np.clip(self.x - crop_w // 2, 0, width - crop_w))
         self._view_bounds = (x0, y0, crop_w, crop_h)
-        selection = (z, slice(y0, y0 + crop_h), slice(x0, x0 + crop_w))
-        step = max(1, math.ceil(max(crop_h, crop_w) / 600))
+        ys, xs, source_rect, step = self._visible_selection(self.views["green"], crop_h, crop_w)
+        selection = (z, slice(y0 + ys.start, y0 + ys.stop), slice(x0 + xs.start, x0 + xs.stop))
         raw = {role: array[selection][::step, ::step] for role, array in self.arrays.items()}
         combined = self._rgb(raw["green"], raw["red"])
         crosshair = ((self.x - x0 + .5) / crop_w, (self.y - y0 + .5) / crop_h)
@@ -779,15 +926,15 @@ class StackReviewDialog(QDialog):
                 labels = self.labels[role][selection][::step, ::step]
                 self._outline(rgb, labels, (70, 230, 255) if role == "green" else (255, 195, 50))
                 self._highlight_member(rgb, labels, role)
-            self.views[role].set_frame(rgb, aspect, crosshair)
-            self.analysis_views[role].set_frame(rgb, aspect, crosshair)
+            self.views[role].set_frame(rgb, aspect, crosshair, source_rect)
+            self.analysis_views[role].set_frame(rgb, aspect, crosshair, source_rect)
         if self.labels:
             for role, color in (("green", (70, 230, 255)), ("red", (255, 195, 50))):
                 labels = self.labels[role][selection][::step, ::step]
                 self._outline(combined, labels, color)
                 self._highlight_member(combined, labels, role)
-        self.views["merged"].set_frame(combined, aspect, crosshair)
-        self.analysis_views["merged"].set_frame(combined, aspect, crosshair)
+        self.views["merged"].set_frame(combined, aspect, crosshair, source_rect)
+        self.analysis_views["merged"].set_frame(combined, aspect, crosshair, source_rect)
         indices = self.stack_info.get("z_indices", list(range(depth)))
         positions = self.stack_info.get("z_positions_um")
         physical = f" · {positions[z]:.2f} µm" if positions is not None else ""
@@ -810,16 +957,17 @@ class StackReviewDialog(QDialog):
         dz = spacing[0] or 1
         for key in ("xz", "yz"):
             planes = {role: a[:, self.y, :] if key == "xz" else a[:, :, self.x] for role, a in self.arrays.items()}
-            step = max(1, math.ceil(max(next(iter(planes.values())).shape) / 700))
-            planes = {role: a[::step, ::step] for role, a in planes.items()}
+            section_shape = next(iter(planes.values())).shape
+            ys, xs, source_rect, step = self._visible_selection(self.views[key], *section_shape)
+            planes = {role: a[ys, xs][::step, ::step] for role, a in planes.items()}
             extent = (width * spacing[2] if key == "xz" else height * spacing[1]) if spacing[0] else (width if key == "xz" else height)
             rgb = self._rgb(planes["green"], planes["red"])
             if self.labels:
                 for role, color in (("green", (70, 230, 255)), ("red", (255, 195, 50))):
                     labels = self.labels[role][:, self.y, :] if key == "xz" else self.labels[role][:, :, self.x]
-                    self._outline(rgb, labels[::step, ::step], color)
-                    self._highlight_member(rgb, labels[::step, ::step], role)
-            self.views[key].set_frame(rgb, extent / (depth * dz))
+                    self._outline(rgb, labels[ys, xs][::step, ::step], color)
+                    self._highlight_member(rgb, labels[ys, xs][::step, ::step], role)
+            self.views[key].set_frame(rgb, extent / (depth * dz), source_rect=source_rect)
         if update_profile:
             radius = self.radius.value()
             y0, y1 = max(0, self.y - radius), min(height, self.y + radius + 1)
@@ -856,6 +1004,8 @@ class StackReviewDialog(QDialog):
         self.object_choice.blockSignals(False)
         self._review_target = f"location_{self.x}_{self.y}"
         self._restore_review()
+        if self.zoom.currentData() is not None:
+            self._center_views_on_selection(include_sections=False)
         self._render_sections()
 
     def _pick_xz(self, x, z):
@@ -912,6 +1062,7 @@ class StackReviewDialog(QDialog):
             self._review_target = ("3d_" if self.result else "2d_") + str(obj["object_id"])
             if self.result and "z" in obj:
                 self.z_slider.setValue(int(np.clip(round(float(obj["z"])), 0, self.stack_info["shape_zyx"][0] - 1)))
+            self._center_views_on_selection()
         self._restore_review()
         self._render_sections()
 
@@ -972,6 +1123,7 @@ class StackReviewDialog(QDialog):
         self.x = int(np.clip(round(float(member["x"])), 0, width - 1))
         self.y = int(np.clip(round(float(member["y"])), 0, height - 1))
         self.z_slider.setValue(int(np.clip(round(float(member["z"])), 0, depth - 1)))
+        self._center_views_on_selection()
         self._render_sections()
         self.status.setText(f"Inspecting {'LIVE G' if role == 'green' else 'DEAD R'}{ident}: crosshair at its 3D centroid; its outline is white. The selected candidate group is retained.")
 

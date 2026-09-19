@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "app_version": "1.4.3",
+  "tests_passed": 271,
+  "test_command": "python -m unittest discover -s tests -v",
+  "python": "3.12.14",
+  "original_package_files": 81,
+  "original_files_changed": [],
+  "coverage": [
+    "cursor-anchored mouse-wheel zoom",
+    "drag without changing review target",
+    "synchronized XY channels and independent XZ/YZ views",
+    "zoomed click coordinates including fixed crop recentering",
+    "native pixel detail and bounded rendering",
+    "no source reload or segmentation during navigation",
+    "existing viability, import, export and numerical regressions"
+  ],
+  "private_data_included": false
+}

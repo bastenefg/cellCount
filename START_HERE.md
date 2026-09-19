@@ -5,7 +5,7 @@ fluorescence TIFF images, with optional EBFP measurements.
 
 ## Use the app
 
-Download the version 1.4.2 Windows ZIP from this repository's Releases page,
+Download the version 1.4.3 Windows ZIP from this repository's Releases page,
 extract the entire archive, and open **Live-Dead Cell Counter.exe**. Python is
 included. Keep the executable and its `_internal` folder together.
 
@@ -58,6 +58,13 @@ Generated environments, old application bundles, temporary preview arrays and
 ordinary run output folders are excluded from Git. Validation records describe
 the original local runs and may contain machine-specific paths. The portable
 Windows application is distributed as a release asset.
+
+## Version 1.4.3 update
+
+**Inspect Z stack** now supports mouse-wheel zoom at the pointer and drag-to-pan.
+LIVE, DEAD and merged XY views stay aligned; side sections also support zoom.
+Magnification persists through Z navigation. **Fit views** resets the display.
+Zoom uses the visible original pixels without reloading or recounting the stack.
 
 ## Version 1.4.2 update
 

@@ -78,7 +78,8 @@ def main(argv):
         from unittest.mock import patch
         import numpy as np
         from PIL import Image
-        from PySide6.QtGui import QFont, QFontDatabase
+        from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
+        from PySide6.QtGui import QFont, QFontDatabase, QMouseEvent, QWheelEvent
         from PySide6.QtWidgets import QApplication, QFileDialog
         from .app import MainWindow, STYLE
         from .analysis_3d import read_analysis_3d
@@ -161,6 +162,52 @@ def main(argv):
         candidate_id = str(dialog.object_choice.currentData()["object_id"])
         dialog.show()
         app.processEvents()
+
+        # Exercise real GUI input in the executable, not only helper methods.
+        pane = dialog.views["green"]
+        target_before = dialog._review_target
+        point_before = (dialog.x, dialog.y)
+        profiles_before = dialog.profile.profiles
+        rectangle = pane._target_rect()
+        position = QPointF(rectangle.left() + pane.crosshair[0] * rectangle.width(),
+                           rectangle.top() + pane.crosshair[1] * rectangle.height())
+        started = time.perf_counter()
+        with patch("numpy.load", side_effect=AssertionError("Navigation must reuse mapped arrays")), \
+             patch("desktop.volume_analysis.analyze_volume", side_effect=AssertionError("Navigation must not segment")):
+            event = QWheelEvent(position, QPointF(pane.mapToGlobal(position.toPoint())), QPoint(), QPoint(0, 720),
+                Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.NoScrollPhase, False)
+            app.sendEvent(pane, event)
+            app.processEvents()
+            assert pane.zoom_factor > 3
+            start, end = position, position + QPointF(24, 15)
+            for kind, point, button, buttons in (
+                    (QEvent.Type.MouseButtonPress, start, Qt.MouseButton.LeftButton, Qt.MouseButton.LeftButton),
+                    (QEvent.Type.MouseMove, end, Qt.MouseButton.NoButton, Qt.MouseButton.LeftButton),
+                    (QEvent.Type.MouseButtonRelease, end, Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton)):
+                app.sendEvent(pane, QMouseEvent(kind, point, QPointF(pane.mapToGlobal(point.toPoint())),
+                    button, buttons, Qt.KeyboardModifier.NoModifier))
+            app.processEvents()
+            viewport = (pane.zoom_factor, pane.view_center)
+            z = dialog.z_slider.value()
+            dialog.z_slider.setValue(z + 1)
+            dialog.z_slider.setValue(z)
+            assert all((item.zoom_factor, item.view_center) == viewport for item in
+                       [dialog.views[role] for role in ("green", "red", "merged")] + list(dialog.analysis_views.values()))
+            assert dialog._review_target == target_before and (dialog.x, dialog.y) == point_before
+            assert dialog.profile.profiles is profiles_before
+            assert dialog.grab().save(str(output / "zoomed_z_dialog.png"))
+            dialog.fit_views()
+            assert all(item.zoom_factor == 1 for item in dialog.views.values())
+            dialog.zoom.setCurrentIndex(3)
+            pane.set_viewport(4, (.75, .75), emit=True)
+            dialog._pick_visible_xy(.75, .75)
+            assert pane.visible_rect().contains(QPointF(*pane.crosshair)), "A click in a zoomed crop hid the selected point"
+            dialog.fit_views()
+            dialog.object_choice.setCurrentIndex(candidates[0])
+            assert dialog._review_target == target_before
+        report["timings_seconds"]["zoom_pan_and_two_slice_changes"] = time.perf_counter() - started
+        report["checks"].append("Mouse-wheel zoom, drag pan, synchronized XY, retained Z magnification and Fit views work without source reload, recounting or review-target changes")
+        report["checks"].append("Clicking within a zoomed fixed crop keeps the selected point visible")
 
         def apply_choice(name, expected):
             started = time.perf_counter()

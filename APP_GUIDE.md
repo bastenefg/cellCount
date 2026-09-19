@@ -1,4 +1,4 @@
-# Live/Dead Cell Counter 1.4.2
+# Live/Dead Cell Counter 1.4.3
 
 A 64-bit Windows desktop interface for paired LIVE/DEAD fluorescence images and
 optional EBFP analysis. The app can review other cell types; its bundled CHO
@@ -8,7 +8,7 @@ preserved.
 
 ## Open the portable app
 
-1. Extract **Live-Dead-Cell-Counter-1.4.2-Windows-x64.zip** completely into a new folder.
+1. Extract **Live-Dead-Cell-Counter-1.4.3-Windows-x64.zip** completely into a new folder.
 2. Open the extracted **Live-Dead Cell Counter** folder.
 3. Double-click **Live-Dead Cell Counter.exe**. Python is included; no installation or
    command line is needed.
@@ -154,7 +154,12 @@ reuse cached arrays rather than rereading the Leica container or recounting cell
 
 Use the Z slider to compare LIVE, DEAD and merged slices. The view selector
 switches from the full field to a 256, 128 or 64 pixel crop around the inspection
-point, preserving source pixel detail while tuning thresholds. Select an existing
+point. Scroll over any image to zoom at the pointer, and drag to pan. LIVE, DEAD
+and merged XY panels move together; XZ and YZ panels can be zoomed independently.
+Zoom reveals the visible original pixels and persists while changing Z slices.
+Dragging does not change the candidate being reviewed. **Fit views** restores
+the full field and resets all panes. Selecting a candidate or individual channel
+object centers it at the current magnification. Select an existing
 2D detection, or click the image to move the inspection point. Side sections
 and intensity-versus-depth profiles help distinguish vertically separated cells.
 Depth is displayed in micrometers when valid Z calibration is available; unknown
@@ -423,11 +428,11 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1 -Zip
 ```
 
 This installs the build requirements into `.venv`, builds the executable, and
-creates `dist/1.4.2/Live-Dead-Cell-Counter-1.4.2-Windows-x64.zip`. The executable is in
-`dist/1.4.2/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
+creates `dist/1.4.3/Live-Dead-Cell-Counter-1.4.3-Windows-x64.zip`. The executable is in
+`dist/1.4.3/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
 replace an existing app directory, so an older open app remains intact. To
 rebuild the same version, choose another folder, for example
-`-ReleaseFolder 1.4.2-rebuild1`. Use `-SkipInstall` to use an
+`-ReleaseFolder 1.4.3-rebuild1`. Use `-SkipInstall` to use an
 already prepared environment. All scientific dependency versions remain pinned
 in the unchanged `requirements-lock.txt`. Qt and dependency notices are included
 in `_internal/third_party_notices`.
@@ -442,7 +447,7 @@ copies. The included source has no newly assigned license.
 After building, audit the release contents and ZIP with:
 
 ```powershell
-.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.4.2\Live-Dead Cell Counter" --zip ".\dist\1.4.2\Live-Dead-Cell-Counter-1.4.2-Windows-x64.zip" --output ".\app_validation\release_1.4.2\bundle_audit.json"
+.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.4.3\Live-Dead Cell Counter" --zip ".\dist\1.4.3\Live-Dead-Cell-Counter-1.4.3-Windows-x64.zip" --output ".\app_validation\release_1.4.3\bundle_audit.json"
 ```
 
 This audit checks bundled sources, preserved original package files, excluded

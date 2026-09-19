@@ -18,6 +18,9 @@ is included; keep the executable and its `_internal` folder together.
 - **Review in Z:** scroll synchronized LIVE/DEAD slices, inspect side sections
   and depth profiles, and annotate projected overlaps. Background loading and
   cached stack planes keep navigation responsive.
+- **Zoom and pan:** use the mouse wheel over a Z-stack image, drag to pan, or
+  click **Fit views** to reset. XY channels stay aligned and zoom persists when
+  changing Z slices. Zoom reveals original pixel detail without recounting.
 - **One setup for 2D or 3D:** tune the usual segmentation controls on the maximum
   projection, choose the counting dimension, and click **Run analysis**. Both
   modes use the saved settings and open on the standard Results page.
@@ -42,7 +45,7 @@ is included; keep the executable and its `_internal` folder together.
   summaries as PNG, with the masks and threshold values from that completed run.
   Older runs remain readable without recounting cells.
 
-![Synthetic Z review: inspect channel objects, choose cell identity and apply decisions to viability](images/viability-review.png)
+![Synthetic Z review zoomed with the mouse wheel: LIVE, DEAD and merged views stay aligned](images/stack-zoom.png)
 
 3D viability assumes each channel object represents one cell and each true
 EthD-1-positive cell is nonviable (L3224). A confirmed LIVE/DEAD pair counts once
@@ -52,10 +55,11 @@ pairs. Original masks and settings remain unchanged. EBFP scoring is available
 in 2D; neither mode diagnoses apoptosis.
 
 The repository includes source, tests, reference fixtures, the supplied sample
-pair, and validation evidence. Version 1.4.2 passed **259 tests**, including
-viability ranges, complex pairing, saved reviews, exact figure panels, shared
-thresholds and both analysis routes. See the
-[source validation](../app_validation/release_1.4.2/source_validation.json).
+pair, and validation evidence. Version 1.4.3 passed **271 tests**, including
+zoomed coordinates, native pixel detail, synchronized channels, viability
+ranges, saved reviews, exact figure panels and both analysis routes. See the
+[source validation](../app_validation/release_1.4.3/source_validation.json) and
+[zoom workflow check](../app_validation/release_1.4.3/source_zoom_workflow.json).
 The synthetic review workflow updated counts and the figure in about **0.2
 seconds** per decision on the development machine, without resegmentation. See
 the [review workflow check](../app_validation/release_1.4.2/source_viability_workflow.json).

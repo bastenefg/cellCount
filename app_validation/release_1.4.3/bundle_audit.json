@@ -1,0 +1,87 @@
+{
+  "status": "passed",
+  "audit_scope": "Bundle source/data identity, original source preservation, dependency exclusions and exact ZIP contents. Runtime checks appear only when supplied separately.",
+  "app_version": "1.4.3",
+  "audit_python": "3.12.14",
+  "app_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.4.3\\Live-Dead Cell Counter",
+  "app_files": 1630,
+  "app_bytes": 297698035,
+  "executable_sha256": "623a183a2c9561e5c7e695c8a31981bb10f36a71fffc7722172527581c02cf88",
+  "original_package_files_checked": 81,
+  "original_package_mismatches": [],
+  "bundled_sources_checked": 202,
+  "runtime_assets_checked": 3,
+  "bundled_source_mismatches": [],
+  "incompatible_icu_files": [],
+  "private_data_folders": [],
+  "missing_notices": [],
+  "zip": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.4.3\\Live-Dead-Cell-Counter-1.4.3-Windows-x64.zip",
+  "zip_bytes": 123191542,
+  "zip_sha256": "298f0ebf7a4e90e9061ec0fb3c84c5027e87ab36255954690b30e7fa474eb0d1",
+  "zip_crc_and_content_check": "passed",
+  "zip_mismatches": [],
+  "supplied_runtime_reports": [
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.4.3\\frozen_zoom_workflow.json",
+      "sha256": "67c64ac5203c3be88ee07d455826191cfd6e36fe0d5e2f6b2204e02559d7e595",
+      "report": {
+        "status": "passed",
+        "app_version": "1.4.3",
+        "fixture": "Synthetic two-channel 3D shapes only; no biological validation implied",
+        "timings_seconds": {
+          "synthetic_analysis": 1.835559999999532,
+          "provisional_results_and_figure": 0.32821810000314144,
+          "zoom_pan_and_two_slice_changes": 0.0672573999981978,
+          "same_cell_review_and_figure": 0.18260349999764003,
+          "separate_review_and_figure": 0.19089140000141924,
+          "total": 3.7201618000035523
+        },
+        "checks": [
+          "Provisional 3D results display the synthetic 40\u201350% association range",
+          "Mouse-wheel zoom, drag pan, synchronized XY, retained Z magnification and Fit views work without source reload, recounting or review-target changes",
+          "Clicking within a zoomed fixed crop keeps the selected point visible",
+          "Same-cell review is acknowledged and yields 40%; original image panels remain pixel-identical",
+          "Separate-cell review yields 50% without rerunning segmentation",
+          "Portable review reload and subsequent run reopen restore decisions and notes",
+          "Exported CSV and PNG use the selected review revision",
+          "All original analysis artifacts and input volumes remain byte-identical",
+          "Original run passes full integrity verification after reviews",
+          "GUI event processing remains active during background figure updates"
+        ],
+        "original_artifact_count": 18,
+        "source_volume_count": 2,
+        "gui_event_loop_iterations": 79,
+        "provisional_viability_pct": [
+          40.0,
+          50.0
+        ],
+        "reviewed_same_cell_viability_pct": 40.0,
+        "reviewed_separate_viability_pct": 50.0
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.4.3\\source_validation.json",
+      "sha256": "20394758db691f9ea90cd245b880d7298f4848ee8292206496d40d61ae502391",
+      "report": {
+        "status": "passed",
+        "app_version": "1.4.3",
+        "tests_passed": 271,
+        "test_command": "python -m unittest discover -s tests -v",
+        "python": "3.12.14",
+        "original_package_files": 81,
+        "original_files_changed": [],
+        "coverage": [
+          "cursor-anchored mouse-wheel zoom",
+          "drag without changing review target",
+          "synchronized XY channels and independent XZ/YZ views",
+          "zoomed click coordinates including fixed crop recentering",
+          "native pixel detail and bounded rendering",
+          "no source reload or segmentation during navigation",
+          "existing viability, import, export and numerical regressions"
+        ],
+        "private_data_included": false
+      }
+    }
+  ],
+  "issues": []
+}
