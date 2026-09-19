@@ -4,7 +4,7 @@ This is deliberately separate from the reference 2D pipeline. Thresholds are
 absolute detector intensities, optionally after a 3D Gaussian smoothing step.
 Channel masks are retained separately: overlapping cells are never overwritten.
 Cross-channel associations are candidates, not proof of cell identity or death
-mechanism. No viability percentage is inferred from unresolved associations.
+mechanism. Unresolved associations produce an assumption-based viability range.
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ OBJECT_COLUMNS = ("object_id", "status", "green_ids", "red_ids", "z", "y", "x",
 LIMITATIONS = [
     "Experimental 3D fluorescence-object count; validate against reviewed cells before biological interpretation.",
     "Dual-positive candidates require review: 3D overlap alone does not establish the same cell.",
-    "A proximity-only or one-to-many association remains unresolved; no viability percentage is reported.",
+    "A proximity-only or one-to-many association remains unresolved; provisional viability spans its possible one-to-one channel pairings.",
     "Dim signal, touching cells, axial blur, channel bleed-through, registration and undersampling can change objects and associations.",
     "L3224 dual signal is compatible with membrane compromise; these images do not diagnose apoptosis.",
     "Counts cover only the selected Z range and time point. Objects cut by its boundaries are flagged.",
@@ -702,9 +702,14 @@ def _figure(arrays, labels, settings, summary, path):
     for ax in axes:
         ax.set_axis_off()
     counts = summary["counts"]
-    figure.suptitle("3D LIVE / DEAD fluorescence-object analysis", fontsize=15, y=0.92)
+    figure.suptitle("3D LIVE / DEAD fluorescence-object analysis", fontsize=15, y=0.97)
     if summary.get("field_id"):
-        figure.text(0.5, 0.875, f"Field: {summary['field_id']}", ha="center", fontsize=9)
+        figure.text(0.5, 0.91, f"Field: {summary['field_id']}", ha="center", fontsize=9)
+    if summary.get("viability"):
+        from .viability_figure import viability_caption
+        caption, progress = viability_caption(summary["viability"])
+        figure.text(0.5, 0.88, caption, ha="center", fontsize=13, color="#16756d")
+        figure.text(0.5, 0.847, progress, ha="center", fontsize=8)
     figure.text(0.5, 0.82, f"Green only: {counts['green_only']}    Red only: {counts['red_only']}    "
                 f"Dual candidates: {counts['dual_positive_candidate']}    Unresolved groups: {counts['unresolved']}",
                 ha="center", fontsize=10)
@@ -718,7 +723,7 @@ def _figure(arrays, labels, settings, summary, path):
     else:
         detail = (f"Min. volume LIVE / DEAD: {settings['green']['min_volume_um3']:g} / {settings['red']['min_volume_um3']:g} µm³; "
                   f"seed spacing: {settings['min_seed_distance_um']:g} µm; maximum channel gap: {settings['match_distance_um']:g} µm\n")
-    figure.text(0.5, 0.065 if shared else 0.08, "Candidates require review; no viability percentage or apoptosis diagnosis is inferred.\n"
+    figure.text(0.5, 0.065 if shared else 0.08, "L3224: each channel object represents one cell; true EthD-1-positive cells are nonviable. No apoptosis diagnosis.\n"
                 + detail +
                 f"Spacing Z/Y/X: {' / '.join(f'{v:g}' for v in summary['spacing_um'])} µm; "
                 f"volume: {' × '.join(map(str, summary['shape_zyx']))} voxels (Z/Y/X)\n"
@@ -784,12 +789,16 @@ def _analyze_volume(stack_info, settings, output_dir, progress, cancelled, array
                        "candidate_count_min": sum(row["candidate_count_min"] for row in rows),
                        "candidate_count_max": sum(row["candidate_count_max"] for row in rows),
                        "boundary_groups": sum(row["touches_boundary"] for row in rows)})
+        from .viability_3d import summarize_objects
         selection = stack_info.get("selection", {})
         z_start = selection.get("z_start", 0)
         z_stop = selection.get("z_stop", z_start + arrays["green"].shape[0])
         selection_description = f"Selected source Z slices {z_start + 1}–{z_stop}; time point {selection.get('time_index', 0) + 1}"
         summary = {"schema_version": SCHEMA_VERSION, "algorithm_version": ALGORITHM_VERSION,
                    "analysis": "experimental_3d_fluorescence_objects", "counts": counts, "display": display,
+                   "viability": summarize_objects(rows),
+                   "figure_layout": {"kind": "three_panel_3d", "canvas_pixels": [1500, 900],
+                                     "panel_strip": [0, 180, 1500, 690]},
                    "field_id": str(stack_info.get("field_id", "")),
                    "shape_zyx": list(arrays["green"].shape), "spacing_um": list(spacing),
                    "source_dtype": str(arrays["green"].dtype),

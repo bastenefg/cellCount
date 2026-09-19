@@ -1,4 +1,4 @@
-# Live/Dead Cell Counter 1.4.1
+# Live/Dead Cell Counter 1.4.2
 
 A 64-bit Windows desktop interface for paired LIVE/DEAD fluorescence images and
 optional EBFP analysis. The app can review other cell types; its bundled CHO
@@ -8,7 +8,7 @@ preserved.
 
 ## Open the portable app
 
-1. Extract **Live-Dead-Cell-Counter-1.4.1-Windows-x64.zip** completely into a new folder.
+1. Extract **Live-Dead-Cell-Counter-1.4.2-Windows-x64.zip** completely into a new folder.
 2. Open the extracted **Live-Dead Cell Counter** folder.
 3. Double-click **Live-Dead Cell Counter.exe**. Python is included; no installation or
    command line is needed.
@@ -161,9 +161,23 @@ Depth is displayed in micrometers when valid Z calibration is available; unknown
 calibration permits slice-index review but prevents a 3D count. Different peak
 depths alone do not prove that there are two cells.
 
-Review labels record **Separate in Z**, **Same-cell signal supported**, or
-**Uncertain**. Export the review separately. These annotations do not rewrite a
-completed run or silently change its counts.
+When opening a 3D field from Results, select a mixed candidate and inspect its
+LIVE and DEAD members through Z. **Separate cells** counts each channel object
+separately. **Same-cell signal supported** is available for one LIVE and one
+DEAD object and counts them once as nonviable. For complex groups, **Explicit
+pairs** lets you choose specific LIVE/DEAD pairs; a member cannot be paired twice.
+Confirm that all unmatched members are separate cells. Use **Uncertain** when
+identity remains unclear; it stays in the viability range. The member selector
+centers the viewer on individual channel objects to help identify them.
+
+Click **Apply to results** to save decisions and update the displayed counts,
+viability and figures. Closing the viewer also saves pending decisions. A failed
+save keeps the viewer open. Local review revisions are separate from the original
+analysis; neither masks nor segmentation parameters change. Use **Save review**
+on Results to export a portable JSON, and **Load review** with the same run on
+another computer. The app checks that the review belongs to that analysis.
+Reviews reopen automatically on the current computer. Optical-section notes
+made outside this 3D Results workflow remain annotations only.
 
 The stack viewer shows the completed 3D masks and the saved shared settings.
 To change them, use the usual **Preview segmentation** or **Inspect segmentation**,
@@ -181,8 +195,20 @@ loading them. The output records parameters, calibrated source selections,
 object tables, label volumes and per-field summary figures generated from those
 saved labels. Batch tables pool candidate categories within the supplied
 replicate groups; they do not turn uncertainty into a definitive cell count.
-EBFP scoring and replicate-pooled viability remain features of the original
-2D workflow. The 3D candidate mode does not report a definitive viability percentage.
+3D Results show **Provisional viability** immediately, as a range across possible
+pairings in unreviewed or uncertain groups. Each detected channel object is
+assumed to represent one cell; confirmed EthD-positive cells are treated as
+nonviable. Pairing one LIVE and one DEAD object reduces the total count by one
+and removes that LIVE object from the viable count. All groups remain in the
+denominator; ambiguous groups are never silently excluded. This is a scenario
+range, not a confidence interval or a bound on segmentation error.
+
+When all mixed groups are resolved, **Reviewed viability** is
+`100 × LIVE cells / total cells`. With no mixed groups, the same calculation is
+shown as apparent viability. Empty analyses show **Not measured**. Field and
+replicate tables pool integer cell counts before calculating percentages; the
+overall result pools all fields, rather than averaging replicate percentages.
+EBFP scoring remains available in 2D.
 
 For Thermo L3224, calcein indicates esterase activity and EthD-1 indicates membrane
 damage. Confirmed red-positive cells are membrane-compromised even if green
@@ -271,7 +297,8 @@ the preview after a short pause in editing; turn it off and click **Update previ
 several edits together. The preview processes the complete selected field,
 even when you are zoomed in. Its counts describe the displayed 2D field or
 projection, including when you intend to run in 3D. Full-volume counts are
-calculated only by a 3D run. EBFP and replicate viability are available in 2D runs.
+calculated only by a 3D run. EBFP scoring is available in 2D runs; 3D viability
+is reported with its remaining association uncertainty.
 
 Repeated previews reuse loaded images and unchanged channel segmentations, so
 editing only DEAD settings does not reprocess LIVE. Complete-image counts are
@@ -329,9 +356,12 @@ segmentation** opens the interactive review with the saved run's inputs and
 effective settings. Use **Open run…**
 to load an earlier run or **Save summary CSV** to export the displayed summary.
 For a 3D run, select a field to view its candidate summary or open **Inspect Z
-stack…** to see saved masks in depth. The summary CSV pools candidate categories
-within replicate groups. **Save summary figure…** exports the selected field's
-3D summary as PNG, using its saved masks and exact shared settings. The figure
+stack…** to see saved masks in depth and resolve mixed candidates. The summary
+CSV exports the displayed viability, cell-count bounds and review progress by
+field or replicate. **Save summary figure…** exports the selected field's
+3D summary as PNG with the current review interpretation, saved masks and exact
+shared settings. Figure preparation runs in the background and does not reread
+the source stack. The figure
 identifies its field and selected source range. A 3D summary image is an overview
 projection; its counts come from the volume.
 
@@ -393,11 +423,11 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1 -Zip
 ```
 
 This installs the build requirements into `.venv`, builds the executable, and
-creates `dist/1.4.1/Live-Dead-Cell-Counter-1.4.1-Windows-x64.zip`. The executable is in
-`dist/1.4.1/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
+creates `dist/1.4.2/Live-Dead-Cell-Counter-1.4.2-Windows-x64.zip`. The executable is in
+`dist/1.4.2/Live-Dead Cell Counter/`. Builds use a new release folder and refuse to
 replace an existing app directory, so an older open app remains intact. To
 rebuild the same version, choose another folder, for example
-`-ReleaseFolder 1.4.1-rebuild1`. Use `-SkipInstall` to use an
+`-ReleaseFolder 1.4.2-rebuild1`. Use `-SkipInstall` to use an
 already prepared environment. All scientific dependency versions remain pinned
 in the unchanged `requirements-lock.txt`. Qt and dependency notices are included
 in `_internal/third_party_notices`.
@@ -412,7 +442,7 @@ copies. The included source has no newly assigned license.
 After building, audit the release contents and ZIP with:
 
 ```powershell
-.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.4.1\Live-Dead Cell Counter" --zip ".\dist\1.4.1\Live-Dead-Cell-Counter-1.4.1-Windows-x64.zip" --output ".\app_validation\release_1.4.1\bundle_audit.json"
+.\.venv\Scripts\python.exe .\packaging\validate_release.py --app-directory ".\dist\1.4.2\Live-Dead Cell Counter" --zip ".\dist\1.4.2\Live-Dead-Cell-Counter-1.4.2-Windows-x64.zip" --output ".\app_validation\release_1.4.2\bundle_audit.json"
 ```
 
 This audit checks bundled sources, preserved original package files, excluded

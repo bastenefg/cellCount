@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "app_version": "1.4.2",
+  "fixture": "Synthetic two-channel 3D shapes only; no biological validation implied",
+  "timings_seconds": {
+    "synthetic_analysis": 2.8410318000023835,
+    "provisional_results_and_figure": 0.38618159999896307,
+    "same_cell_review_and_figure": 0.2105474999989383,
+    "separate_review_and_figure": 0.3073156999962521,
+    "total": 5.126951499994902
+  },
+  "checks": [
+    "Provisional 3D results display the synthetic 40\u201350% association range",
+    "Same-cell review is acknowledged and yields 40%; original image panels remain pixel-identical",
+    "Separate-cell review yields 50% without rerunning segmentation",
+    "Portable review reload and subsequent run reopen restore decisions and notes",
+    "Exported CSV and PNG use the selected review revision",
+    "All original analysis artifacts and input volumes remain byte-identical",
+    "Original run passes full integrity verification after reviews",
+    "GUI event processing remains active during background figure updates"
+  ],
+  "original_artifact_count": 18,
+  "source_volume_count": 2,
+  "gui_event_loop_iterations": 95,
+  "provisional_viability_pct": [
+    40.0,
+    50.0
+  ],
+  "reviewed_same_cell_viability_pct": 40.0,
+  "reviewed_separate_viability_pct": 50.0
+}

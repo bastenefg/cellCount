@@ -16,13 +16,72 @@ import uuid
 import numpy as np
 from PySide6.QtCore import QProcess, QProcessEnvironment, QRectF, QStandardPaths, Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QColor, QImage, QPainter, QPen, QPixmap
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QFileDialog,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog,
     QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit,
     QPushButton, QScrollArea, QSlider, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from .services import ROOT
 
 DECISIONS = ("Unreviewed", "Separate in Z", "Same-cell signal supported", "Uncertain")
+COUNT_DECISIONS = (("Unreviewed", "unreviewed"), ("Separate cells", "separate"),
+                   ("Same-cell signal supported · one nonviable", "same_cell"),
+                   ("Uncertain", "uncertain"), ("Explicit pairs…", "pairs"))
+
+
+def _member_ids(obj, role):
+    return [int(value) for value in str(obj.get(role + "_ids", "")).split(";") if value]
+
+
+class PairReviewDialog(QDialog):
+    """Require an explicit one-to-one assignment for a complex mixed group."""
+    def __init__(self, obj, pairs=(), parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Review individual LIVE / DEAD pairs")
+        self.resize(570, 360)
+        self.pairs = None
+        self._green = _member_ids(obj, "green")
+        self._red = _member_ids(obj, "red")
+        layout = QVBoxLayout(self)
+        layout.addWidget(caption("Pair only signals supported as the same cell in the optical sections. Each pair counts once as nonviable; unpaired signals count as separate cells."))
+        layout.addWidget(caption("Use the Inspect object control in the Z viewer to locate each LIVE G and DEAD R object before pairing.", True))
+        self.choices = {}
+        previous = {int(g): int(r) for g, r in pairs}
+        form = QFormLayout()
+        for green in self._green:
+            choice = QComboBox()
+            choice.addItem("Separate LIVE cell (no DEAD partner)", None)
+            for red in self._red:
+                choice.addItem(f"Same cell as DEAD R{red}", red)
+            choice.setCurrentIndex(max(0, choice.findData(previous.get(green))))
+            choice.currentIndexChanged.connect(self._validate)
+            self.choices[green] = choice
+            form.addRow(f"LIVE G{green}", choice)
+        layout.addLayout(form)
+        self.confirm = QCheckBox("I reviewed these assignments; all unpaired objects are separate cells.")
+        self.confirm.toggled.connect(self._validate)
+        layout.addWidget(self.confirm)
+        self.message = caption("", True)
+        layout.addWidget(self.message)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self.ok = buttons.button(QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+        self._validate()
+
+    def _validate(self, *_):
+        selected = [choice.currentData() for choice in self.choices.values() if choice.currentData() is not None]
+        duplicates = len(set(selected)) != len(selected)
+        self.ok.setEnabled(self.confirm.isChecked() and not duplicates)
+        self.message.setText("A DEAD object can belong to only one pair." if duplicates else
+                             "Confirm only after reviewing the individual objects. Leave this group uncertain if identities remain unclear.")
+
+    def accept(self):
+        self._validate()
+        if not self.ok.isEnabled():
+            return
+        self.pairs = [[green, choice.currentData()] for green, choice in self.choices.items() if choice.currentData() is not None]
+        super().accept()
 
 
 def caption(text="", muted=False):
@@ -193,8 +252,18 @@ class ThresholdControl(QWidget):
 
 
 class StackReviewDialog(QDialog):
-    def __init__(self, run=None, initial_field=None, parent=None, rows=None, config=None, output_base=None, cache_dir=None, volume_run=None):
+    reviewApplied = Signal(object)
+
+    def __init__(self, run=None, initial_field=None, parent=None, rows=None, config=None, output_base=None, cache_dir=None, volume_run=None, review_decisions=None):
         super().__init__(parent)
+        self._count_review = review_decisions is not None
+        self.review_decisions = deepcopy(review_decisions or {})
+        self._saved_decisions = deepcopy(self.review_decisions)
+        self._count_target = None
+        self._volume_objects = []
+        self._channel_objects = {}
+        self._review_ack = None
+        self._pending_review = None
         self.run_path = Path(run).resolve() if run is not None else None
         if self.run_path:
             config = json.loads((self.run_path / "effective_config.json").read_text(encoding="utf-8"))
@@ -261,6 +330,7 @@ class StackReviewDialog(QDialog):
         row = QHBoxLayout()
         row.addWidget(caption("Field"))
         self.fields = QComboBox()
+        self.fields.setEnabled(not self._count_review)
         row.addWidget(self.fields, 1)
         row.addWidget(caption("XY view"))
         self.zoom = QComboBox()
@@ -274,6 +344,7 @@ class StackReviewDialog(QDialog):
         row.addWidget(self.stop)
         self.open_volume = QPushButton("Open 3D result…")
         self.open_volume.clicked.connect(self.open_volume_result)
+        self.open_volume.setVisible(not self._count_review)
         row.addWidget(self.open_volume)
         outer.addLayout(row)
         self.tabs = QTabWidget()
@@ -291,6 +362,14 @@ class StackReviewDialog(QDialog):
         view.addLayout(detection_row)
         self.context = caption("", True)
         view.addWidget(self.context)
+        identity_row = QHBoxLayout()
+        self.member_caption = caption("", True)
+        identity_row.addWidget(self.member_caption, 1)
+        self.member_focus = QComboBox()
+        self.member_focus.setAccessibleName("Inspect individual LIVE or DEAD object")
+        self.member_focus.currentIndexChanged.connect(self._focus_member)
+        identity_row.addWidget(self.member_focus)
+        view.addLayout(identity_row)
         self.shared_settings_caption = caption("", True)
         view.addWidget(self.shared_settings_caption)
         grid = QGridLayout()
@@ -329,24 +408,41 @@ class StackReviewDialog(QDialog):
         view.addLayout(zrow)
         review_row = QHBoxLayout()
         self.decision = QComboBox()
-        self.decision.addItems(DECISIONS)
-        self.decision.currentTextChanged.connect(self._record_review)
+        if self._count_review:
+            for text, value in COUNT_DECISIONS:
+                self.decision.addItem(text, value)
+        else:
+            self.decision.addItems(DECISIONS)
+        self.decision.currentTextChanged.connect(self._decision_changed)
         review_row.addWidget(self.decision)
         self.note = QLineEdit()
         self.note.setPlaceholderText("Review note (optional)")
         self.note.editingFinished.connect(self._record_review)
         review_row.addWidget(self.note, 1)
-        self.export_review = QPushButton("Save review…")
+        self.edit_pairs = QPushButton("Edit pairs…")
+        self.edit_pairs.clicked.connect(self._edit_pairs)
+        self.edit_pairs.setVisible(self._count_review)
+        review_row.addWidget(self.edit_pairs)
+        self.export_review = QPushButton("Save notes…" if self._count_review else "Save review…")
         self.export_review.clicked.connect(self.save_review)
         review_row.addWidget(self.export_review)
         view.addLayout(review_row)
-        view.addWidget(caption("Review annotations are saved separately; original 2D counts and figures remain unchanged.", True))
+        self.review_explanation = caption("For L3224, a supported same-cell LIVE/DEAD pair counts once as nonviable (membrane compromised); this does not establish apoptosis. Apply to results, or Close, to save decisions and update viability. Original detections remain unchanged." if self._count_review else
+            "Review annotations are saved separately; original 2D counts and figures remain unchanged.", True)
+        view.addWidget(self.review_explanation)
+        self.review_progress = caption("", True)
+        view.addWidget(self.review_progress)
         self._build_analysis_tab()
         self.status = caption("Preparing stack…", True)
         outer.addWidget(self.status)
         bottom = QHBoxLayout()
         bottom.addWidget(self.analyze_button)
         bottom.addWidget(self.save_figure)
+        self.apply_review = QPushButton("Apply to results")
+        self.apply_review.setObjectName("primary")
+        self.apply_review.setVisible(self._count_review)
+        self.apply_review.clicked.connect(self.apply_to_results)
+        bottom.addWidget(self.apply_review)
         bottom.addStretch()
         close = QPushButton("Close")
         close.clicked.connect(self.reject)
@@ -358,7 +454,7 @@ class StackReviewDialog(QDialog):
     def _update_inspection_mode(self):
         self.tabs.setTabVisible(1, self._legacy_raw)
         self.analyze_button.setVisible(self._legacy_raw)
-        self.save_figure.setVisible(bool(self.result) or self._legacy_raw)
+        self.save_figure.setVisible((bool(self.result) or self._legacy_raw) and not self._count_review)
         if self._shared_settings:
             config = self._shared_settings["config"]
             segmentation = config.get("segmentation", {})
@@ -468,6 +564,8 @@ class StackReviewDialog(QDialog):
         self.analysis_z.setEnabled(ready)
         self.export_review.setEnabled(ready)
         self.object_choice.setEnabled(ready)
+        self.apply_review.setEnabled(bool(ready and self.result and self._count_review))
+        self.member_focus.setEnabled(bool(ready and self.result))
         self.preview_mask.setEnabled(ready and self._legacy_raw)
         calibrated = (ready and self.stack_info and self.stack_info.get("spacing_um", [None])[0] is not None
                       and self.stack_info["shape_zyx"][0] > 1)
@@ -678,13 +776,16 @@ class StackReviewDialog(QDialog):
                 rgb[raw[role] >= self.thresholds[role, "low"].value()] = [70, 230, 255] if role == "green" else [255, 195, 50]
                 rgb[raw[role] >= self.thresholds[role, "high"].value()] = [255, 255, 255]
             elif self.labels:
-                self._outline(rgb, self.labels[role][selection][::step, ::step], (70, 230, 255) if role == "green" else (255, 195, 50))
+                labels = self.labels[role][selection][::step, ::step]
+                self._outline(rgb, labels, (70, 230, 255) if role == "green" else (255, 195, 50))
+                self._highlight_member(rgb, labels, role)
             self.views[role].set_frame(rgb, aspect, crosshair)
             self.analysis_views[role].set_frame(rgb, aspect, crosshair)
         if self.labels:
             for role, color in (("green", (70, 230, 255)), ("red", (255, 195, 50))):
                 labels = self.labels[role][selection][::step, ::step]
                 self._outline(combined, labels, color)
+                self._highlight_member(combined, labels, role)
         self.views["merged"].set_frame(combined, aspect, crosshair)
         self.analysis_views["merged"].set_frame(combined, aspect, crosshair)
         indices = self.stack_info.get("z_indices", list(range(depth)))
@@ -717,6 +818,7 @@ class StackReviewDialog(QDialog):
                 for role, color in (("green", (70, 230, 255)), ("red", (255, 195, 50))):
                     labels = self.labels[role][:, self.y, :] if key == "xz" else self.labels[role][:, :, self.x]
                     self._outline(rgb, labels[::step, ::step], color)
+                    self._highlight_member(rgb, labels[::step, ::step], role)
             self.views[key].set_frame(rgb, extent / (depth * dz))
         if update_profile:
             radius = self.radius.value()
@@ -731,6 +833,11 @@ class StackReviewDialog(QDialog):
             self.profile.axis_text = (f"{positions[0]:.1f} → {positions[-1]:.1f} µm" if positions is not None else
                                       f"Planes {acquisition_indices[0] + 1} → {acquisition_indices[-1] + 1}")
         self._render_slice()
+
+    def _highlight_member(self, rgb, labels, role):
+        focus = self.member_focus.currentData()
+        if focus is not None and focus[0] == role:
+            self._outline(rgb, labels == focus[1], (255, 255, 255))
 
     def _pick_visible_xy(self, x, y):
         if self.arrays:
@@ -762,6 +869,7 @@ class StackReviewDialog(QDialog):
             self.z_slider.setValue(min(self.stack_info["shape_zyx"][0] - 1, int(z * self.stack_info["shape_zyx"][0])))
 
     def _populate_objects(self, *_):
+        self._record_review()
         self.object_choice.blockSignals(True)
         self.object_choice.clear()
         self.object_choice.addItem("Click an XY image to select a location", None)
@@ -771,6 +879,13 @@ class StackReviewDialog(QDialog):
         if self.result:
             with Path(self.result["objects"]).open(encoding="utf-8", newline="") as stream:
                 objects = list(csv.DictReader(stream))
+            self._volume_objects = objects
+            self._channel_objects = {}
+            for role in ("green", "red"):
+                path = Path(self.result["objects"]).parent / (role + "_objects.csv")
+                if path.is_file():
+                    with path.open(encoding="utf-8", newline="") as stream:
+                        self._channel_objects[role] = {int(row["id"]): row for row in csv.DictReader(stream)}
             prefix = "3D candidate"
         for obj in objects:
             if not self.result and obj.get("image_id", obj.get("field_id")) != field:
@@ -802,18 +917,160 @@ class StackReviewDialog(QDialog):
 
     def _review_key(self):
         field = self.stack_info.get("field_id", self.fields.currentText()) if self.stack_info else self.fields.currentText()
-        result_key = str(Path(self.result["objects"]).parent) if self.result else "2d"
+        result_key = str(Path(self.result["objects"]).parent) if self.result and self.result.get("objects") else "2d"
         return field + ":" + result_key + ":" + str(self._review_target)
 
     def _restore_review(self):
         record = self.reviews.get(self._review_key(), {})
+        self._count_target = None
+        obj = self.object_choice.currentData() if self.result and str(self._review_target).startswith("3d_") else None
+        mixed = obj is not None and obj.get("status") in ("dual_positive_candidate", "unresolved")
+        if self._count_review and mixed:
+            self._count_target = deepcopy(obj)
+            record = self.review_decisions.get(str(obj["object_id"]), {})
         self.decision.blockSignals(True)
-        self.decision.setCurrentText(record.get("decision", "Unreviewed"))
+        if self._count_review:
+            self.decision.setCurrentIndex(max(0, self.decision.findData(record.get("decision", "unreviewed"))))
+            self.decision.setEnabled(bool(mixed))
+            simple = mixed and len(_member_ids(obj, "green")) == len(_member_ids(obj, "red")) == 1
+            self.decision.model().item(self.decision.findData("same_cell")).setEnabled(bool(simple))
+            self.edit_pairs.setEnabled(bool(mixed))
+            self.note.setEnabled(bool(mixed))
+        else:
+            self.decision.setCurrentText(record.get("decision", "Unreviewed"))
         self.decision.blockSignals(False)
         self.note.setText(record.get("note", ""))
+        self._populate_member_focus(obj)
+        self._update_review_progress()
+
+    def _populate_member_focus(self, obj):
+        self.member_focus.blockSignals(True)
+        self.member_focus.clear()
+        self.member_focus.addItem("Inspect object…", None)
+        members = []
+        if obj is not None:
+            for role, short, title in (("green", "G", "LIVE"), ("red", "R", "DEAD")):
+                for ident in _member_ids(obj, role):
+                    members.append(f"{short}{ident}")
+                    self.member_focus.addItem(f"{title} {short}{ident}", (role, ident))
+        self.member_focus.blockSignals(False)
+        self.member_caption.setText("Group members: " + ", ".join(members) if members else
+                                    "Select a 3D candidate to inspect its individual channel objects.")
+        self.member_focus.setVisible(bool(self.result))
+        self.member_caption.setVisible(bool(self.result))
+
+    def _focus_member(self, *_):
+        value = self.member_focus.currentData()
+        if not value or not self.arrays:
+            return
+        role, ident = value
+        member = self._channel_objects.get(role, {}).get(ident)
+        if member is None:
+            self.status.setText("This result has no saved centroid for the selected channel object.")
+            return
+        depth, height, width = self.stack_info["shape_zyx"]
+        self.x = int(np.clip(round(float(member["x"])), 0, width - 1))
+        self.y = int(np.clip(round(float(member["y"])), 0, height - 1))
+        self.z_slider.setValue(int(np.clip(round(float(member["z"])), 0, depth - 1)))
+        self._render_sections()
+        self.status.setText(f"Inspecting {'LIVE G' if role == 'green' else 'DEAD R'}{ident}: crosshair at its 3D centroid; its outline is white. The selected candidate group is retained.")
+
+    def _decision_changed(self, *_):
+        if self._count_review and self.decision.currentData() == "pairs":
+            self._edit_pairs()
+        else:
+            self._record_review()
+
+    def _edit_pairs(self):
+        if not self._count_target:
+            return
+        ident = str(self._count_target["object_id"])
+        previous = self.review_decisions.get(ident, {})
+        dialog = PairReviewDialog(self._count_target, previous.get("pairs", []), self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.review_decisions[ident] = {"decision": "pairs", "pairs": dialog.pairs, "note": self.note.text().strip()}
+            self.decision.blockSignals(True)
+            self.decision.setCurrentIndex(self.decision.findData("pairs"))
+            self.decision.blockSignals(False)
+            self._update_review_progress()
+        else:
+            self.decision.blockSignals(True)
+            self.decision.setCurrentIndex(max(0, self.decision.findData(previous.get("decision", "unreviewed"))))
+            self.decision.blockSignals(False)
+        dialog.deleteLater()
+
+    def _update_review_progress(self):
+        if not self._count_review:
+            self.review_progress.clear()
+            return
+        mixed = [row for row in self._volume_objects if row.get("status") in ("dual_positive_candidate", "unresolved")]
+        complete = sum(self.review_decisions.get(str(row["object_id"]), {}).get("decision") in
+                       ("same_cell", "separate", "pairs") for row in mixed)
+        dirty = self.review_decisions != self._saved_decisions
+        text = f"Resolved {complete}/{len(mixed)} mixed groups · {len(mixed) - complete} still uncertain or unreviewed."
+        if self._volume_objects:
+            try:
+                from .viability_3d import summarize_objects
+                metrics = summarize_objects(self._volume_objects, self.review_decisions)
+                low, high = metrics["viability_min_pct"], metrics["viability_max_pct"]
+                if low is None:
+                    text += " Viability undefined (no counted objects)."
+                elif metrics["pending_groups"]:
+                    text += f" Provisional viability: {low:.1f}–{high:.1f}%."
+                else:
+                    text += f" Reviewed viability: {metrics['viability_pct']:.1f}%."
+            except (ValueError, KeyError):
+                text += " Review assignments need correction before applying."
+        if self._count_target:
+            current = self.review_decisions.get(str(self._count_target["object_id"]), {})
+            if current.get("decision") == "pairs":
+                pairs = ", ".join(f"G{g} ↔ R{r}" for g, r in current.get("pairs", [])) or "No same-cell pairs"
+                text += " Current assignments: " + pairs + "; remaining objects separate."
+        self.review_progress.setText(text + (" Changes pending Apply / Close." if dirty else " Decisions saved."))
+
+    def apply_to_results(self):
+        """Reinterpret saved objects only; the parent persists the review revision."""
+        self._record_review()
+        if not self._count_review or not self.result:
+            return True
+        try:
+            from .viability_3d import summarize_objects
+            snapshot = deepcopy(self.review_decisions)
+            summarize_objects(self._volume_objects, snapshot)
+            self._pending_review, self._review_ack = snapshot, None
+            self.reviewApplied.emit(deepcopy(snapshot))
+            if self._review_ack is None:
+                self.status.setText("Review has not been saved. Keep this window open and try Apply to results again.")
+            return self._review_ack is True
+        except Exception as exc:
+            self.status.setText("Could not apply review: " + str(exc))
+            return False
+
+    def acknowledge_review_saved(self, success, error=""):
+        """Called by the result window after its persistence attempt completes."""
+        self._review_ack = bool(success)
+        if success:
+            self._saved_decisions = deepcopy(self._pending_review or {})
+            self.status.setText("Review saved. Results and viability use these decisions; figure updates do not rerun segmentation.")
+            self._update_review_progress()
+        else:
+            self.status.setText("Could not save review; decisions remain in this window. " + str(error))
 
     def _record_review(self, *_):
         if not self.stack_info or self._review_target is None:
+            return
+        if self._count_review:
+            if self._count_target is None:
+                return
+            ident = str(self._count_target["object_id"])
+            decision, note = self.decision.currentData(), self.note.text().strip()
+            if decision == "unreviewed" and not note:
+                self.review_decisions.pop(ident, None)
+            else:
+                previous = self.review_decisions.get(ident, {})
+                self.review_decisions[ident] = {"decision": decision, "note": note,
+                    "pairs": deepcopy(previous.get("pairs", [])) if decision == "pairs" else []}
+            self._update_review_progress()
             return
         if self.decision.currentText() == "Unreviewed" and not self.note.text().strip():
             self.reviews.pop(self._review_key(), None)
@@ -835,7 +1092,7 @@ class StackReviewDialog(QDialog):
             protected.append(Path(self.result["objects"]).parent)
         if any(destination == p.resolve() or p.resolve() in destination.parents for p in protected):
             raise ValueError("Save exports outside original data, cached files and completed analysis folders.")
-        if any((p / "run_manifest.json").exists() or (p / "result.json").exists() for p in destination.parents):
+        if any((p / "run_manifest.json").exists() or (p / "result.json").exists() or (p / "volume_run.json").exists() for p in destination.parents):
             raise ValueError("Choose a destination outside a completed analysis folder.")
         records = list(self.records)
         if self.stack_info:
@@ -865,6 +1122,10 @@ class StackReviewDialog(QDialog):
                 "original_run": str(self.run_path) if self.run_path else None,
                 "interpretation": "Manual annotations only; original counts unchanged. Same-cell support does not establish apoptosis.",
                 "saved_at": datetime.now(timezone.utc).isoformat(), "reviews": list(self.reviews.values())}
+            if self._count_review:
+                document["interpretation"] = "Copy of manual 3D review annotations. Apply to results persists count interpretation separately; original segmentation is unchanged. Same-cell support does not establish apoptosis."
+                document["reviews"] = [{"field_id": self.stack_info.get("field_id", self.fields.currentText()),
+                    "target": "3d_" + ident, **deepcopy(record)} for ident, record in self.review_decisions.items()]
             destination.write_text(json.dumps(document, indent=2, allow_nan=False) + "\n", encoding="utf-8")
             # The JSON is the authoritative export; avoid silently overwriting an
             # unrelated CSV beside a user-selected file.
@@ -1079,6 +1340,8 @@ class StackReviewDialog(QDialog):
 
     def reject(self):
         self._record_review()
+        if self._count_review and self.review_decisions != self._saved_decisions and not self.apply_to_results():
+            return
         self._closing = True
         self._stop()
         if self.worker is None and self.process is None:
@@ -1089,9 +1352,5 @@ class StackReviewDialog(QDialog):
         super().reject()
 
     def closeEvent(self, event):
-        if self.worker is not None or self.process is not None:
-            event.ignore()
-            self.reject()
-        else:
-            self.arrays, self.labels = {}, {}
-            event.accept()
+        event.ignore()
+        self.reject()

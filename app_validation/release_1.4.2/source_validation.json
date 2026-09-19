@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "app_version": "1.4.2",
+  "tests_passed": 259,
+  "test_command": "python -m unittest discover -s tests -v",
+  "python": "3.12.14",
+  "original_package_files": 81,
+  "original_files_changed": [],
+  "coverage": [
+    "3D scenario and reviewed viability arithmetic",
+    "complex explicit pair validation",
+    "pooled field and replicate counts",
+    "source-bound immutable portable reviews",
+    "GUI apply/close persistence and reopen",
+    "threshold-matched summary exports",
+    "original 2D regressions"
+  ],
+  "private_data_included": false,
+  "existing_1_4_1_run_compatibility": {
+    "status": "passed",
+    "read_and_calculation_seconds": 0.801,
+    "details": "Read-only validation; acquisition paths, counts and images omitted from public report."
+  }
+}

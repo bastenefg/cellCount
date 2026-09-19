@@ -82,6 +82,20 @@ class SharedAnalysisRunTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "changed"):
             analysis_3d.read_analysis_3d(copied, verify=True)
 
+    def test_viability_is_saved_for_fields_and_pooled_replicates(self):
+        from desktop.viability_3d import aggregate_metrics
+        out, _ = self.run_batch()
+        saved = analysis_3d.read_analysis_3d(out)
+        metrics = [json.loads(Path(field["result"]["summary"]).read_text())["viability"]
+                   for field in saved["fields"]]
+        pooled = aggregate_metrics(metrics)
+        self.assertEqual(saved["summary"]["viability"], pooled)
+        for row, field in zip(saved["image"], metrics):
+            for key in analysis_3d.VIABILITY_KEYS:
+                self.assertEqual(row[key], "" if field[key] is None else str(field[key]))
+        for key in analysis_3d.VIABILITY_KEYS:
+            self.assertEqual(saved["replicate"][0][key], "" if pooled[key] is None else str(pooled[key]))
+
     def test_tiff_only_field_cannot_silently_fall_back_to_2d(self):
         plain = self.root / "plain"
         plain.mkdir()

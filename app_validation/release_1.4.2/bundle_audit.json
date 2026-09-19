@@ -1,0 +1,89 @@
+{
+  "status": "passed",
+  "audit_scope": "Bundle source/data identity, original source preservation, dependency exclusions and exact ZIP contents. Runtime checks appear only when supplied separately.",
+  "app_version": "1.4.2",
+  "audit_python": "3.12.14",
+  "app_directory": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.4.2\\Live-Dead Cell Counter",
+  "app_files": 1629,
+  "app_bytes": 297664114,
+  "executable_sha256": "a91dec600ff5872d7e5674d6c6e506c9facda9a5d94ded39d28f166c249df30a",
+  "original_package_files_checked": 81,
+  "original_package_mismatches": [],
+  "bundled_sources_checked": 201,
+  "runtime_assets_checked": 3,
+  "bundled_source_mismatches": [],
+  "incompatible_icu_files": [],
+  "private_data_folders": [],
+  "missing_notices": [],
+  "zip": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\dist\\1.4.2\\Live-Dead-Cell-Counter-1.4.2-Windows-x64.zip",
+  "zip_bytes": 123176455,
+  "zip_sha256": "73476da8fe444e63a218844b5901899ba80ff6b85aa7d0943d7e686b2bd3b939",
+  "zip_crc_and_content_check": "passed",
+  "zip_mismatches": [],
+  "supplied_runtime_reports": [
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.4.2\\frozen_viability_workflow.json",
+      "sha256": "67efbce8fd86a8d6273b5a8e06da406a00735b5f322863108baedabedac7e690",
+      "report": {
+        "status": "passed",
+        "app_version": "1.4.2",
+        "fixture": "Synthetic two-channel 3D shapes only; no biological validation implied",
+        "timings_seconds": {
+          "synthetic_analysis": 2.8410318000023835,
+          "provisional_results_and_figure": 0.38618159999896307,
+          "same_cell_review_and_figure": 0.2105474999989383,
+          "separate_review_and_figure": 0.3073156999962521,
+          "total": 5.126951499994902
+        },
+        "checks": [
+          "Provisional 3D results display the synthetic 40\u201350% association range",
+          "Same-cell review is acknowledged and yields 40%; original image panels remain pixel-identical",
+          "Separate-cell review yields 50% without rerunning segmentation",
+          "Portable review reload and subsequent run reopen restore decisions and notes",
+          "Exported CSV and PNG use the selected review revision",
+          "All original analysis artifacts and input volumes remain byte-identical",
+          "Original run passes full integrity verification after reviews",
+          "GUI event processing remains active during background figure updates"
+        ],
+        "original_artifact_count": 18,
+        "source_volume_count": 2,
+        "gui_event_loop_iterations": 95,
+        "provisional_viability_pct": [
+          40.0,
+          50.0
+        ],
+        "reviewed_same_cell_viability_pct": 40.0,
+        "reviewed_separate_viability_pct": 50.0
+      }
+    },
+    {
+      "path": "C:\\Users\\basti\\Desktop\\zhao papers\\CHO_viability_pipeline_v1.1.0\\CHO_viability_pipeline\\app_validation\\release_1.4.2\\source_validation.json",
+      "sha256": "2ed50392de8e2678d78b097f2bfd3aa8f4dd783400dd9995abb2bddbc7032f8d",
+      "report": {
+        "status": "passed",
+        "app_version": "1.4.2",
+        "tests_passed": 259,
+        "test_command": "python -m unittest discover -s tests -v",
+        "python": "3.12.14",
+        "original_package_files": 81,
+        "original_files_changed": [],
+        "coverage": [
+          "3D scenario and reviewed viability arithmetic",
+          "complex explicit pair validation",
+          "pooled field and replicate counts",
+          "source-bound immutable portable reviews",
+          "GUI apply/close persistence and reopen",
+          "threshold-matched summary exports",
+          "original 2D regressions"
+        ],
+        "private_data_included": false,
+        "existing_1_4_1_run_compatibility": {
+          "status": "passed",
+          "read_and_calculation_seconds": 0.801,
+          "details": "Read-only validation; acquisition paths, counts and images omitted from public report."
+        }
+      }
+    }
+  ],
+  "issues": []
+}

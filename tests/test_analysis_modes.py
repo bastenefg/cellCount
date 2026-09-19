@@ -2,6 +2,8 @@
 from copy import deepcopy
 import json
 import os
+import csv
+import time
 from pathlib import Path
 import unittest
 from unittest.mock import Mock, patch
@@ -28,6 +30,8 @@ class AnalysisModeTests(unittest.TestCase):
         self.addCleanup(self.fixture.doCleanups)
         self.root = self.fixture.root
         self.window = MainWindow()
+        self.window.summary_cache = self.root / "summary_cache"
+        self.window.volume_review_cache = self.root / "review_cache"
         self.window.output_base.setText(str(self.root))
         self.window.rows = deepcopy(self.fixture.rows)
         self.window.config = deepcopy(self.fixture.config)
@@ -45,9 +49,18 @@ class AnalysisModeTests(unittest.TestCase):
     def completed_run(self, name="volume_run"):
         out, args, _ = self.fixture.prepare(name)
         request = json.loads(Path(args[1]).read_text())
-        with patch.object(volume_analysis, "_figure", side_effect=lambda *a: Image.new("RGB", (32, 24), "green").save(a[-1])):
+        with patch.object(volume_analysis, "_figure", side_effect=lambda *a: Image.new("RGB", (1500, 900), "green").save(a[-1])):
             analysis_3d.analyze_batch(request)
         return out
+
+    def wait_for_figures(self):
+        deadline = time.monotonic() + 15
+        while self.window.volume_workers and time.monotonic() < deadline:
+            self.app.processEvents()
+            time.sleep(.01)
+        self.app.processEvents()
+        self.assertFalse(self.window.volume_workers)
+        self.assertTrue(self.window.figure_button.isEnabled(), self.window.result_notes.toPlainText())
 
     def test_dimension_choice_is_shared_between_quick_and_batch(self):
         self.assertEqual(self.window.analysis_mode.currentData(), "2d")
@@ -88,21 +101,25 @@ class AnalysisModeTests(unittest.TestCase):
         self.window.load_result(out)
         self.assertEqual(self.window.result["mode"], "3d")
         self.assertEqual(self.window.pages.currentIndex(), 1)
-        self.assertEqual(self.window.metric_titles[0].text(), "LIVE only")
-        self.assertNotIn("viability", " ".join(item.text() for item in self.window.metric_titles).lower())
+        self.assertIn("viability", self.window.metric_titles[0].text().lower())
         self.assertEqual(self.window.preview_choice.count(), 2)
-        self.assertEqual(self.window.result_table.columnCount(), 9)
+        self.assertEqual(self.window.result_table.columnCount(), 8)
+        self.wait_for_figures()
         self.window.preview_choice.setCurrentIndex(1)
         selected = self.window._selected_volume_field()
         self.assertEqual(selected["image_id"], "field_1")
         destination = self.root / "exported.png"
         with patch.object(QFileDialog, "getSaveFileName", return_value=(str(destination), "PNG image (*.png)")):
             self.window.save_summary_figure()
-        self.assertEqual(destination.read_bytes(), Path(selected["result"]["figure"]).read_bytes())
+        self.assertEqual(destination.read_bytes(), Path(self.window.summary_paths["png"]).read_bytes())
+        self.assertNotEqual(destination.read_bytes(), Path(selected["result"]["figure"]).read_bytes())
         csv_copy = self.root / "exported.csv"
         with patch.object(QFileDialog, "getSaveFileName", return_value=(str(csv_copy), "")):
             self.window.save_summary()
-        self.assertEqual(csv_copy.read_bytes(), (out / "image_summary.csv").read_bytes())
+        with csv_copy.open(newline="", encoding="utf-8") as stream:
+            rows = list(csv.DictReader(stream))
+        self.assertEqual(len(rows), 2)
+        self.assertIn("viability_min_pct", rows[0])
         self.window.load_result(out)
         self.assertEqual(self.window.result["mode"], "3d")
         with patch.object(self.window, "start_job") as start:
@@ -141,13 +158,58 @@ class AnalysisModeTests(unittest.TestCase):
 
     def test_3d_figure_modified_after_loading_cannot_be_exported_as_saved_result(self):
         self.window.load_result(self.completed_run())
-        field = self.window._selected_volume_field()
-        Path(field["result"]["figure"]).write_bytes(b"changed image")
+        self.wait_for_figures()
+        Path(self.window.summary_paths["png"]).write_bytes(b"changed image")
         destination = self.root / "modified.png"
         with patch.object(QFileDialog, "getSaveFileName", return_value=(str(destination), "PNG image (*.png)")), patch.object(self.window, "error") as error:
             self.window.save_summary_figure()
         self.assertFalse(destination.exists())
         self.assertIn("changed after analysis", str(error.call_args.args[0]))
+
+    def test_review_is_saved_restored_and_exported_without_changing_original_run(self):
+        import hashlib
+        out = self.completed_run()
+        before = {str(p.relative_to(out)): hashlib.sha256(p.read_bytes()).hexdigest() for p in out.rglob("*") if p.is_file()}
+        self.window.load_result(out)
+        self.wait_for_figures()
+        field = self.window._selected_volume_field()
+        with Path(field["result"]["objects"]).open(newline="", encoding="utf-8") as stream:
+            objects = list(csv.DictReader(stream))
+        decisions = {row["object_id"]: {"decision": "separate", "note": "Synthetic review", "pairs": []}
+                     for row in objects if row["green_ids"] and row["red_ids"]}
+        with patch.object(volume_analysis, "analyze_volume", side_effect=AssertionError("Review must not resegment")):
+            self.assertTrue(self.window.apply_volume_review(field["image_id"], decisions))
+        self.wait_for_figures()
+        report = deepcopy(self.window.result["viability_report"])
+        self.assertEqual(report["overall"]["reviewed_groups"], 1)
+        self.assertEqual(report["overall"]["pending_groups"], 1)
+        self.assertEqual(report["overall"]["viability_min_pct"], 100 / 3)
+        self.assertEqual(report["overall"]["viability_max_pct"], 50)
+        exported = self.root / "portable_review.json"
+        with patch.object(QFileDialog, "getSaveFileName", return_value=(str(exported), "")):
+            self.window.export_volume_review()
+        self.assertTrue(exported.is_file())
+        self.window.load_result(out)
+        self.assertEqual(self.window.result["review_decisions"][field["image_id"]], decisions)
+        self.assertEqual(self.window.result["viability_report"], report)
+        self.assertEqual(before, {str(p.relative_to(out)): hashlib.sha256(p.read_bytes()).hexdigest() for p in out.rglob("*") if p.is_file()})
+
+    def test_portable_review_export_stays_bound_to_run_at_click(self):
+        from desktop.viability_3d import load_review_document
+        original = self.completed_run("first")
+        other = self.completed_run("second")
+        self.window.load_result(original)
+        snapshot = self.window.result
+        destination = self.root / "first_review.json"
+        def switch_run(*args):
+            self.window.load_result(other)
+            return str(destination), ""
+        with patch.object(QFileDialog, "getSaveFileName", side_effect=switch_run):
+            self.window.export_volume_review()
+        document = load_review_document(snapshot, destination)
+        self.assertEqual(document["decisions"], {})
+        self.assertEqual(self.window.result["path"], other)
+        self.assertNotIn("review_document", self.window.result)
 
     def test_cancelled_batch_cleanup_runs_only_after_worker_completion(self):
         process = Mock()

@@ -20,9 +20,11 @@ from .services import (config_with_imports, output_path, safe_filename,
 COUNT_KEYS = ("green_only", "red_only", "dual_positive_candidate", "unresolved",
               "total_groups", "green_objects", "red_objects", "candidate_count_min",
               "candidate_count_max", "boundary_groups")
+VIABILITY_KEYS = ("viability_min_pct", "viability_max_pct", "viability_pct", "live_min", "live_max",
+                  "total_min", "total_max", "dead_count", "pending_groups", "reviewed_groups", "mixed_groups")
 WARNINGS = [
     "3D uses the accepted projection settings on each optical section; projection preview counts are 2D and can differ.",
-    "Dual-positive candidates and unresolved associations require review; no definitive viability is inferred.",
+    "Provisional viability spans unresolved channel pairings. Review dual candidates and unresolved groups to resolve cell identity; the range is not a confidence interval.",
     "Optional EBFP measurements and extended EBFP diagnostics are available in 2D analysis only.",
 ]
 
@@ -99,6 +101,7 @@ def analyze_batch(request, progress=None, cancelled=None):
     from .stack_source import prepare_stack
     from .leica import LeicaImportCancelled
     from .volume_analysis import analyze_volume, settings_from_config, VolumeAnalysisCancelled
+    from .viability_3d import aggregate_metrics
     rows, config = deepcopy(request["rows"]), deepcopy(request["config"])
     validate_rows(rows)
     validate_config(config)
@@ -114,7 +117,7 @@ def analyze_batch(request, progress=None, cancelled=None):
     try:
         _json(out / "effective_config.json", config)
         write_manifest(out / "resolved_samples.csv", rows)
-        images = []
+        images, image_metrics = [], []
         for index, (row, record) in enumerate(zip(rows, records), 1):
             _check(cancelled)
             name = row["image_id"]
@@ -125,8 +128,10 @@ def analyze_batch(request, progress=None, cancelled=None):
             relative = f"fields/{name}"
             result = analyze_volume(info, settings, out / relative, progress=report, cancelled=cancelled)
             summary = json.loads(Path(result["summary"]).read_text(encoding="utf-8"))
+            image_metrics.append(summary["viability"])
             images.append({"image_id": name, "replicate_id": row["replicate_id"],
-                           **{key: summary["counts"][key] for key in COUNT_KEYS}})
+                           **{key: summary["counts"][key] for key in COUNT_KEYS},
+                           **{key: summary["viability"][key] for key in VIABILITY_KEYS}})
             metadata["fields"].append({"image_id": name, "replicate_id": row["replicate_id"], "relative_path": relative})
             _json(out / "volume_run.json", metadata)
         _check(cancelled)
@@ -137,10 +142,15 @@ def analyze_batch(request, progress=None, cancelled=None):
             group["n_fields"] += 1
             for key in COUNT_KEYS:
                 group[key] += row[key]
-        _write_table(out / "image_summary.csv", images, ("image_id", "replicate_id", *COUNT_KEYS))
-        _write_table(out / "replicate_summary.csv", list(grouped.values()), ("replicate_id", "n_fields", *COUNT_KEYS))
+        for replicate, group in grouped.items():
+            pooled = aggregate_metrics([metrics for row, metrics in zip(images, image_metrics)
+                                        if row["replicate_id"] == replicate])
+            group.update({key: pooled[key] for key in VIABILITY_KEYS})
+        _write_table(out / "image_summary.csv", images, ("image_id", "replicate_id", *COUNT_KEYS, *VIABILITY_KEYS))
+        _write_table(out / "replicate_summary.csv", list(grouped.values()), ("replicate_id", "n_fields", *COUNT_KEYS, *VIABILITY_KEYS))
         aggregate = {"analysis_mode": "3d", "n_fields": len(images), "n_replicates": len(grouped),
-                     "counts": {key: sum(row[key] for row in images) for key in COUNT_KEYS}, "warnings": WARNINGS}
+                     "counts": {key: sum(row[key] for row in images) for key in COUNT_KEYS},
+                     "viability": aggregate_metrics(image_metrics), "warnings": WARNINGS}
         _json(out / "summary.json", aggregate)
         metadata.update(status="completed", completed_utc=datetime.now(timezone.utc).isoformat())
         _json(out / "volume_run.json", metadata)

@@ -5,7 +5,7 @@ fluorescence TIFF images, with optional EBFP measurements.
 
 ## Use the app
 
-Download the version 1.4.1 Windows ZIP from this repository's Releases page,
+Download the version 1.4.2 Windows ZIP from this repository's Releases page,
 extract the entire archive, and open **Live-Dead Cell Counter.exe**. Python is
 included. Keep the executable and its `_internal` folder together.
 
@@ -58,6 +58,21 @@ Generated environments, old application bundles, temporary preview arrays and
 ordinary run output folders are excluded from Git. Validation records describe
 the original local runs and may contain machine-specific paths. The portable
 Windows application is distributed as a release asset.
+
+## Version 1.4.2 update
+
+3D Results now show an assumption-based viability range immediately. Use
+**Inspect Z stack** to mark mixed candidates as separate cells, a supported
+same-cell pair, uncertain, or explicit pairs within a complex group. A true
+LIVE/DEAD pair counts once as nonviable for the L3224 assay. Uncertain groups
+remain in the range. Once all mixed groups are resolved, a single reviewed
+viability percentage is shown.
+
+**Apply to results** saves the review locally and updates counts, CSV exports and
+summary figures without repeating segmentation. Closing the viewer also saves
+pending decisions. **Save review** and **Load review** on Results transfer those
+decisions with the original run folder. Original masks, settings and completed
+analysis files remain unchanged. EBFP scoring remains available in 2D.
 
 ## Version 1.4.1 update
 

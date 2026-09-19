@@ -3,6 +3,7 @@ from pathlib import Path
 from copy import deepcopy
 import csv
 import hashlib
+import io
 import json
 import sys
 import time
@@ -180,6 +181,9 @@ class MainWindow(QMainWindow):
         self.summary_process = None
         self.summary_paths = None
         self.summary_error = ""
+        self.volume_figure_worker = None
+        self.volume_workers = set()
+        self.volume_review_cache = None
         self.summary_cache = Path(QStandardPaths.writableLocation(
             QStandardPaths.StandardLocation.CacheLocation)) / "Live-Dead Cell Counter" / "full_field_summaries"
         self.job_log = None
@@ -356,6 +360,15 @@ class MainWindow(QMainWindow):
             metrics.addWidget(frame, 1)
             self.metric_labels.append((value, detail))
         layout.addLayout(metrics)
+        self.review_bar = QWidget()
+        review_layout = QHBoxLayout(self.review_bar)
+        review_layout.setContentsMargins(0, 0, 0, 0)
+        self.review_caption = label("", "muted", True)
+        review_layout.addWidget(self.review_caption, 1)
+        review_layout.addWidget(button("Load review…", self.load_volume_review))
+        review_layout.addWidget(button("Save review…", self.export_volume_review))
+        self.review_bar.hide()
+        layout.addWidget(self.review_bar)
         self.result_tabs = QTabWidget()
         summary, contents = card()
         self.table_level = QComboBox()
@@ -507,7 +520,9 @@ class MainWindow(QMainWindow):
             if self.result.get("mode") == "3d":
                 field = self._selected_volume_field()
                 dialog = StackReviewDialog(volume_run=field["path"],
-                                           output_base=Path(self.output_base.text()), parent=self)
+                    review_decisions=deepcopy(self.result.get("review_decisions", {}).get(field["image_id"], {})),
+                    output_base=Path(self.output_base.text()), parent=self)
+                dialog.reviewApplied.connect(lambda decisions: self.apply_volume_review(field["image_id"], decisions, dialog))
             else:
                 field = self.preview_choice.currentText().removeprefix("Detections · ")
                 dialog = StackReviewDialog(run=self.result["path"], initial_field=field,
@@ -845,6 +860,12 @@ class MainWindow(QMainWindow):
             event.ignore()
         else:
             self.stop_summary_worker()
+            for worker in list(self.volume_workers):
+                worker.requestInterruption()
+                if not worker.wait(5000):
+                    event.ignore()
+                    self.status_text.setText("Finishing the summary export. Close again in a moment.")
+                    return
             event.accept()
 
     def open_run(self):
@@ -873,6 +894,7 @@ class MainWindow(QMainWindow):
         self.figure_button.setEnabled(False)
         self.figure_button.setToolTip("Save the full field with this run's detection outlines and saved threshold values as PNG or SVG.")
         self.result = result
+        self.review_bar.hide()
         self.result_title.setText(result["path"].name)
         self.result_title.setToolTip(str(result["path"]))
         for title, text in zip(self.metric_titles, ("Apparent viability", "EBFP among green only", "Counted objects", "Replicate groups")):
@@ -922,6 +944,7 @@ class MainWindow(QMainWindow):
 
     def load_volume_result(self, path):
         from .analysis_3d import read_analysis_3d
+        from .viability_3d import build_report, load_review
         result = read_analysis_3d(Path(path))
         result["mode"] = "3d"
         result["leica_imports"] = result["config"].get("leica_imports", [])
@@ -929,27 +952,30 @@ class MainWindow(QMainWindow):
         self.summary_paths = None
         self.summary_error = ""
         self.result = result
+        self.review_bar.show()
         self.figure_button.setToolTip("Save the selected field's 3D summary as PNG, with its saved masks and exact reviewed settings.")
         self.result_title.setText(result["path"].name + " · 3D")
         self.result_title.setToolTip(str(result["path"]))
-        counts = result["summary"].get("counts", result["summary"])
-        for index, (key, title) in enumerate((("green_only", "LIVE only"), ("red_only", "DEAD only"),
-                ("dual_positive_candidate", "Dual candidates"), ("unresolved", "Unresolved groups"))):
-            self.metric_titles[index].setText(title)
-            self.metric_labels[index][0].setText(f"{int(counts.get(key, 0)):,}")
-            self.metric_labels[index][1].setText("3D signal objects" if index < 2 else "Review spatial continuity in Z")
-        self.counts_note.setText("3D candidates use the same saved settings as the projection preview. Count bounds reflect ambiguous associations; no definitive viability percentage is inferred. EBFP is not scored in this mode.")
-        notes = ["Saved 3D results loaded; file integrity has not been checked in this session.",
-                 f"Candidate count range: {counts.get('candidate_count_min', '?')}–{counts.get('candidate_count_max', '?')}. Review dual candidates and unresolved groups."]
-        notes.extend(result["meta"].get("warnings", []))
+        notes = ["Saved 3D metadata checked; use Verify files to check full label volumes."]
+        notes.extend(item for item in result["meta"].get("warnings", []) if "no definitive viability" not in item)
         self.result_notes.setPlainText("\n".join(notes))
-        self.populate_result_table()
+        result["review_decisions"] = {}
+        result["viability_report"] = build_report(result, {})
+        try:
+            document = load_review(result, cache_dir=self.volume_review_cache)
+            if document:
+                result["review_document"] = document
+                result["review_decisions"] = document["decisions"]
+                result["viability_report"] = document["report"]
+        except Exception as exc:
+            self.result_notes.appendPlainText("Saved review could not be loaded; showing unreviewed results: " + str(exc))
+        self.refresh_volume_metrics()
         self.preview_choice.blockSignals(True)
         self.preview_choice.clear()
         self.viewer.scene().clear()
         for field in result["fields"]:
             index = self.preview_choice.count()
-            self.preview_choice.addItem("3D summary · " + field["image_id"], str(field["result"]["figure"]))
+            self.preview_choice.addItem("3D summary · " + field["image_id"], None)
             self.preview_choice.setItemData(index, field["image_id"], Qt.ItemDataRole.UserRole + 1)
         self.preview_choice.blockSignals(False)
         self.select_preview()
@@ -960,6 +986,170 @@ class MainWindow(QMainWindow):
         self.stack_result_button.setEnabled(self.process is None and bool(result["fields"]))
         self.result_tabs.setCurrentIndex(1)
         self.show_page(1)
+        self.prepare_volume_figures()
+
+    @staticmethod
+    def _count_range(record, name):
+        low, high = record[name + "_min"], record[name + "_max"]
+        return f"{low:,}" if low == high else f"{low:,}–{high:,}"
+
+    @staticmethod
+    def _viability_text(record):
+        low, high = record["viability_min_pct"], record["viability_max_pct"]
+        if low is None:
+            return "Not measured"
+        if record["viability_pct"] is not None:
+            return f"{record['viability_pct']:.1f}%"
+        return f"{low:.1f}–{high:.1f}%"
+
+    def refresh_volume_metrics(self):
+        report = self.result["viability_report"]
+        metrics = report["overall"]
+        pending = metrics["pending_groups"]
+        title = "Provisional viability" if pending else "Reviewed viability" if metrics["mixed_groups"] else "Apparent viability"
+        cards = ((title, self._viability_text(metrics), "Assumption-based range" if pending else "LIVE / total cells"),
+                 ("LIVE cells", self._count_range(metrics, "live"), "After channel-pair interpretation"),
+                 ("Nonviable cells", f"{metrics['dead_count']:,}", "EthD-positive, including true dual cells"),
+                 ("Needs review", f"{pending:,}", f"{metrics['reviewed_groups']} / {metrics['mixed_groups']} mixed groups resolved"))
+        for index, (heading, value, detail) in enumerate(cards):
+            self.metric_titles[index].setText(heading)
+            self.metric_labels[index][0].setText(value)
+            self.metric_labels[index][1].setText(detail)
+        counts = self.result["summary"]["counts"]
+        self.counts_note.setText(
+            "L3224 interpretation: each channel object represents one cell; a confirmed LIVE/DEAD pair counts once as nonviable. "
+            "Unreviewed and uncertain groups remain in the range, not excluded. The range reflects possible pairings, not a confidence interval. "
+            "Values pool cells across fields and replicates. EBFP is not scored in 3D. "
+            f"Original segmentation: {counts['green_only']} LIVE only, {counts['red_only']} DEAD only, "
+            f"{counts['dual_positive_candidate']} dual candidates, {counts['unresolved']} unresolved groups.")
+        document = self.result.get("review_document")
+        suffix = "Review saved locally; use Save review to share it with the run." if document else "Use Inspect Z stack to resolve mixed candidates."
+        self.review_caption.setText(f"{self._count_range(metrics, 'total')} total cells · {suffix}")
+        self.populate_result_table()
+
+    def apply_volume_review(self, field_id, decisions, dialog=None):
+        from .viability_3d import save_review
+        try:
+            updated = deepcopy(self.result["review_decisions"])
+            updated[field_id] = decisions
+            document = save_review(self.result, updated, cache_dir=self.volume_review_cache)
+            self._install_volume_review(document)
+            if dialog is not None:
+                dialog.acknowledge_review_saved(True)
+            return True
+        except Exception as exc:
+            if dialog is not None:
+                dialog.acknowledge_review_saved(False, str(exc))
+            self.error("Review could not be saved: " + str(exc))
+            return False
+
+    def _install_volume_review(self, document):
+        self.result["review_document"] = document
+        self.result["review_decisions"] = document["decisions"]
+        self.result["viability_report"] = document["report"]
+        self.refresh_volume_metrics()
+        self.prepare_volume_figures()
+        self.status_text.setText("Review saved. Counts and viability updated without repeating segmentation.")
+
+    def load_volume_review(self):
+        if not self.result or self.result.get("mode") != "3d":
+            return
+        result = self.result
+        name, _ = QFileDialog.getOpenFileName(self, "Load a review for this 3D run", "", "Review JSON (*.json)")
+        if not name:
+            return
+        try:
+            from .viability_3d import load_review_document, save_review
+            if self.result is not result:
+                raise ValueError("The loaded run changed while choosing a review. Select Load review again for the displayed run.")
+            document = load_review_document(result, name)
+            saved = save_review(result, document["decisions"], cache_dir=self.volume_review_cache)
+            self._install_volume_review(saved)
+        except Exception as exc:
+            self.error(exc)
+
+    def export_volume_review(self):
+        if not self.result or self.result.get("mode") != "3d":
+            return
+        result = self.result
+        decisions = deepcopy(result["review_decisions"])
+        document = deepcopy(result.get("review_document"))
+        name, _ = QFileDialog.getSaveFileName(self, "Save portable count review", result["path"].name + "_review.json", "Review JSON (*.json)")
+        if not name:
+            return
+        try:
+            from .viability_3d import save_review
+            destination = Path(name)
+            if not destination.suffix:
+                destination = destination.with_suffix(".json")
+            self.check_export_path(destination, ".json")
+            if document is None:
+                document = save_review(result, decisions, cache_dir=self.volume_review_cache)
+                if self.result is result:
+                    self._install_volume_review(document)
+            if destination.resolve().is_relative_to(Path(document["path"]).parent):
+                raise ValueError("Save the review outside its local revision store.")
+            destination.write_bytes(Path(document["path"]).read_bytes())
+            self.status_text.setText(f"Review exported to {destination.resolve()}. Share it with the original run folder.")
+        except Exception as exc:
+            self.error(exc)
+
+    def prepare_volume_figures(self):
+        try:
+            self._start_volume_figures()
+        except Exception as exc:
+            self.summary_paths = None
+            self.figure_button.setEnabled(False)
+            self.summary_error = "Summary unavailable. See run notes below."
+            self.result_notes.appendPlainText("3D summary: " + str(exc))
+
+    def _start_volume_figures(self):
+        from .viability_worker import ViabilityFigureWorker
+        from .viability_3d import source_fingerprint
+        if self.volume_figure_worker:
+            self.volume_figure_worker.requestInterruption()
+            self.volume_figure_worker = None
+        result = self.result
+        document = result.get("review_document")
+        revision = document["revision_id"] if document else "provisional"
+        self.preview_choice.blockSignals(True)
+        for index, field in enumerate(result["fields"]):
+            field.pop("review_figure_sha256", None)
+            self.preview_choice.setItemData(index, None)
+        self.preview_choice.blockSignals(False)
+        self.summary_error = "Preparing summary with current viability and review decisions…"
+        self.select_preview()
+        output = self.summary_cache / "3d" / source_fingerprint(result) / revision
+        worker = ViabilityFigureWorker(deepcopy(result["fields"]), deepcopy(result["viability_report"]), output, revision, self)
+        self.volume_figure_worker = worker
+        self.volume_workers.add(worker)
+        worker.ready.connect(lambda ident, path, digest: self._volume_figure_ready(worker, ident, path, digest))
+        worker.failed.connect(lambda ident, error: self._volume_figure_failed(worker, ident, error))
+        worker.finished.connect(lambda: self._volume_worker_finished(worker))
+        worker.start()
+
+    def _volume_figure_ready(self, worker, ident, path, digest):
+        if worker is not self.volume_figure_worker or not self.result or self.result.get("mode") != "3d":
+            return
+        for index, field in enumerate(self.result["fields"]):
+            if field["image_id"] == ident:
+                field["review_figure_sha256"] = digest
+                self.preview_choice.setItemData(index, path)
+                if self.preview_choice.currentIndex() == index:
+                    self.select_preview()
+                break
+
+    def _volume_figure_failed(self, worker, ident, error):
+        if worker is self.volume_figure_worker:
+            self.result_notes.appendPlainText(f"Summary for {ident}: {error}")
+            self.summary_error = "Summary unavailable. See run notes below."
+            self.select_preview()
+
+    def _volume_worker_finished(self, worker):
+        self.volume_workers.discard(worker)
+        if self.volume_figure_worker is worker:
+            self.volume_figure_worker = None
+        worker.deleteLater()
 
     def _selected_volume_field(self):
         if not self.result or self.result.get("mode") != "3d":
@@ -969,6 +1159,9 @@ class MainWindow(QMainWindow):
                     self.result["fields"][0] if self.result["fields"] else {})
 
     def stop_summary_worker(self):
+        if self.volume_figure_worker is not None:
+            self.volume_figure_worker.requestInterruption()
+            self.volume_figure_worker = None
         process, self.summary_process = self.summary_process, None
         if process is not None:
             process.kill()
@@ -1070,7 +1263,9 @@ class MainWindow(QMainWindow):
         is_image = self.table_level.currentIndex() == 0
         rows = self.result["image" if is_image else "replicate"]
         volume = self.result.get("mode") == "3d"
-        headers = (["Field", "Replicate", "LIVE only", "DEAD only", "Dual candidates", "Unresolved", "Groups", "Min candidates", "Max candidates"]
+        if volume:
+            rows = self.result["viability_report"]["image" if is_image else "replicate"]
+        headers = (["Field", "Replicate", "LIVE cells", "Nonviable", "Total cells", "Viability %", "Reviewed", "Pending"]
                    if volume else ["Field", "Replicate", "Green only", "Red only", "Both", "Total", "Viability %", "EBFP / green %"])
         self.result_table.setColumnCount(len(headers))
         self.result_table.setHorizontalHeaderLabels(headers)
@@ -1078,7 +1273,8 @@ class MainWindow(QMainWindow):
         for i, record in enumerate(rows):
             if volume:
                 values = [record.get("image_id", "Pooled"), record.get("replicate_id", ""),
-                          *(record.get(key, 0) for key in ("green_only", "red_only", "dual_positive_candidate", "unresolved", "total_groups", "candidate_count_min", "candidate_count_max"))]
+                          self._count_range(record, "live"), record["dead_count"], self._count_range(record, "total"),
+                          self._viability_text(record), record["reviewed_groups"], record["pending_groups"]]
             else:
                 values = [record.get("image_id", "Pooled"), record.get("replicate_id", ""), *(record[key] for key in ("live_only", "dead_only", "double_positive", "total")), number(record.get("viability_percent")), number(record.get("ebfp_live_percent"))]
             for j, value in enumerate(values):
@@ -1098,7 +1294,7 @@ class MainWindow(QMainWindow):
         if volume:
             self.summary_paths = {"png": path} if path else None
             self.figure_button.setEnabled(bool(path and Path(path).is_file()))
-        if self.result and self.preview_choice.currentIndex() == 0 and not path:
+        if self.result and (volume or self.preview_choice.currentIndex() == 0) and not path:
             self.preview_caption.setText(self.summary_error or "Preparing full-field summary…")
             return
         if path:
@@ -1129,8 +1325,7 @@ class MainWindow(QMainWindow):
         if self.result.get("mode") == "3d":
             try:
                 field = self._selected_volume_field()
-                checks = json.loads(Path(field["result"]["checksums"]).read_text(encoding="utf-8"))
-                expected_png = checks["figure.png"]
+                expected_png = field["review_figure_sha256"]
             except Exception as exc:
                 return self.error("Cannot verify the selected 3D figure before export: " + str(exc))
         field_suffix = "_" + self._selected_volume_field().get("image_id", "field") if self.result.get("mode") == "3d" else ""
@@ -1165,6 +1360,13 @@ class MainWindow(QMainWindow):
             return
         run = self.result["path"]
         name = "image_summary.csv" if self.table_level.currentIndex() == 0 else "replicate_summary.csv"
+        volume_rows = None
+        if self.result.get("mode") == "3d":
+            volume_rows = deepcopy(self.result["viability_report"]["image" if self.table_level.currentIndex() == 0 else "replicate"])
+            revision = self.result.get("review_document", {}).get("revision_id", "provisional")
+            for record in volume_rows:
+                record["review_revision"] = revision
+                record["assumptions"] = self.result["viability_report"]["assumptions"]
         path, _ = QFileDialog.getSaveFileName(self, "Save a copy of the summary", name, "CSV table (*.csv)")
         if path:
             try:
@@ -1172,7 +1374,14 @@ class MainWindow(QMainWindow):
                 source = run / name
                 if Path(path).resolve().is_relative_to(run):
                     raise ValueError("Save exported copies outside the completed run to preserve its verification records.")
-                Path(path).write_bytes(source.read_bytes())
+                if volume_rows is not None:
+                    stream = io.StringIO(newline="")
+                    writer = csv.DictWriter(stream, fieldnames=list(volume_rows[0]))
+                    writer.writeheader()
+                    writer.writerows(volume_rows)
+                    Path(path).write_text(stream.getvalue(), encoding="utf-8", newline="")
+                else:
+                    Path(path).write_bytes(source.read_bytes())
             except Exception as exc:
                 self.error(exc)
 

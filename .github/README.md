@@ -25,6 +25,10 @@ is included; keep the executable and its `_internal` folder together.
   overlaps, with saved label volumes and explicit unresolved associations.
   Review the completed masks in depth; a projection and a volume can produce
   different detections even with the same thresholds.
+- **3D viability and review:** see a provisional viability range, resolve mixed
+  candidates in Z, then apply decisions to update counts, CSVs and summary
+  figures without repeating segmentation. Reviews reopen automatically and
+  can be exported for collaborators.
 - **Threshold sliders:** adjust peak/region thresholds while keeping exact
   numeric controls; previews update after releasing the slider.
 - **Quick analysis:** select LIVE and DEAD TIFFs without a CSV or sample IDs.
@@ -38,17 +42,23 @@ is included; keep the executable and its `_internal` folder together.
   summaries as PNG, with the masks and threshold values from that completed run.
   Older runs remain readable without recounting cells.
 
-![Synthetic Z review example: green and red cells occupy the same XY position at different depths](images/z-review.png)
+![Synthetic Z review: inspect channel objects, choose cell identity and apply decisions to viability](images/viability-review.png)
 
-3D results keep green-only, red-only, dual-positive candidates and unresolved
-groups separate. EBFP scoring and apparent viability remain features of the
-2D workflow; 3D signal overlap needs review before assigning cell identity.
+3D viability assumes each channel object represents one cell and each true
+EthD-1-positive cell is nonviable (L3224). A confirmed LIVE/DEAD pair counts once
+as nonviable; uncertain groups remain in a scenario range. Resolve all mixed
+groups to obtain a single reviewed percentage. Complex groups require explicit
+pairs. Original masks and settings remain unchanged. EBFP scoring is available
+in 2D; neither mode diagnoses apoptosis.
 
 The repository includes source, tests, reference fixtures, the supplied sample
-pair, and validation evidence. Version 1.4.1 passed **220 tests**, including shared
-thresholds, calibrated depth separation, both analysis routes, saved figures,
-cancellation and previous-result compatibility. See the
-[source validation](../app_validation/release_1.4.1/source_validation.json).
+pair, and validation evidence. Version 1.4.2 passed **259 tests**, including
+viability ranges, complex pairing, saved reviews, exact figure panels, shared
+thresholds and both analysis routes. See the
+[source validation](../app_validation/release_1.4.2/source_validation.json).
+The synthetic review workflow updated counts and the figure in about **0.2
+seconds** per decision on the development machine, without resegmentation. See
+the [review workflow check](../app_validation/release_1.4.2/source_viability_workflow.json).
 A complete two-channel 25-plane 1024² 3D run took about **13 seconds**, including
 worker startup, with warm caches on the development machine. Bounded parallel
 processing preserved identical masks and object tables. See the

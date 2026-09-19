@@ -5,6 +5,9 @@ import sys
 
 
 def main():
+    if "--viability-smoke-test" in sys.argv:
+        from desktop.viability_smoke import main as viability_smoke_main
+        return viability_smoke_main(sys.argv[1:])
     if "--stack-analysis" in sys.argv or "--verify-stack-analysis" in sys.argv:
         import argparse
         parser = argparse.ArgumentParser()
